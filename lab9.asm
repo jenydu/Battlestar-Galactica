@@ -1,5 +1,5 @@
 # Full Names: Stanley Bryan Z. Hua, Jun Ni Du
-# UTORid: huastanl, _______
+# UTORid: huastanl, dujun1
 
 # Bitmap Display Configuration:
 # - Unit column in pixels: 4
@@ -46,9 +46,15 @@ displayAddress: .word 0x10008000
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
 lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
-
+addi $a1, $zero, 1
 jal PAINT_PLANE					# paint plane at $a0
 
+# main game loop
+MAIN_LOOP:
+	jal check_key_press
+
+
+	
 # Tells OS the program ends
 EXIT:	li $v0, 10
 	syscall
@@ -213,4 +219,41 @@ PAINT_PLANE:
 		addi $t4, $t4, row_increment		# t4 += row_increment
 		j LOOP_PLANE_ROWS			# repeats LOOP_PLANE_ROWS
 #___________________________________________________________________________________________________________________________
+
+check_key_press:	lw $t8, 0xffff0000	# load the value at this address into $t8
+			bne $t8, 1, NO_KEY	# if $t8 != 1, then no key was pressed, exit the function
+			
+			addi $a1, $zero, 0		# set $a1 as 0 			
+			jal PAINT_PLANE			# paint current plane black
+			
+			lw $t2, 0xffff0004	# load the ascii value of the key that was pressed
+			beq $t2, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
+			beq $t2, 0x77, respond_to_w
+			beq $t2, 0x73, respond_to_s
+			beq $t2, 0x64, respond_to_d
+			j NO_KEY
+			
+respond_to_a:		lw $t0, 0($a0)
+			subu $t0, $t0, 12		# set base position 1 pixel left
+			sw $t0, 0($a0)
+			addi $a1, $zero, 1		# set $a1 as 1
+			jal PAINT_PLANE			# paint plane at new location
+			j MAIN_LOOP
+
+
+respond_to_w:		
+			
+respond_to_s:
+			
+respond_to_d:		lw $t0, 0($a0)
+			addu $t0, $t0, 12		# set base position 1 pixel right
+			sw $t0, 0($a0)
+			addi $a1, $zero, 1		# set $a1 as 1
+			jal PAINT_PLANE			# paint plane at new location
+			j MAIN_LOOP	
+					
+			
+			
+NO_KEY:			j MAIN_LOOP
+
 
