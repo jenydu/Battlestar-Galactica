@@ -51,9 +51,13 @@ jal PAINT_PLANE					# paint plane at $a0
 
 # main game loop
 MAIN_LOOP:
-	jal check_key_press
 
+AVATAR_MOVE:
+	jal check_key_press			# check for keyboard input and redraw avatar accordingly
 
+OBSTACLE_MOVE:
+	j MAIN_LOOP
+	
 	
 # Tells OS the program ends
 EXIT:	li $v0, 10
@@ -80,7 +84,7 @@ PAINT_PLANE:
 	add $t4, $0, $0				# holds 'row for loop' indexer
 	
 	# FOR LOOP (through the bitmap columns)
-	LOOP_PLANE_COLS: bge $t3, column_max, EXIT	# repeat loop until column index = column 31 (4096)
+	LOOP_PLANE_COLS: bge $t3, column_max, EXIT_PLANE_PAINT	# repeat loop until column index = column 31 (4096)
 		add $t4, $0, $0			# reinitialize t4; index for LOOP_PLANE_ROWS
 		
 		# SWITCH CASES: paint in row based on column value
@@ -220,40 +224,47 @@ PAINT_PLANE:
 		j LOOP_PLANE_ROWS			# repeats LOOP_PLANE_ROWS
 #___________________________________________________________________________________________________________________________
 
-check_key_press:	lw $t8, 0xffff0000	# load the value at this address into $t8
-			bne $t8, 1, NO_KEY	# if $t8 != 1, then no key was pressed, exit the function
+check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
+			bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
 			
 			addi $a1, $zero, 0		# set $a1 as 0 			
 			jal PAINT_PLANE			# paint current plane black
 			
-			lw $t2, 0xffff0004	# load the ascii value of the key that was pressed
-			beq $t2, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
-			beq $t2, 0x77, respond_to_w
-			beq $t2, 0x73, respond_to_s
-			beq $t2, 0x64, respond_to_d
-			j NO_KEY
+			lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
+			beq $t4, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
+			beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
+			beq $t4, 0x73, respond_to_s	# ASCII code of 's'
+			beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
+			j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
 			
-respond_to_a:		lw $t0, 0($a0)
-			subu $t0, $t0, 12		# set base position 1 pixel left
-			sw $t0, 0($a0)
+respond_to_a:		la $t0, ($a0)			# load base address to $t0
+			subu $t0, $t0, column_increment	# set base position 1 pixel left
+			la $a0, ($t0)			# load new base address to $a0
 			addi $a1, $zero, 1		# set $a1 as 1
 			jal PAINT_PLANE			# paint plane at new location
-			j MAIN_LOOP
+			j EXIT_KEY_PRESS
 
-
-respond_to_w:		
-			
-respond_to_s:
-			
-respond_to_d:		lw $t0, 0($a0)
-			addu $t0, $t0, 12		# set base position 1 pixel right
-			sw $t0, 0($a0)
+respond_to_w:		la $t0, ($a0)			# load base address to $t0
+			subu $t0, $t0, row_increment	# set base position 1 pixel up
+			la $a0, ($t0)			# load new base address to $a0
 			addi $a1, $zero, 1		# set $a1 as 1
 			jal PAINT_PLANE			# paint plane at new location
-			j MAIN_LOOP	
+			j EXIT_KEY_PRESS
+			
+respond_to_s:		la $t0, ($a0)			# load base address to $t0
+			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			la $a0, ($t0)			# load new base address to $a0 
+			addi $a1, $zero, 1		# set $a1 as 1
+			jal PAINT_PLANE			# paint plane at new location
+			j EXIT_KEY_PRESS
+			
+respond_to_d:		la $t0, ($a0)			# load base address to $t0
+			addu $t0, $t0, column_increment	# set base position 1 pixel right
+			la $a0, ($t0)			# load new base address to $a0 
+			addi $a1, $zero, 1		# set $a1 as 1
+			jal PAINT_PLANE			# paint plane at new location
+			j EXIT_KEY_PRESS
 					
-			
-			
-NO_KEY:			j MAIN_LOOP
+EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 
 
