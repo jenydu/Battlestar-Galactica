@@ -52,11 +52,11 @@ jal PAINT_PLANE					# paint plane at $a0
 # main game loop
 MAIN_LOOP:
 
-AVATAR_MOVE:
-	jal check_key_press			# check for keyboard input and redraw avatar accordingly
+	AVATAR_MOVE:
+		jal check_key_press			# check for keyboard input and redraw avatar accordingly
 
-OBSTACLE_MOVE:
-	j MAIN_LOOP
+	OBSTACLE_MOVE:
+		j MAIN_LOOP
 	
 	
 # Tells OS the program ends
@@ -266,5 +266,4 @@ respond_to_d:		la $t0, ($a0)			# load base address to $t0
 			j EXIT_KEY_PRESS
 					
 EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
-
-
+#___________________________________________________________________________________________________________________________
