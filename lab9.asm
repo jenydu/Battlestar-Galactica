@@ -231,39 +231,42 @@ check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 			jal PAINT_PLANE			# paint current plane black
 			
 			lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
+			
+check_border:		la $t0, ($a0)			# load base address to $t0
+			lw $t5, displayAddress
+			
+			sub $t1, $t0, $t5
+			addi $t5, $zero, column_max
+			div $t1, $t5
+			mfhi $t5			# remainder (which column it is on)
+			mflo $t6			# quotient (which row it is on)
+			
 			beq $t4, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
 			beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
 			beq $t4, 0x73, respond_to_s	# ASCII code of 's'
 			beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
 			j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
 			
-respond_to_a:		la $t0, ($a0)			# load base address to $t0
+respond_to_a:		beq $t5, $zero, draw_new_avatar	# the avatar is on left of screen, cannot move up
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
-			la $a0, ($t0)			# load new base address to $a0
-			addi $a1, $zero, 1		# set $a1 as 1
-			jal PAINT_PLANE			# paint plane at new location
-			j EXIT_KEY_PRESS
-
-respond_to_w:		la $t0, ($a0)			# load base address to $t0
+			j draw_new_avatar
+			
+respond_to_w:		beq $t6, $zero, draw_new_avatar	# the avatar is on top of screen, cannot move up
 			subu $t0, $t0, row_increment	# set base position 1 pixel up
-			la $a0, ($t0)			# load new base address to $a0
-			addi $a1, $zero, 1		# set $a1 as 1
-			jal PAINT_PLANE			# paint plane at new location
-			j EXIT_KEY_PRESS
+			j draw_new_avatar
 			
-respond_to_s:		la $t0, ($a0)			# load base address to $t0
+respond_to_s:		bgt $t6, 911, draw_new_avatar
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
-			la $a0, ($t0)			# load new base address to $a0 
-			addi $a1, $zero, 1		# set $a1 as 1
-			jal PAINT_PLANE			# paint plane at new location
-			j EXIT_KEY_PRESS
+			j draw_new_avatar
 			
-respond_to_d:		la $t0, ($a0)			# load base address to $t0
+respond_to_d:		bgt $t5, 911, draw_new_avatar
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
-			la $a0, ($t0)			# load new base address to $a0 
+			j draw_new_avatar
+	
+draw_new_avatar:	la $a0, ($t0)			# load new base address to $a0 
 			addi $a1, $zero, 1		# set $a1 as 1
 			jal PAINT_PLANE			# paint plane at new location
-			j EXIT_KEY_PRESS
-					
+			j EXIT_KEY_PRESS		
+															
 EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
