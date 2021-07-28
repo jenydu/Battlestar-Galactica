@@ -45,10 +45,10 @@ displayAddress: .word 0x10008000
 	.end_macro
 	# MACRO: 
 	.macro setup_object_paint (%color, %offset)
-		addi $t1, $0, {color}	\t# change current color to dark gray
+		addi $t1, $0, %color			# change current color to dark gray
     		check_color			        # updates color (in $t1) according to func. param. $a1
 		add $t2, $0, $0				# reinitialize temporary address store
-		addi $t2, $a0, {address_offset}		# add address offset to base address
+		addi $t2, $a0, %offset			# add address offset to base address
 		sw $t1, ($t2)				# paint pixel value
 	.end_macro
 #___________________________________________________________________________________________________________________________
