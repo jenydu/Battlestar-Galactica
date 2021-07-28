@@ -43,6 +43,14 @@ displayAddress: .word 0x10008000
 		mult $a1, $t1
 		mflo $t1
 	.end_macro
+	# MACRO: 
+	.macro setup_object_paint (%color, %offset)
+		addi $t1, $0, {color}	\t# change current color to dark gray
+    		check_color			        # updates color (in $t1) according to func. param. $a1
+		add $t2, $0, $0				# reinitialize temporary address store
+		addi $t2, $a0, {address_offset}		# add address offset to base address
+		sw $t1, ($t2)				# paint pixel value
+	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
 lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
@@ -270,3 +278,6 @@ draw_new_avatar:	la $a0, ($t0)			# load new base address to $a0
 															
 EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT OBJECT
+
+PAINT_OBJECT:
