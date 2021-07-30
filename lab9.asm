@@ -53,9 +53,11 @@ displayAddress: .word 0x10008000
 	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
-lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
-addi $a1, $zero, 1
-jal PAINT_PLANE					# paint plane at $a0
+INITIALIZE:
+	lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
+	addi $a1, $zero, 1
+	jal PAINT_PLANE					# paint plane at $a0
+	addi $s0, $zero, 0				# $s0 will be the counter for how many main loops the game had run (for difficulty settings)
 
 # main game loop
 MAIN_LOOP:
@@ -64,6 +66,7 @@ MAIN_LOOP:
 		jal check_key_press			# check for keyboard input and redraw avatar accordingly
 
 	OBSTACLE_MOVE:
+		# jal PAINT_OBJECT
 		j MAIN_LOOP
 	
 	
@@ -239,6 +242,8 @@ check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 			jal PAINT_PLANE			# paint current plane black
 			
 			lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
+			beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
+			j check_border
 			
 check_border:		la $t0, ($a0)			# load base address to $t0
 			lw $t5, displayAddress
@@ -254,7 +259,11 @@ check_border:		la $t0, ($a0)			# load base address to $t0
 			beq $t4, 0x73, respond_to_s	# ASCII code of 's'
 			beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
 			j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
-			
+
+respond_to_p:		jal erase_everything
+			j INITIALIZE
+
+						
 respond_to_a:		beq $t5, $zero, draw_new_avatar	# the avatar is on left of screen, cannot move up
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
 			j draw_new_avatar
@@ -278,6 +287,37 @@ draw_new_avatar:	la $a0, ($t0)			# load new base address to $a0
 															
 EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
+
+erase_everything:	jr $ra				# WIP; remove every obstacle; reset plane position, health, & score
+
+
+
+
 # FUNCTION: PAINT OBJECT
 
-PAINT_OBJECT:
+PAINT_OBJECT:		la $t9, ($a0)		# load the avatar address to a temp. register so it doesn't get lost
+
+			li $v0, 42 	# Service 42, random int range
+			li $a0, 0 	# Select random generator 0
+			
+			li $a1, 65536 	# Select upper bound of random number
+			syscall 	# Generate random int (returns in $a0)
+			
+			addi $s0, $zero, 4	# multiply $a0 by 4 to get the address
+			mult $a0, $s0
+			mflo $a0
+			
+			lw $t0, displayAddress	
+			add $t0, $t0, $a0	# update $t0
+			la $a0, ($t9)
+			
+			li $t4, 0xFFFFFF # white
+				
+			sw $t4, 0($t0)		# draw obstacle
+			sw $t4, 4($t0)
+			sw $t4, 256($t0)
+			sw $t4, 260($t0)
+OBJECT_EXIT:			jr $ra
+			
+			
+OBJECT_MOVE:		
