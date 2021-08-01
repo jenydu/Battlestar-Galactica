@@ -20,8 +20,6 @@
 
 .eqv plane_center 15360			# offset for center of plane. = 15 bytes * row_increment
 
-
-
 #___________________________________________________________________________________________________________________________
 .data
 displayAddress: .word 0x10008000
@@ -35,8 +33,7 @@ displayAddress: .word 0x10008000
 		addi $t8, $0, row_increment
 		addi $t9, $0, %y
 		mult $t8, $t9
-		# set $t5 from lower 32 bits
-		mflo $t5
+		mflo $t5				# $t5 = %y * row_increment		(lower 32 bits)
 	.end_macro
 	# MACRO: Check whether to color normally or black. Update $t1 accordingly.
 		# $t1: contains color to be painted
@@ -238,7 +235,7 @@ PAINT_PLANE:
 
 	# FOR LOOP: (through row)
 	# Paints in symmetric row at given column (stored in t2) 	# from center using row (stored in $t5)
-	LOOP_PLANE_ROWS: bge $t4, $t5, UPDATE_COL	# returns to LOOP_PLANE_COLS when index (stored in $t4) >= plane_center (row)t2
+	LOOP_PLANE_ROWS: bge $t4, $t5, UPDATE_COL	# returns to LOOP_PLANE_COLS when index (stored in $t4) >= (number of rows to paint in) /2
 		add $t2, $0, $0				# Reinitialize t2; temporary address store
 		add $t2, $a0, $t3			# update to specific column from base address
 		addi $t2, $t2, plane_center		# update to specified center axis
@@ -331,12 +328,14 @@ RANDOM_OFFSET:
 	jr $ra			# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT OBJECT
+	# Inputs
+		# $a1: If 0, paint in black. Elif 1, paint in color specified otherwise.
 	# Registers Used
 		# $t1: stores current color value
 		# $t2: temporary memory address storage for current unit (in bitmap)
-		# $t3: column index for 'for loop' LOOP_PLANE_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
-		# $t4: row index for 'for loop' LOOP_PLANE_ROWS
-		# $t5: parameter for subfunction LOOP_PLANE_ROWS. Will store # rows to paint from the center row outwards
+		# $t3: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $t4: row index for 'for loop' LOOP_OBJ_ROWS
+		# $t5: parameter for subfunction LOOP_OBJ_ROWS. Will store # rows to paint from the center row outwards
 		# $t8-9: used for multiplication operations
 PAINT_OBJECT:
 	# Initialize registers
@@ -348,20 +347,20 @@ PAINT_OBJECT:
 	addi $t1, $0, 0xFFFFFF			# change current color to white
 	check_color				# updates color according to func. param. $a1	
 	
-	PAINT_BLOCK: bge $t3, 32, EXIT_OBJ_PAINT
+	LOOP_OBJ_COLS: bge $t3, 32, EXIT_PAINT_OBJECT
 		set_row_incr (4)		# update row for column
 		j LOOP_OBJ_ROWS			# paint in row
 	UPDATE_OBJ_COL:				# Update column value
-		addi $t3, $t3, column_increment	# add 4 bits (1 byte) to refer to memory address for next row row
+		addi $t3, $t3, column_increment	# add 4 bits (1 byte) to refer to memory address for next row
 		add $t4, $0, $0			# reinitialize index for LOOP_OBJ_ROWS
-		j PAINT_BLOCK
+		j LOOP_OBJ_COLS
 	
-	EXIT_OBJ_PAINT:				# return to previous instruction
+	EXIT_PAINT_OBJECT:				# return to previous instruction
 		jr $ra
 	
 	# FOR LOOP: (through row)
-	# Paints in symmetric row at given column (stored in t2) 	# from center using row (stored in $t5)
-	LOOP_OBJ_ROWS: bge $t4, $t5, UPDATE_OBJ_COL	# returns when index (stored in $t4) >= plane_center (row)t2
+	# Paints in symmetrically from center at given column
+	LOOP_OBJ_ROWS: bge $t4, $t5, UPDATE_OBJ_COL	# returns when row index (stored in $t4) >= (number of rows to paint in) /2
 		add $t2, $0, $0				# Reinitialize t2; temporary address store
 		add $t2, $s0, $t3			# update to specific column from base address
 		addi $t2, $t2, plane_center		# update to specified center axis
