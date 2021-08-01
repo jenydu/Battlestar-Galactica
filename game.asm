@@ -50,6 +50,7 @@
 
 .eqv base_address 0x10008000		# display base address
 #___________________________________________________________________________________________________________________________
+# ==VARIABLES==:
 .data
 displayAddress: 	.word 0x10008000
 obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same time
