@@ -1,13 +1,41 @@
-# Full Names: Stanley Bryan Z. Hua, Jun Ni Du
-# UTORid: huastanl, dujun1
-
+#####################################################################
+#
+# CSC258 Summer 2021 Assembly Final Project
+# University of Toronto
+#
+# Student: Name, Student Number, UTorID
+#	Stanley Bryan Z. Hua, _____________, huastanl
+#	Jun Ni Du, 1006217130, dujun1
+#
 # Bitmap Display Configuration:
-# - Unit column in pixels: 4
-# - Unit row in pixels: 4
-# - Display column in pixels: 1024
-# - Display row in pixels: 1024
+# - Unit width in pixels: 4
+# - Unit height in pixels: 4
+# - Display width in pixels: 1024
+# - Display height in pixels: 1024
 # - Base Address for Display: 0x10008000 ($gp)
-#___________________________________________________________________________________________________________________________
+#
+# Which milestones have been reached in this submission?
+# (See the assignment handout for descriptions of the milestones)
+# - Milestone 1 (choose the one that applies)
+#
+# Which approved features have been implemented for milestone 3?
+# (See the assignment handout for the list of additional features)
+# 1. (fill in the feature, if any)
+# 2. (fill in the feature, if any)
+# 3. (fill in the feature, if any)
+# ... (add more if necessary)
+#
+# Link to video demonstration for final submission:
+# - (insert YouTube / MyMedia / other URL here). Make sure we can view it!
+#
+# Are you OK with us sharing the video with people outside course staff?
+# - yes / no / yes, and please share this project github link as well!
+#
+# Any additional information that the TA needs to know:
+# - (write here, if any)
+#
+#####################################################################
+#_________________________________________________________________________________________________________________________
 # ==CONSTANTS==:
 .eqv UNIT_WIDTH 4
 .eqv UNIT_HEIGHT 4
@@ -90,17 +118,23 @@ MAIN_LOOP:
 		add $s1, $a0, $0		# temporarily store plane's base address
 
 	OBSTACLE_MOVE:
-		# Erase last object
-		# add $a0, $s0, $0		# restore object address
-		# addi $a1, $zero, 0		# set to erase
-		# jal PAINT_OBJECT
-
-		# Paint new object
-		# jal RANDOM_OFFSET
-		# jal PAINT_OBJECT
-		# addi $s0, $a0, 0		# store previous randomly placed object
+		la $s5, obstacle_positions	# $t9 holds the address of obstacle_positions
+		addi $s4, $zero, 0		# i = 0
 		
-		add $a0, $s1, $0		# restore plane address
+	obstacle_move_loop:				# move each obstacle one pixel left in a loop
+			bge $s4, $s6, end_move_loop		# exit loop when i >= 3
+			
+			add $s2, $a0, 0			# save avatar address to $s2 (temp.)
+			lw $a0, 0($s5)			# load the address of the current obstacle into $a0
+			jal MOVE_OBJECT
+			sw $a0, ($s5)
+			add $s5, $s5, 4   		# increment array address pointer by 4
+			
+			add $a0, $s2, 0			# set $a0 back to avatar address
+			addi $s4, $s4, 1		# i++
+			j obstacle_move_loop
+	
+	end_move_loop:
 	
 		
 			
@@ -411,3 +445,14 @@ PAINT_OBJECT:
 		# Updates for loop index
 		addi $t4, $t4, row_increment		# t4 += row_increment
 		j LOOP_OBJ_ROWS				# repeats LOOP_OBJ_ROWS
+#___________________________________________________________________________________________________________________________
+MOVE_OBJECT:
+	addi $a1, $0, 0
+	jal PAINT_OBJECT
+	
+	subu $a0, $a0, column_increment
+	addi $a1, $0, 1
+	jal PAINT_OBJECT
+	
+	jr $ra 
+	
