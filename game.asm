@@ -18,7 +18,10 @@
 .eqv column_max 1024			# column_increment * (display_column) / UNIT_WIDTH			# NOTE: Always equal to row_increment
 .eqv row_max 262144			# row_increment * (display_row) / UNIT_HEIGHT
 
-.eqv center_row 15360			# offset for center of plane. = 15 bytes * row_increment
+.eqv plane_center 15360			# offset for center of plane. = 15 bytes * row_increment
+
+
+
 #___________________________________________________________________________________________________________________________
 .data
 displayAddress: .word 0x10008000
@@ -153,7 +156,7 @@ PAINT_PLANE:
 			addi $t1, $0, 0x255E90		# change current color to dark blue
 			check_color			# updates color according to func. param. $a1
 	                add $t2, $a0, $t3		# update to specific column from base address
-	            	addi $t2, $t2, center_row	# update to specified center axis
+	            	addi $t2, $t2, plane_center	# update to specified center axis
 	           	sw $t1, ($t2)			# paint at center axis
 	           	j UPDATE_COL			# end iteration
 		PLANE_COL_1_2:
@@ -209,7 +212,7 @@ PAINT_PLANE:
 			check_color			# updates color according to func. param. $a1
 			add $t2, $0, $0			# reinitialize temporary address store
 			add $t2, $a0, $t3		# update to specific column from base address
-			addi $t2, $t2, center_row	# update to specified center axis
+			addi $t2, $t2, plane_center	# update to specified center axis
 			sw $t1, ($t2)			# paint at center axis
 			j UPDATE_COL			# end iteration
 		PLANE_COL_26:
@@ -223,7 +226,7 @@ PAINT_PLANE:
 			check_color			# updates color according to func. param. $a1
 			add $t2, $0, $0			# reinitialize temporary address store
 			add $t2, $a0, $t3		# update to specific column from base address
-			addi $t2, $t2, center_row	# update to specified center axis
+			addi $t2, $t2, plane_center	# update to specified center axis
 			sw $t1, ($t2)			# paint at center axis
 			j UPDATE_COL			# end iteration
 
@@ -235,10 +238,10 @@ PAINT_PLANE:
 
 	# FOR LOOP: (through row)
 	# Paints in symmetric row at given column (stored in t2) 	# from center using row (stored in $t5)
-	LOOP_PLANE_ROWS: bge $t4, $t5, UPDATE_COL	# returns to LOOP_PLANE_COLS when index (stored in $t4) >= center_row (row)t2
+	LOOP_PLANE_ROWS: bge $t4, $t5, UPDATE_COL	# returns to LOOP_PLANE_COLS when index (stored in $t4) >= plane_center (row)t2
 		add $t2, $0, $0				# Reinitialize t2; temporary address store
 		add $t2, $a0, $t3			# update to specific column from base address
-		addi $t2, $t2, center_row		# update to specified center axis
+		addi $t2, $t2, plane_center		# update to specified center axis
 
 		add $t2, $t2, $t4			# update to positive (delta) row
 		sw $t1, ($t2)				# paint at positive (delta) row
@@ -328,7 +331,13 @@ RANDOM_OFFSET:
 	jr $ra			# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT OBJECT
-
+	# Registers Used
+		# $t1: stores current color value
+		# $t2: temporary memory address storage for current unit (in bitmap)
+		# $t3: column index for 'for loop' LOOP_PLANE_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $t4: row index for 'for loop' LOOP_PLANE_ROWS
+		# $t5: parameter for subfunction LOOP_PLANE_ROWS. Will store # rows to paint from the center row outwards
+		# $t8-9: used for multiplication operations
 PAINT_OBJECT:
 	# Initialize registers
 	add $t1, $0, $0				# initialize current color to black
@@ -352,10 +361,10 @@ PAINT_OBJECT:
 	
 	# FOR LOOP: (through row)
 	# Paints in symmetric row at given column (stored in t2) 	# from center using row (stored in $t5)
-	LOOP_OBJ_ROWS: bge $t4, $t5, UPDATE_OBJ_COL	# returns to LOOP_PLANE_COLS when index (stored in $t4) >= center_row (row)t2
+	LOOP_OBJ_ROWS: bge $t4, $t5, UPDATE_OBJ_COL	# returns when index (stored in $t4) >= plane_center (row)t2
 		add $t2, $0, $0				# Reinitialize t2; temporary address store
 		add $t2, $s0, $t3			# update to specific column from base address
-		addi $t2, $t2, center_row		# update to specified center axis
+		addi $t2, $t2, plane_center		# update to specified center axis
 
 		add $t2, $t2, $t4			# update to positive (delta) row
 		sw $t1, ($t2)				# paint at positive (delta) row
@@ -366,4 +375,4 @@ PAINT_OBJECT:
 
 		# Updates for loop index
 		addi $t4, $t4, row_increment		# t4 += row_increment
-		j LOOP_OBJ_ROWS			# repeats LOOP_PLANE_ROWS
+		j LOOP_OBJ_ROWS				# repeats LOOP_OBJ_ROWS
