@@ -4,7 +4,7 @@
 # University of Toronto
 #
 # Student: Name, Student Number, UTorID
-#	Stanley Bryan Z. Hua, _____________, huastanl
+#	Stanley Bryan Z. Hua, 1005977267, huastanl
 #	Jun Ni Du, 1006217130, dujun1
 #
 # Bitmap Display Configuration:
@@ -91,8 +91,31 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 		lw $reg, ($sp)				# load stored value from register
 		addi $sp, $sp, 4			# de-allocate space;	increment by 4
 	.end_macro
+	
+	# MACRO:  Get column and row index from current base address
+		# Registers Used
+			# $s1-2: for temporary operations
+			# $col_store: to store column index
+			# $row_store: to store row index
+	.macro calculate_indices ($address, $col_store, $row_store)
+		# Store curr. $s0-1 values in stack.
+		push_reg_to_stack ($s1)
+		push_reg_to_stack ($s2)
+		
+		# Calculate indices
+		subi $s1, $address, base_address	# subtract base display address (0x10008000)
+		addi $s2, $zero, row_increment	
+		div $s1, $s2				# divide by row increment
+		mfhi $col_store				# remainder (which column it is on)
+		mflo $row_store				# quotient (which row it is on)
+		
+		# Restore $s0-1 values from stack.
+		pop_reg_from_stack ($s2)
+		pop_reg_from_stack ($s1)
+	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
+.main
 lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
 
 # Paint Border
@@ -315,12 +338,8 @@ check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 			lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
 
 check_border:		la $t0, ($a0)			# load ___ base address to $t0
-			subi $t1, $t0, base_address	# subtract base display address (0x10008000)
-			addi $t5, $zero, row_increment	# divide by row increment
-			div $t1, $t5
-			mfhi $t5			# remainder (which column it is on)
-			mflo $t6			# quotient (which row it is on)
-
+			calculate_indices ($t0, $t5, $t6)	# calculate column and row index
+			
 			beq $t4, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
 			beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
 			beq $t4, 0x73, respond_to_s	# ASCII code of 's'
