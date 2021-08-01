@@ -590,14 +590,11 @@ PAINT_BORDER:
 		j LOOP_BORDER_ROWS			# repeats LOOP_BORDER_ROWS
 	EXIT_LOOP_BORDER_ROWS:
 		jr $ra
-
-		#___________________________________________________________________________________________________________________________
-		MOVE_OBJECT:
-			addi $a1, $0, 0
-			jal PAINT_OBJECT
-
-			subu $a0, $a0, column_increment
-			addi $a1, $0, 1
-			jal PAINT_OBJECT
-
-			jr $ra
+#___________________________________________________________________________________________________________________________
+MOVE_OBJECT:
+	addi $a1, $0, 0
+	jal PAINT_OBJECT
+	subu $a0, $a0, column_increment
+	addi $a1, $0, 1
+	jal PAINT_OBJECT
+	jr $ra
