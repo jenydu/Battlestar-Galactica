@@ -22,7 +22,8 @@
 
 #___________________________________________________________________________________________________________________________
 .data
-displayAddress: .word 0x10008000
+displayAddress: 	.word 0x10008000
+obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same time
 #___________________________________________________________________________________________________________________________
 .text
 # ==MACROS==:
@@ -53,17 +54,34 @@ displayAddress: .word 0x10008000
 	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
-lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
-addi $a1, $zero, 1				# set to paint
-jal PAINT_PLANE					# paint plane at $a0
+INITIALIZE:
+	lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
+	addi $s7, $zero, 0				# counter for how many main loop the game has looped
+	addi $s6, $zero, 3				# max. obstacles at once 
 
-jal RANDOM_OFFSET
-addi $a1, $zero, 1				# set to paint
-jal PAINT_OBJECT
-addi $s0, $a0, 0				# store previous randomly placed object base address
+	addi $a1, $zero, 1				# set to paint
+	jal PAINT_PLANE					# paint plane at $a0
+	
 
-lw $a0, displayAddress 				# reload base address for plane
-
+GENERATE_OBSTACLES:	
+			la $s5, obstacle_positions	# $t9 holds the address of obstacle_positions
+			addi $s4, $zero, 0		# i = 0
+	
+	obstacle_gen_loop:	
+			bge $s4, $s6, end_loop		# exit loop when i >= 3
+			jal RANDOM_OFFSET
+			addi $a1, $zero, 1		# set to paint
+			jal PAINT_OBJECT
+			addi $s0, $a0, 0		# store previous randomly placed object base address
+			
+			sw $a0, ($s5)			# save obstacle address into the array
+			add $s5, $s5, 4   		# increment array address pointer by 4
+			
+			addi $s4, $s4, 1		# i++
+			j obstacle_gen_loop
+	
+	end_loop:
+			lw $a0, displayAddress 		# reload base address for plane
 
 # main game loop
 MAIN_LOOP:
@@ -83,7 +101,10 @@ MAIN_LOOP:
 		# addi $s0, $a0, 0		# store previous randomly placed object
 		
 		add $a0, $s1, $0		# restore plane address
+	
 		
+			
+	addi $s7, $s7, 1			# main counter += 1	
 	j MAIN_LOOP				# repeat loop
 
 
@@ -269,6 +290,9 @@ check_border:		la $t0, ($a0)			# load base address to $t0
 			beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
 			beq $t4, 0x73, respond_to_s	# ASCII code of 's'
 			beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
+			
+			beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
+			beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
 			j OBSTACLE_MOVE			# invalid key, exit the input checking stage
 
 respond_to_a:		beq $t5, $zero, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
@@ -283,7 +307,7 @@ respond_to_s:		bgt $t6, 896, EXIT_KEY_PRESS
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
 			j draw_new_avatar
 
-respond_to_d:		bgt $t5, 916, EXIT_KEY_PRESS
+respond_to_d:		bgt $t5, 908, EXIT_KEY_PRESS
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
 			j draw_new_avatar
 
@@ -294,6 +318,18 @@ draw_new_avatar:	addi $a1, $zero, 0		# set $a1 as 0
 			addi $a1, $zero, 1		# set $a1 as 1
 			jal PAINT_PLANE			# paint plane at new location
 			j EXIT_KEY_PRESS
+
+respond_to_p:		jal erase_everything
+			j INITIALIZE
+
+respond_to_q:		jal erase_everything
+			j EXIT
+
+erase_everything:	jr $ra
+
+
+
+
 
 EXIT_KEY_PRESS:		j AVATAR_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
