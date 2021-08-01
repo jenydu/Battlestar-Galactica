@@ -20,10 +20,10 @@
 
 .eqv plane_center 15360			# offset for center of plane. = 15 bytes * row_increment
 
+.eqv base_address 0x10008000		# display base address
 #___________________________________________________________________________________________________________________________
 .data
-displayAddress: 	.word 0x10008000
-obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same time
+displayAddress: .word 0x10008000
 #___________________________________________________________________________________________________________________________
 .text
 # ==MACROS==:
@@ -52,36 +52,40 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 		addi $t2, $a0, %offset			# add address offset to base address
 		sw $t1, ($t2)				# paint pixel value
 	.end_macro
+	# MACRO: Push / Store value in register $reg to stack
+	.macro push_reg_to_stack ($reg)
+		addi $sp, $sp, -4			# decrement by 4
+		sw $reg, ($sp)				# store register at stack pointer
+	.end_macro
+	# MACRO: Pop / Load value from stack to register $reg
+	.macro pop_reg_from_stack ($reg)
+		lw $reg, ($sp)				# load stored value from register
+		addi $sp, $sp, 4			# de-allocate space;	increment by 4
+	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
-INITIALIZE:
-	lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
-	addi $s7, $zero, 0				# counter for how many main loop the game has looped
-	addi $s6, $zero, 3				# max. obstacles at once 
+lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
 
-	addi $a1, $zero, 1				# set to paint
-	jal PAINT_PLANE					# paint plane at $a0
-	
+# Paint Border
+jal PAINT_BORDER
 
-GENERATE_OBSTACLES:	
-			la $s5, obstacle_positions	# $t9 holds the address of obstacle_positions
-			addi $s4, $zero, 0		# i = 0
-	
-	obstacle_gen_loop:	
-			bge $s4, $s6, end_loop		# exit loop when i >= 3
-			jal RANDOM_OFFSET
-			addi $a1, $zero, 1		# set to paint
-			jal PAINT_OBJECT
-			addi $s0, $a0, 0		# store previous randomly placed object base address
-			
-			sw $a0, ($s5)			# save obstacle address into the array
-			add $s5, $s5, 4   		# increment array address pointer by 4
-			
-			addi $s4, $s4, 1		# i++
-			j obstacle_gen_loop
-	
-	end_loop:
-			lw $a0, displayAddress 		# reload base address for plane
+# Paint Plane
+addi $a1, $zero, 1				# set to paint
+addi $a0, $0, base_address 			# reload base address for plane
+addi $a0, $a0, 44				# add min column
+addi $a0, $a0, 18432				# add min row
+push_reg_to_stack ($a0)				# store current plane address in stack
+jal PAINT_PLANE					# paint plane at $a0
+
+# Randomize Object Base Address Offset
+addi $a0, $0, base_address 			# load base address of BitMap to temp. base address for plane
+jal RANDOM_OFFSET
+# Paint Object
+addi $a1, $zero, 1				# set to paint
+jal PAINT_OBJECT
+addi $s0, $a0, 0				# store previous randomly placed object base address
+
+pop_reg_from_stack ($a0)			# restore current plane address from stack
 
 # main game loop
 MAIN_LOOP:
@@ -101,10 +105,7 @@ MAIN_LOOP:
 		# addi $s0, $a0, 0		# store previous randomly placed object
 		
 		add $a0, $s1, $0		# restore plane address
-	
 		
-			
-	addi $s7, $s7, 1			# main counter += 1	
 	j MAIN_LOOP				# repeat loop
 
 
@@ -277,10 +278,8 @@ check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 			bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
 			lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
 
-check_border:		la $t0, ($a0)			# load base address to $t0
-			lw $t5, displayAddress		# store temporary address
-			
-			sub $t1, $t0, $t5
+check_border:		la $t0, ($a0)			# load ___ base address to $t0
+			subi $t1, $t0, base_address	# subtract base display address (0x10008000)
 			addi $t5, $zero, row_increment	# divide by row increment
 			div $t1, $t5
 			mfhi $t5			# remainder (which column it is on)
@@ -290,24 +289,18 @@ check_border:		la $t0, ($a0)			# load base address to $t0
 			beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
 			beq $t4, 0x73, respond_to_s	# ASCII code of 's'
 			beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
-			
-			beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
-			beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
 			j OBSTACLE_MOVE			# invalid key, exit the input checking stage
 
-respond_to_a:		beq $t5, $zero, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
+respond_to_a:		ble $t5, 44, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
 			j draw_new_avatar
-
-respond_to_w:		beq $t6, $zero, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
+respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
 			subu $t0, $t0, row_increment	# set base position 1 pixel up
 			j draw_new_avatar
-
-respond_to_s:		bgt $t6, 896, EXIT_KEY_PRESS
+respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
 			j draw_new_avatar
-
-respond_to_d:		bgt $t5, 908, EXIT_KEY_PRESS
+respond_to_d:		bgt $t5, 864, EXIT_KEY_PRESS
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
 			j draw_new_avatar
 
@@ -318,18 +311,6 @@ draw_new_avatar:	addi $a1, $zero, 0		# set $a1 as 0
 			addi $a1, $zero, 1		# set $a1 as 1
 			jal PAINT_PLANE			# paint plane at new location
 			j EXIT_KEY_PRESS
-
-respond_to_p:		jal erase_everything
-			j INITIALIZE
-
-respond_to_q:		jal erase_everything
-			j EXIT
-
-erase_everything:	jr $ra
-
-
-
-
 
 EXIT_KEY_PRESS:		j AVATAR_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
@@ -366,6 +347,7 @@ RANDOM_OFFSET:
 # FUNCTION: PAINT OBJECT
 	# Inputs
 		# $a1: If 0, paint in black. Elif 1, paint in color specified otherwise.
+		# $s0: random offset
 	# Registers Used
 		# $t1: stores current color value
 		# $t2: temporary memory address storage for current unit (in bitmap)
@@ -383,31 +365,193 @@ PAINT_OBJECT:
 	addi $t1, $0, 0xFFFFFF			# change current color to white
 	check_color				# updates color according to func. param. $a1	
 	
-	LOOP_OBJ_COLS: bge $t3, 32, EXIT_PAINT_OBJECT
-		set_row_incr (4)		# update row for column
+	# FOR LOOP: (through col)
+	LOOP_OBJ_COLS: bge $t3, 24, EXIT_PAINT_OBJECT
+		set_row_incr (6)		# update row for column
 		j LOOP_OBJ_ROWS			# paint in row
 	UPDATE_OBJ_COL:				# Update column value
 		addi $t3, $t3, column_increment	# add 4 bits (1 byte) to refer to memory address for next row
 		add $t4, $0, $0			# reinitialize index for LOOP_OBJ_ROWS
 		j LOOP_OBJ_COLS
-	
 	EXIT_PAINT_OBJECT:				# return to previous instruction
 		jr $ra
 	
 	# FOR LOOP: (through row)
 	# Paints in symmetrically from center at given column
 	LOOP_OBJ_ROWS: bge $t4, $t5, UPDATE_OBJ_COL	# returns when row index (stored in $t4) >= (number of rows to paint in) /2
-		add $t2, $0, $0				# Reinitialize t2; temporary address store
-		add $t2, $s0, $t3			# update to specific column from base address
-		addi $t2, $t2, plane_center		# update to specified center axis
-
-		add $t2, $t2, $t4			# update to positive (delta) row
-		sw $t1, ($t2)				# paint at positive (delta) row
-
-		sub $t2, $t2, $t4			# update back to specified center axis
-		sub $t2, $t2, $t4			# update to negative (delta) row
-		sw $t1, ($t2)				# paint at negative (delta) row
-
+		add $t2, $s0, $t3			# update to specific column with random offset from base address
+		add $t2, $t2, $t4			# update to specific row
+		sw $t1, ($t2)				# paint
+		
 		# Updates for loop index
 		addi $t4, $t4, row_increment		# t4 += row_increment
 		j LOOP_OBJ_ROWS				# repeats LOOP_OBJ_ROWS
+#___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT BORDER
+	# Registers Used
+		# $t1: parameter for LOOP_BORDER_ROWS. Stores color value
+		# $t2: temporary memory address storage for current unit (in bitmap)
+		# $t3: column index for 'for loop' LOOP_BORDER_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $t4: beginning row index for 'for loop' LOOP_BORDER_ROWS
+		# $t5: parameter for LOOP_BORDER_ROWS. Stores row index for last row to be painted in
+		# $t6: parameter for LOOP_BORDER_ROWS. Stores # rows to paint from top to bottom
+		# $t7: stores result from logical operations
+		# $t8-9: used for logical operations
+PAINT_BORDER:
+	# Push $t registers to stack
+	push_reg_to_stack ($ra)
+
+	# Initialize registers
+	add $t1, $0, $0				# initialize current color to black
+	add $t2, $0, $0				# holds temporary memory address
+	add $t3, $0, $0				# 'column for loop' indexer
+	add $t4, $0, $0				# 'row for loop' indexer
+	add $t5, $0, $0				# last row index to paint in
+	
+	LOOP_BORDER_COLS: bge $t3, column_max, EXIT_BORDER_PAINT
+		# Boolean Expressions: Paint in border piece based on column index
+		BORDER_COND:
+			# BORDER_OUTER
+			sle $t8, $t3, 36
+			sge $t9, $t3, 24
+			and $t7, $t8, $t9		# 6 <= col index <= 9
+			
+			sle $t8, $t3, 996
+			sge $t9, $t3, 984
+			and $t9, $t8, $t9		# 246 <= col index <= 249
+			
+			or $t7, $t7, $t9		# if 6 <= col index <= 9 	|	246 <= col index <= 249
+			beq $t7, 1, BORDER_OUTER
+			
+			# BORDER_OUTERMOST
+			sle $t8, $t3, 20
+			sge $t9, $t3, 1000
+			or $t7, $t8, $t9		# if col <= 5 OR col index >= 250
+			beq $t7, 1, BORDER_OUTERMOST
+			
+			# BORDER_INNER
+			seq $t8, $t3, 40
+			seq $t9, $t3, 980
+			or $t7, $t8, $t9		# if col == 10 OR == 245
+			beq $t7, 1, BORDER_INNER
+			
+			# BORDER_OUTER
+			sge $t9, $t3, 44
+			sle $t8, $t3, 976
+			or $t7, $t8, $t9		# if col <= 11 OR col index >= 244
+			beq $t7, 1, BORDER_INNERMOST
+
+
+		BORDER_OUTERMOST:
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint in from top to bottom
+			addi $t5, $0, row_max
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	                j UPDATE_BORDER_COL		# end iteration
+		BORDER_OUTER:
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint starting from row ___
+			addi $t5, $0, 13312		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 13312		# paint starting from row ___
+			addi $t5, $0, 248832		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column	    		
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			addi $t4, $0, 248832		# paint starting from row ___
+			addi $t5, $0, row_max		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	                j UPDATE_BORDER_COL		# end iteration
+		BORDER_INNER:
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint starting from row ___
+			addi $t5, $0, 13312		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 13312		# paint starting from row ___
+			addi $t5, $0, 17408		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint white section
+	    		addi $t1, $0, 0xFFFFFF		# change current color to white
+			addi $t4, $0, 17408		# paint starting from row ___
+			addi $t5, $0, 244736		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 244736		# paint starting from row ___
+			addi $t5, $0, 248832		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			addi $t4, $0, 248832		# paint starting from row ___
+			addi $t5, $0, row_max		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		
+	                j UPDATE_BORDER_COL		# end iteration
+		BORDER_INNERMOST:
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint starting from row ___
+			addi $t5, $0, 13312		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 13312		# paint starting from row ___
+			addi $t5, $0, 17408		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint white section
+	    		addi $t1, $0, 0xFFFFFF		# change current color to white
+			addi $t4, $0, 17408		# paint starting from row ___
+			addi $t5, $0, 18432		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint black selection
+	    		addi $t1, $0, 0			# change current color to black
+			addi $t4, $0, 18432		# paint starting from row ___
+			addi $t5, $0, 243712		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint white section
+	    		addi $t1, $0, 0xFFFFFF		# change current color to white
+			addi $t4, $0, 243712		# paint starting from row ___
+			addi $t5, $0, 244736		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column	    		
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 244736		# paint starting from row ___
+			addi $t5, $0, 248832		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			addi $t4, $0, 248832		# paint starting from row ___
+			addi $t5, $0, row_max		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		
+	                j UPDATE_BORDER_COL		# end iteration
+	
+	UPDATE_BORDER_COL:				# Update column value
+		addi $t3, $t3, column_increment	# add 4 bits (1 byte) to refer to memory address for next row
+		j LOOP_BORDER_COLS
+	
+	# EXIT FUNCTION
+	EXIT_BORDER_PAINT:
+		# Restore $t registers
+		pop_reg_from_stack ($ra)
+		jr $ra					# return to previous instruction
+	
+	# FOR LOOP: (through row)
+	# Paints in row from $t4 to $t5 at some column
+	LOOP_BORDER_ROWS: bge $t4, $t5, EXIT_LOOP_BORDER_ROWS	# branch to UPDATE_BORDER_COL; if row index >= last row index to paint
+		addi $t2, $0, base_address		# Reinitialize t2; temporary address store
+		add $t2, $t2, $t3			# update to specific column from base address
+		add $t2, $t2, $t4			# update to specific row
+		sw $t1, ($t2)				# paint in value
+
+		# Updates for loop index
+		addi $t4, $t4, row_increment		# t4 += row_increment
+		j LOOP_BORDER_ROWS			# repeats LOOP_BORDER_ROWS
+	EXIT_LOOP_BORDER_ROWS:
+		jr $ra
