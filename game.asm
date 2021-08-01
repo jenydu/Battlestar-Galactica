@@ -588,26 +588,26 @@ PAINT_BORDER:
 	                j UPDATE_BORDER_COL		# end iteration
 
 	UPDATE_BORDER_COL:				# Update column value
-		addi $t3, $t3, column_increment	# add 4 bits (1 byte) to refer to memory address for next row
+		addi $t3, $t3, column_increment		# add 4 bits (1 byte) to refer to memory address for next row
 		j LOOP_BORDER_COLS
 
 	# EXIT FUNCTION
 	EXIT_BORDER_PAINT:
 		# Restore $t registers
 		pop_reg_from_stack ($ra)
-		jr $ra					# return to previous instruction
+		jr $ra						# return to previous instruction
 
 	# FOR LOOP: (through row)
 	# Paints in row from $t4 to $t5 at some column
 	LOOP_BORDER_ROWS: bge $t4, $t5, EXIT_LOOP_BORDER_ROWS	# branch to UPDATE_BORDER_COL; if row index >= last row index to paint
-		addi $t2, $0, base_address		# Reinitialize t2; temporary address store
-		add $t2, $t2, $t3			# update to specific column from base address
-		add $t2, $t2, $t4			# update to specific row
-		sw $t1, ($t2)				# paint in value
+		addi $t2, $0, base_address			# Reinitialize t2; temporary address store
+		add $t2, $t2, $t3				# update to specific column from base address
+		add $t2, $t2, $t4				# update to specific row
+		sw $t1, ($t2)					# paint in value
 
 		# Updates for loop index
-		addi $t4, $t4, row_increment		# t4 += row_increment
-		j LOOP_BORDER_ROWS			# repeats LOOP_BORDER_ROWS
+		addi $t4, $t4, row_increment			# t4 += row_increment
+		j LOOP_BORDER_ROWS				# repeats LOOP_BORDER_ROWS
 	EXIT_LOOP_BORDER_ROWS:
 		jr $ra
 #___________________________________________________________________________________________________________________________
