@@ -4,10 +4,11 @@ import cv2
 import numpy as np
 from PIL import Image
 
-label = 'GAME_OVER'
+# Default Parameters
+label = 'GENERAL'
 column_increment = 4
 row_increment = 1024
-by = "row"      # 'row' or 'column'
+by = "row"                      # 'row' or 'column'
 by_inverse = "column"
 
 
@@ -130,7 +131,7 @@ def create_paint_block(color_lst: list, idx_tuple_lst: list, ignore_hex_value=No
 
 
 # HELPER FUNCTION for create_paint_block
-def create_paint_segment(hex_color: str, start_idx: int, end_idx: int, ignore_hex_value=None) -> list:
+def create_paint_segment(hex_color: str, start_idx: int, end_idx: int, ignore_hex_value=None) -> str:
     """Return assembly code for painting in <colors> at <address_offsets>
 
     ==Assumptions==:
@@ -148,10 +149,10 @@ def create_paint_segment(hex_color: str, start_idx: int, end_idx: int, ignore_he
 
     base_code = \
 f"""
-\t\t\t\t\t\taddi $t1, $0, {extend_rgb_hex(hex_color)}		# change current color
-\t\t\t\t\t\taddi $t4, $0, {start_idx_address}		    # paint starting from {by_inverse} ___
-\t\t\t\t\t\taddi $t5, $0, {end_idx_address}		    # ending at {by_inverse} ___
-\t\t\t\t\t\tjal LOOP_{label.upper()}_{by_inverse.upper()}		# paint in
+\t\t\t\t\t\taddi $t1, $0, {extend_rgb_hex(hex_color)}\t\t# change current color
+\t\t\t\t\t\taddi $t4, $0, {start_idx_address}\t\t\t# paint starting from {by_inverse} ___
+\t\t\t\t\t\taddi $t5, $0, {end_idx_address}\t\t\t# ending at {by_inverse} ___
+\t\t\t\t\t\tjal LOOP_{label.upper()}_{by_inverse.upper()}\t\t# paint in
 """
     return base_code
 
@@ -200,10 +201,17 @@ def from_assembly_idx_to_paint_settings(index_info, ignore_color=None):
     return paint_code
 
 
-def create_assembly_code(img_path: str, img_shape: tuple):
+def create_assembly_code(img_path: str, img_shape: tuple, code_name: str, ignore_color=None):
     global by, by_inverse, label, column_increment, row_increment
 
     index_info, background = create_assembly_indices(img_path, img_shape)
+
+    if ignore_color == "background":
+        ignored_color = background
+    elif ignore_color is None:
+        ignored_color = None
+    else:
+        ignored_color = ignore_color
 
     start_code = \
 f"""
@@ -224,7 +232,7 @@ PAINT_{label}:
 
     cond_code = from_assembly_idx_to_conditionals(index_info)
 
-    paint_code = from_assembly_idx_to_paint_settings(index_info, None)
+    paint_code = from_assembly_idx_to_paint_settings(index_info, ignore_color)
 
     end_code = \
 f"""
@@ -256,7 +264,7 @@ f"""
     full_code = start_code + cond_code + paint_code + end_code
 
     # Save produced code to text file
-    with open("C:/Users/Stanley/OneDrive - University of Toronto/UofT/3rd Year/Summer 2021/CSC258/Assignment/produced_code.txt", "w+") as f:
+    with open(f"D:/projects/Shoot-em-up-Game-Project/{code_name}.txt", "w+") as f:
         f.write(full_code)
 
     return full_code
@@ -264,7 +272,15 @@ f"""
 
 
 if __name__ == "__main__":
-    img_path = "C:/Users/Stanley/OneDrive - University of Toronto/UofT/3rd Year/Summer 2021/CSC258/Assignment/game_over.png"
-    img_shape = (160, 251)       # row, column
+    # img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
+    # img_shape = (160, 251)       # row, column
+    # ==PARAMETERS==:
+    label = 'HEART'
+    column_increment = 4
+    row_increment = 1024
+    by = "row"      # 'row' or 'column'
+    by_inverse = "column"
+    img_path = "D:/projects/Shoot-em-up-Game-Project/material/heart.png"
+    img_shape = (9, 9)
 
-    create_assembly_code(img_path, img_shape)
+    print(create_assembly_code(img_path, img_shape, "heart_code"))

@@ -701,3 +701,412 @@ CLEAR_SCREEN:
 		j LOOP_CLEAR_ROW				# repeats LOOP_CLEAR_ROWS
 	EXIT_LOOP_CLEAR_ROW:
 		jr $ra
+#___________________________________________________________________________________________________________________________
+
+#___________________________________________________________________________________________________________________________
+# HELPER FUNCTION: PAINT_HEART
+	# Inputs:
+		# $a2: current health points (min=0, max=5)
+	# Registers Used
+		# $t1: stores current color value
+		# $t2: temporary memory address storage for current unit (in bitmap)
+		# $t3: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $t4: row index for 'for loop' LOOP_OBJ_ROWS
+		# $t5: parameter for subfunction LOOP_OBJ_ROWS. Will store # rows to paint from the center row outwards
+		# $t8-9: used for multiplication operations
+
+PAINT_HEART:
+	    # Push $ra registers to stack
+	    push_reg_to_stack ($ra)
+    
+	    # Initialize registers
+	    add $t1, $0, $0				# initialize current color to black
+	    add $t2, $0, $0				# holds temporary memory address
+	    add $t3, $0, $0				# 'column for loop' indexer
+	    add $t4, $0, $0				# 'row for loop' indexer
+	    add $t5, $0, $0				# last row index to paint in
+
+		LOOP_HEART_ROW: bge $t3, row_max, EXIT_PAINT_HEART
+				# Boolean Expressions: Paint in based on row index
+				HEART_COND:
+						beq $t3, 0, HEART_ROW_0
+						beq $t3, 1024, HEART_ROW_1
+						beq $t3, 2048, HEART_ROW_2
+						beq $t3, 3072, HEART_ROW_3
+						beq $t3, 4096, HEART_ROW_4
+						beq $t3, 5120, HEART_ROW_5
+						beq $t3, 6144, HEART_ROW_6
+						beq $t3, 7168, HEART_ROW_7
+						beq $t3, 8192, HEART_ROW_8
+				HEART_ROW_0:
+						addi $t1, $0, 0x7f7f7f		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 4			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x797979		# change current color
+						addi $t4, $0, 4			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x4c4c4c		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 12			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x666666		# change current color
+						addi $t4, $0, 12			# paint starting from column ___
+						addi $t5, $0, 16			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x7f7f7f		# change current color
+						addi $t4, $0, 16			# paint starting from column ___
+						addi $t5, $0, 20			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x6b6b6b		# change current color
+						addi $t4, $0, 20			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x4c4c4c		# change current color
+						addi $t4, $0, 24			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x747474		# change current color
+						addi $t4, $0, 28			# paint starting from column ___
+						addi $t5, $0, 32			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x7f7f7f		# change current color
+						addi $t4, $0, 32			# paint starting from column ___
+						addi $t5, $0, 36			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_1:
+						addi $t1, $0, 0x777777		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 4			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x6c2a2a		# change current color
+						addi $t4, $0, 4			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xdc3131		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 12			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x9f1616		# change current color
+						addi $t4, $0, 12			# paint starting from column ___
+						addi $t5, $0, 16			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x545353		# change current color
+						addi $t4, $0, 16			# paint starting from column ___
+						addi $t5, $0, 20			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x900000		# change current color
+						addi $t4, $0, 20			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xd80000		# change current color
+						addi $t4, $0, 24			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x741e1e		# change current color
+						addi $t4, $0, 28			# paint starting from column ___
+						addi $t5, $0, 32			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x737373		# change current color
+						addi $t4, $0, 32			# paint starting from column ___
+						addi $t5, $0, 36			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_2:
+						addi $t1, $0, 0x553131		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 4			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xed4343		# change current color
+						addi $t4, $0, 4			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff4d4d		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 12			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff0000		# change current color
+						addi $t4, $0, 12			# paint starting from column ___
+						addi $t5, $0, 16			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xcc0000		# change current color
+						addi $t4, $0, 16			# paint starting from column ___
+						addi $t5, $0, 20			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xfb0000		# change current color
+						addi $t4, $0, 20			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff0000		# change current color
+						addi $t4, $0, 24			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xdb0000		# change current color
+						addi $t4, $0, 28			# paint starting from column ___
+						addi $t5, $0, 32			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x502424		# change current color
+						addi $t4, $0, 32			# paint starting from column ___
+						addi $t5, $0, 36			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_3:
+						addi $t1, $0, 0x512424		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 4			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff3535		# change current color
+						addi $t4, $0, 4			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff0000		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xe50000		# change current color
+						addi $t4, $0, 28			# paint starting from column ___
+						addi $t5, $0, 32			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x4f1717		# change current color
+						addi $t4, $0, 32			# paint starting from column ___
+						addi $t5, $0, 36			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_4:
+						addi $t1, $0, 0x5f5050		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 4			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xc30000		# change current color
+						addi $t4, $0, 4			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff0000		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xfa0000		# change current color
+						addi $t4, $0, 24			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xb40000		# change current color
+						addi $t4, $0, 28			# paint starting from column ___
+						addi $t5, $0, 32			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x564343		# change current color
+						addi $t4, $0, 32			# paint starting from column ___
+						addi $t5, $0, 36			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_5:
+						addi $t1, $0, 0x757575		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 4			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x701e1e		# change current color
+						addi $t4, $0, 4			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xf80000		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 12			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff0000		# change current color
+						addi $t4, $0, 12			# paint starting from column ___
+						addi $t5, $0, 20			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xfe0000		# change current color
+						addi $t4, $0, 20			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xe50000		# change current color
+						addi $t4, $0, 24			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x6c1717		# change current color
+						addi $t4, $0, 28			# paint starting from column ___
+						addi $t5, $0, 32			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x707070		# change current color
+						addi $t4, $0, 32			# paint starting from column ___
+						addi $t5, $0, 36			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_6:
+						addi $t1, $0, 0x7f7f7f		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 4			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x787878		# change current color
+						addi $t4, $0, 4			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x671c1c		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 12			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xff0000		# change current color
+						addi $t4, $0, 12			# paint starting from column ___
+						addi $t5, $0, 20			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xe90000		# change current color
+						addi $t4, $0, 20			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x651414		# change current color
+						addi $t4, $0, 24			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x727272		# change current color
+						addi $t4, $0, 28			# paint starting from column ___
+						addi $t5, $0, 32			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x7f7f7f		# change current color
+						addi $t4, $0, 32			# paint starting from column ___
+						addi $t5, $0, 36			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_7:
+						addi $t1, $0, 0x7f7f7f		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 8			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x7b7b7b		# change current color
+						addi $t4, $0, 8			# paint starting from column ___
+						addi $t5, $0, 12			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x621c1c		# change current color
+						addi $t4, $0, 12			# paint starting from column ___
+						addi $t5, $0, 16			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0xe60000		# change current color
+						addi $t4, $0, 16			# paint starting from column ___
+						addi $t5, $0, 20			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x611616		# change current color
+						addi $t4, $0, 20			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x747474		# change current color
+						addi $t4, $0, 24			# paint starting from column ___
+						addi $t5, $0, 28			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+				HEART_ROW_8:
+						addi $t1, $0, 0x7f7f7f		# change current color
+						addi $t4, $0, 0			# paint starting from column ___
+						addi $t5, $0, 12			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x7a7a7a		# change current color
+						addi $t4, $0, 12			# paint starting from column ___
+						addi $t5, $0, 16			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x423333		# change current color
+						addi $t4, $0, 16			# paint starting from column ___
+						addi $t5, $0, 20			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						addi $t1, $0, 0x747373		# change current color
+						addi $t4, $0, 20			# paint starting from column ___
+						addi $t5, $0, 24			# ending at column ___
+						jal LOOP_HEART_COLUMN		# paint in
+
+						j UPDATE_HEART_ROW
+
+    	UPDATE_HEART_ROW:				# Update row value
+    	    	addi $t3, $t3, row_increment
+	        	j LOOP_HEART_ROW
+
+    	# FOR LOOP: (through column)
+    	# Paints in column from $t4 to $t5 at some row
+    	LOOP_HEART_COLUMN: bge $t4, $t5, EXIT_LOOP_HEART_COLUMN	# branch to UPDATE_HEART_COL; if column index >= last column index to paint
+        		addi $t2, $0, base_address			# Reinitialize t2; temporary address store
+        		add $t2, $t2, $t3				# update to specific row from base address
+        		add $t2, $t2, $t4				# update to specific column
+        		sw $t1, ($t2)					# paint in value
+
+        		# Updates for loop index
+        		addi $t4, $t4, column_increment			# t4 += row_increment
+        		j LOOP_HEART_COLUMN				# repeats LOOP_HEART_ROW
+	    EXIT_LOOP_HEART_COLUMN:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_HEART:
+        		# Restore $t registers
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction
+
+#___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT_GAME_OVER
+	# Registers Used
+		# $t1: stores current color value
+		# $t2: temporary memory address storage for current unit (in bitmap)
+		# $t3: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $t4: row index for 'for loop' LOOP_OBJ_ROWS
+		# $t5: parameter for subfunction LOOP_OBJ_ROWS. Will store # rows to paint from the center row outwards
+		# $t8-9: used for multiplication operations

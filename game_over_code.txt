@@ -27766,6 +27766,7 @@ PAINT_GAME_OVER:
     	# Paints in column from $t4 to $t5 at some row
     	LOOP_GAME_OVER_COLUMN: bge $t4, $t5, EXIT_LOOP_GAME_OVER_COLUMN	# branch to UPDATE_GAME_OVER_COL; if column index >= last column index to paint
         		addi $t2, $0, base_address			# Reinitialize t2; temporary address store
+		addi $t2, $t2, 61440				# shift down 60 rows
         		add $t2, $t2, $t3				# update to specific row from base address
         		add $t2, $t2, $t4				# update to specific column
         		sw $t1, ($t2)					# paint in value
