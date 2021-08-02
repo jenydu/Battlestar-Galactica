@@ -120,6 +120,8 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 INITIALIZE:
 lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
 
+jal PAINT_GAME_OVER
+
 # Paint Border
 jal PAINT_BORDER
 
@@ -472,6 +474,14 @@ PAINT_OBJECT:
 		addi $t4, $t4, row_increment		# t4 += row_increment
 		j LOOP_OBJ_ROWS				# repeats LOOP_OBJ_ROWS
 #___________________________________________________________________________________________________________________________
+MOVE_OBJECT:
+	addi $a1, $0, 0
+	jal PAINT_OBJECT
+	subu $a0, $a0, column_increment
+	addi $a1, $0, 1
+	jal PAINT_OBJECT
+	jr $ra
+#___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT BORDER
 	# Registers Used
 		# $t1: parameter for LOOP_BORDER_ROWS. Stores color value
@@ -641,10 +651,3 @@ PAINT_BORDER:
 	EXIT_LOOP_BORDER_ROWS:
 		jr $ra
 #___________________________________________________________________________________________________________________________
-MOVE_OBJECT:
-	addi $a1, $0, 0
-	jal PAINT_OBJECT
-	subu $a0, $a0, column_increment
-	addi $a1, $0, 1
-	jal PAINT_OBJECT
-	jr $ra
