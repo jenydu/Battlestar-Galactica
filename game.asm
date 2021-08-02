@@ -483,7 +483,7 @@ PAINT_OBJECT:
 		# $t7: stores result from logical operations
 		# $t8-9: used for logical operations
 PAINT_BORDER:
-	# Push $t registers to stack
+	# Push $ra to stack
 	push_reg_to_stack ($ra)
 
 	# Initialize registers
