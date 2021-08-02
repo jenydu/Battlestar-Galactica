@@ -265,6 +265,6 @@ f"""
 
 if __name__ == "__main__":
     img_path = "C:/Users/Stanley/OneDrive - University of Toronto/UofT/3rd Year/Summer 2021/CSC258/Assignment/game_over.png"
-    img_shape = (66, 350)       # row, column
+    img_shape = (160, 251)       # row, column
 
     create_assembly_code(img_path, img_shape)
