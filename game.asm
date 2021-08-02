@@ -485,14 +485,14 @@ PAINT_OBJECT:
 PAINT_BORDER:
 	# Push $ra to stack
 	push_reg_to_stack ($ra)
-
+        
 	# Initialize registers
 	add $t1, $0, $0				# initialize current color to black
 	add $t2, $0, $0				# holds temporary memory address
 	add $t3, $0, $0				# 'column for loop' indexer
 	add $t4, $0, $0				# 'row for loop' indexer
 	add $t5, $0, $0				# last row index to paint in
-
+                
 	LOOP_BORDER_COLS: bge $t3, column_max, EXIT_BORDER_PAINT
 		# Boolean Expressions: Paint in border piece based on column index
 		BORDER_COND:
@@ -525,7 +525,7 @@ PAINT_BORDER:
 			sle $t8, $t3, 976
 			or $t7, $t8, $t9		# if col <= 11 OR col index >= 244
 			beq $t7, 1, BORDER_INNERMOST
-
+                
 
 		BORDER_OUTERMOST:
 			addi $t1, $0, 0x868686		# change current color to dark gray
