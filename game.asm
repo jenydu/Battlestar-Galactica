@@ -123,7 +123,6 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
 INITIALIZE:
-lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
 
 # ==PARAMETERS==
 addi $s7, $zero, 0				# counter for how many main loop the game has looped
@@ -136,7 +135,8 @@ jal PAINT_BORDER
 jal UPDATE_HEALTH
 # Paint Plane
 addi $a1, $zero, 1				# set to paint
-addi $a0, $0, object_base_address
+addi $a0, $0, object_base_address		# start painting plane from top-left border
+addi $a0, $a0, 96256				# center plane in 
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
 
@@ -444,7 +444,7 @@ EXIT_KEY_PRESS:		j AVATAR_MOVE			# avatar finished moving, move to next stage
 		# $v0: used to create random integer via syscall
 		# $s0: used to hold column/row offset
 		# $s1: used to hold column/row offset
-		# $s3: accumulator of random offset from column and height
+		# $s2: accumulator of random offset from column and height
 	# Outputs:
 		# $v0: stores return value for random address offset
 RANDOM_OFFSET:
@@ -453,7 +453,7 @@ RANDOM_OFFSET:
 	push_reg_to_stack ($a1)
 	push_reg_to_stack ($s0)
 	push_reg_to_stack ($s1)
-	push_reg_to_stack ($s3)
+	push_reg_to_stack ($s2)
 	
 	# Randomly generate row value
 	li $v0, 42 		# Specify random integer
@@ -463,7 +463,7 @@ RANDOM_OFFSET:
 
 	addi $s0, $0, row_increment	# store row increment in $s0
 	mult $a0, $s0			# multiply row index to row increment
-	mflo $s3			# store result in $s3
+	mflo $s2			# store result in $s2
 
 	# Randomly generate col value
 	li $v0, 42 		# Specify random integer
@@ -474,12 +474,12 @@ RANDOM_OFFSET:
 	addi $s0, $0, column_increment	# store column increment in $s0
 	mult $a0, $s0			# multiply column index to column increment
 	mflo $s1			# store result in t9
-	add $s3, $s3, $s1		# add column address offset to base address
+	add $s2, $s2, $s1		# add column address offset to base address
 
-	add $v0, $s3, $0		# store return value (address offset) in $v0
+	add $v0, $s2, $0		# store return value (address offset) in $v0
 	
 	# Restore used registers from stack
-	pop_reg_from_stack ($s3)
+	pop_reg_from_stack ($s2)
 	pop_reg_from_stack ($s1)
 	pop_reg_from_stack ($s0)
 	pop_reg_from_stack ($a1)
