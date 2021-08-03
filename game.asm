@@ -141,7 +141,7 @@ GENERATE_OBSTACLES:
 	# Used Registers
 		# $a0, $a1, $a2: PAINT_OBJECT parameters
 		# $t0: temporarily stores memory address word increment (4). Also used in multiplication
-		# $s0: holds current object base address
+		# $t1: holds current object base address
 		# $s4: for loop indexer over the number of obstacles
 		# $s6: total number of obstacles
 	addi $s4, $zero, 0		# i = 0		# initialize for loop indexer
@@ -151,14 +151,17 @@ GENERATE_OBSTACLES:
 			addi $a0, $0, object_base_address	# PAINT_OBJECT param. Load default object_base_address
 			addi $a1, $zero, 1			# PAINT_OBJECT param. Set to paint
 			addi $a2, $v0, 0			# PAINT_OBJECT param. Random address offset
-			jal PAINT_OBJECT
+			# jal PAINT_OBJECT
 
 			# Store current obstacle address to memory
-			add $s0, $a0, $a2			# store current object base address (default + random offset)
+			add $t1, $a0, $a2			# store current object base address (default + random offset)
 			addi $t0, $0, 4				# initialize $t0
 			mult $s4, $t0				# multiply current for loop index by increment to get memory address ofsset
 			mflo $t0				# store memory address offset in $t0
-			sw $s0, obstacle_positions($t0)		# save obstacle address into the array
+			sw $t1, obstacle_positions($t0)		# save obstacle address into the array
+			
+			sw 
+			
 			# Update loop
 			addi $s4, $s4, 1			# i += 1
 			j obstacle_gen_loop
