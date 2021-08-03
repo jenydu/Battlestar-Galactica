@@ -108,8 +108,13 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 		subi $s1, $address, display_base_address	# subtract base display address (0x10008000)
 		addi $s2, $zero, row_increment
 		div $s1, $s2				# divide by row increment
-		mfhi $col_store				# remainder (which column it is on)
-		mflo $row_store				# quotient (which row it is on)
+		mflo $row_store				# quotient = row index
+		
+		addi $s2, $zero, column_increment
+		mfhi $s1				# store remainder back in $s1. NOTE: remainder = column_increment * column index
+		div $s1, $s2				# divide by column increment
+		mflo $col_store				# quotient = column index
+		
 
 		# Restore $s0-1 values from stack.
 		pop_reg_from_stack ($s2)
@@ -151,7 +156,7 @@ GENERATE_OBSTACLES:
 			addi $a0, $0, object_base_address	# PAINT_OBJECT param. Load default object_base_address
 			addi $a1, $zero, 1			# PAINT_OBJECT param. Set to paint
 			addi $a2, $v0, 0			# PAINT_OBJECT param. Random address offset
-			# jal PAINT_OBJECT
+			jal PAINT_OBJECT
 
 			# Store current obstacle address to memory
 			add $t1, $a0, $a2			# store current object base address (default + random offset)
@@ -399,7 +404,7 @@ check_border:		la $t0, ($a0)			# load ___ base address to $t0
 			beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
 			j OBSTACLE_MOVE			# invalid key, exit the input checking stage
 
-respond_to_a:		ble $t5, 44, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
+respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
 			j draw_new_avatar
 respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
@@ -408,7 +413,7 @@ respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, can
 respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
 			j draw_new_avatar
-respond_to_d:		bgt $t5, 864, EXIT_KEY_PRESS
+respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
 			j draw_new_avatar
 
