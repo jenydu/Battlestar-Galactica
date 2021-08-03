@@ -139,8 +139,13 @@ jal PAINT_PLANE					# paint plane at $a0
 
 
 GENERATE_OBSTACLES:
-	# Initialize registers
-	addi $s4, $zero, 0		# i = 0		# for loop indexer
+	# Used Registers
+		# $a0, $a1, $a2: PAINT_OBJECT parameters
+		# $t0: temporarily stores memory address word increment (4). Also used in multiplication
+		# $s0: holds current object base address
+		# $s4: for loop indexer over the number of obstacles
+		# $s6: total number of obstacles
+	addi $s4, $zero, 0		# i = 0		# initialize for loop indexer
 
 	obstacle_gen_loop:	bge $s4, $s6, end_loop			# exit loop when i >= 3
 			jal RANDOM_OFFSET			# store random address offset in $v0
@@ -151,10 +156,10 @@ GENERATE_OBSTACLES:
 
 			# Store current obstacle address to memory
 			add $s0, $a0, $a2			# store current object base address (default + random offset)
-			addi $t0, $0, 4				# store memory address word increment (4)
+			addi $t0, $0, 4				# initialize $t0
 			mult $s4, $t0				# multiply current for loop index by increment to get memory address ofsset
-			mflo $s5				# store offset in $s5
-			sw $s0, obstacle_positions($s5)		# save obstacle address into the array
+			mflo $t0				# store memory address offset in $t0
+			sw $s0, obstacle_positions($t0)		# save obstacle address into the array
 			# Update loop
 			addi $s4, $s4, 1			# i += 1
 			j obstacle_gen_loop
@@ -162,7 +167,7 @@ GENERATE_OBSTACLES:
 	end_loop:
 
 pop_reg_from_stack ($a0)			# restore current plane address from stack
-
+j EXIT
 # main game loop
 MAIN_LOOP:
 
