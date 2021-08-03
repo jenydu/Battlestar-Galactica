@@ -126,14 +126,14 @@ addi $s6, $zero, 3				# max. obstacles at once
 addi $s0, $0, 3					# starting number of hearts
 
 # Paint Border
-# jal PAINT_BORDER
+jal PAINT_BORDER
 # Paint Health
-# jal UPDATE_HEALTH
+jal UPDATE_HEALTH
 # Paint Plane
-# addi $a1, $zero, 1				# set to paint
-# addi $a0, $0, object_base_address
-# push_reg_to_stack ($a0)				# store current plane address in stack
-# jal PAINT_PLANE					# paint plane at $a0
+addi $a1, $zero, 1				# set to paint
+addi $a0, $0, object_base_address
+push_reg_to_stack ($a0)				# store current plane address in stack
+jal PAINT_PLANE					# paint plane at $a0
 
 
 
@@ -159,8 +159,6 @@ GENERATE_OBSTACLES:
 			mult $s4, $t0				# multiply current for loop index by increment to get memory address ofsset
 			mflo $t0				# store memory address offset in $t0
 			sw $t1, obstacle_positions($t0)		# save obstacle address into the array
-			
-			sw 
 			
 			# Update loop
 			addi $s4, $s4, 1			# i += 1
