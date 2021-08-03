@@ -94,11 +94,14 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 		addi $sp, $sp, 4			# de-allocate space;	increment by 4
 	.end_macro
 
-	# MACRO:  Get column and row index from current base address
+	# MACRO: Get column and row index from current base address
+		# Inputs
+			# $address: register containing address
+			# $col_store: register to store column index
+			# $row_store: register to store row index
 		# Registers Used
 			# $s1-2: for temporary operations
-			# $col_store: to store column index
-			# $row_store: to store row index
+
 	.macro calculate_indices ($address, $col_store, $row_store)
 		# Store curr. $s0-1 values in stack.
 		push_reg_to_stack ($s1)
@@ -115,10 +118,36 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 		div $s1, $s2				# divide by column increment
 		mflo $col_store				# quotient = column index
 		
-
 		# Restore $s0-1 values from stack.
 		pop_reg_from_stack ($s2)
 		pop_reg_from_stack ($s1)
+	.end_macro
+	
+	# MACRO: Compute boolean if pixel indices stored in registers $col_index and $row_index are within the border.
+		# Inputs
+			# $col: register containing column index
+			# $row: register containing row index
+			# $bool_store: register to store boolean output
+		# Registers Used
+			# $s0-2: used in logical operations
+	.macro within_borders($col, $row, $bool_store)
+		# Store current values of $s0-2 to stack
+		push_reg_to_stack ($s0)
+		push_reg_to_stack ($s1)
+		push_reg_to_stack ($s2)
+		# Column index in (11, 216)
+		sgt $s0, $col, 11
+		slti $s1, $col, 216
+		and $s2, $s0, $s1			# 11 < col < 216
+		# Row index in (18, 206)
+		sgt $s0, $row, 18
+		slti $s1, $row, 206
+		and $bool_store, $s0, $s1		# 18 < row < 206
+		and $bool_store, $bool_store, $s2	# make sure both inequalities are true
+		# Restore $s0-1 values from stack.
+		pop_reg_from_stack ($s2)
+		pop_reg_from_stack ($s1)
+		pop_reg_from_stack ($s0)
 	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
@@ -497,7 +526,7 @@ RANDOM_OFFSET:
 		# $t3: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
 		# $t4: row index for 'for loop' LOOP_OBJ_ROWS
 		# $t5: parameter for subfunction LOOP_OBJ_ROWS. Will store # rows to paint from the center row outwards
-		# $t8-9: used for multiplication operations
+		# $t8-9: used for multiplication/logical operations
 PAINT_OBJECT:
 	# Store used registers to stack
 	push_reg_to_stack ($t1)
@@ -542,8 +571,13 @@ PAINT_OBJECT:
 		add $t2, $t2, $t3			# update to specific column
 		add $t2, $t2, $t4			# update to specific row
 		add $t2, $t2, $a2			# update to random offset
-		sw $t1, ($t2)				# paint
-
+		
+		calculate_indices ($t2, $t8, $t9)	# get address indices. Store in $t8 and $t9
+		within_borders ($t8, $t9, $t9)		# check within borders. Store boolean result in $t9 
+		beq $t9, 1, SKIP_OBJ_PAINT		# skip painting pixel if out of border
+		
+		sw $t1, ($t2)				# paint pixel
+		SKIP_OBJ_PAINT:
 		# Updates for loop index
 		addi $t4, $t4, row_increment		# t4 += row_increment
 		j LOOP_OBJ_ROWS				# repeats LOOP_OBJ_ROWS
