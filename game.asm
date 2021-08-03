@@ -169,7 +169,7 @@ MAIN_LOOP:
 		add $s1, $a0, $0		# temporarily store plane's base address
 
 	OBSTACLE_MOVE:
-		la $s5, obstacle_positions	# $t9 holds the address of obstacle_positions
+		la $s5, obstacle_positions	# $s5 holds the address of obstacle_positions
 		addi $s4, $zero, 0		# i = 0
 
 	obstacle_move_loop:				# move each obstacle one pixel left in a loop
@@ -212,6 +212,16 @@ EXIT:	li $v0, 10
 		# $t5: parameter for subfunction LOOP_PLANE_ROWS. Will store # rows to paint from the center row outwards
 		# $t8-9: used for multiplication operations
 PAINT_PLANE:
+	# Store used registers to stack
+	# Store current state of used registers
+	push_reg_to_stack ($t1)
+	push_reg_to_stack ($t2)
+	push_reg_to_stack ($t3)
+	push_reg_to_stack ($t4)
+	push_reg_to_stack ($t5)
+	push_reg_to_stack ($t8)
+	push_reg_to_stack ($t9)
+
 	# Initialize registers
 	add $t1, $0, $0				# initialize current color to black
 	add $t2, $0, $0				# holds temporary memory address
@@ -338,6 +348,14 @@ PAINT_PLANE:
 			j LOOP_PLANE_COLS		# repeats LOOP_PLANE_COLS
 
 	EXIT_PLANE_PAINT:
+		# Restore registers from stack
+		pop_reg_from_stack ($t9)
+		pop_reg_from_stack ($t8)
+		pop_reg_from_stack ($t5)
+		pop_reg_from_stack ($t4)
+		pop_reg_from_stack ($t3)
+		pop_reg_from_stack ($t2)
+		pop_reg_from_stack ($t1)
 		jr $ra					# return to previous instruction before PAINT_PLANE was called.
 
 	# FOR LOOP: (through row)
