@@ -119,12 +119,16 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 .main
 INITIALIZE:
 lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
-addi $s0, $0, 3					# starting number of hearts
-jal UPDATE_HEALTH			# update health on each loop
 
+# ==PARAMETERS==
+addi $s7, $zero, 0				# counter for how many main loop the game has looped
+addi $s6, $zero, 3				# max. obstacles at once
+addi $s0, $0, 3					# starting number of hearts
 
 # Paint Border
 jal PAINT_BORDER
+# Paint Health
+jal UPDATE_HEALTH
 # Paint Plane
 addi $a1, $zero, 1				# set to paint
 addi $a0, $0, base_address 			# reload base address for plane
@@ -133,9 +137,6 @@ addi $a0, $a0, 18432				# add min row
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
 
-# ==PARAMETERS==
-addi $s7, $zero, 0				# counter for how many main loop the game has looped
-addi $s6, $zero, 3				# max. obstacles at once
 
 
 GENERATE_OBSTACLES:
@@ -709,8 +710,8 @@ CLEAR_SCREEN:
 	# Inputs:
 		# $s0: Current number of health points (min = 0, max = 5)
 	# Registers Used:
-		# $a1: whether to paint in or erase heart
 		# $a2: address offset
+		# $a3: whether to paint in or erase heart
 		# $t0: for loop indexer
 		# $t1: used to store column_increment temporarily
 		# $t2: temporary storage for manipulating number of health points
@@ -719,8 +720,8 @@ UPDATE_HEALTH:
 	# Store current state of used registers
 	push_reg_to_stack ($ra)
 	push_reg_to_stack ($s0)
-	push_reg_to_stack ($a1)
 	push_reg_to_stack ($a2)
+	push_reg_to_stack ($a3)
 	push_reg_to_stack ($t0)
 	push_reg_to_stack ($t1)
 	push_reg_to_stack ($t2)
@@ -730,22 +731,25 @@ UPDATE_HEALTH:
 	push_reg_to_stack ($t8)
 	push_reg_to_stack ($t9)
 	
-	# Initialize registers
+	# Initialize for loop indexer
 	add $t0, $0, $0
-	addi $t1, $0, column_increment	# store column increment temporarily
-	add $a2, $0, $0
 	# Loop 5 times through all possible hearts. Subtract 1 from number of hearts each time.
 	LOOP_HEART: beq $t0, 5, EXIT_UPDATE_HEALTH	# branch if $t0 = 5
-		mult $t0, $t1			# address offset = current index * column_increment
+		addi $t1, $0, column_increment	# store column increment temporarily
+		addi $t2, $0, 12			
+		mult $t1, $t2
+		mflo $t1			
+		mult $t0, $t1			# address offset = current index * (3 * column_increment)
 		mflo $a2			# param. for helper function to add column offset
 		
 		add $t2, $s0, $0		# store number of hit points
 		sub $t2, $t2, $t0		# subtract number of hit points by current indexer
-		sle $a1, $t2, 0			# param. for helper function to paint/erase heart. If number of hearts > curr index, paint in heart. Otherwise, erase.		
+		sge $a3, $t2, 1			# param. for helper function to paint/erase heart. If number of hearts > curr index, paint in heart. Otherwise, erase.		
 		jal PAINT_HEART			# paint/erase heart
 		
 		# Update for loop indexer
 		addi $t0, $t0, 1		# $t0 = $t0 + 1
+		j LOOP_HEART
 	# Restore previouos state of used registers
 	EXIT_UPDATE_HEALTH:
 		pop_reg_from_stack ($t9)
@@ -756,26 +760,26 @@ UPDATE_HEALTH:
 		pop_reg_from_stack ($t2)
 		pop_reg_from_stack ($t1)
 		pop_reg_from_stack ($t0)
+		pop_reg_from_stack ($a3)
 		pop_reg_from_stack ($a2)
-		pop_reg_from_stack ($a1)
 		pop_reg_from_stack ($s0)
 		pop_reg_from_stack ($ra)
 		jr $ra
 #___________________________________________________________________________________________________________________________
 # HELPER FUNCTION: PAINT_HEART
 	# Inputs:
-		# $a1: whether to paint in or erase heart
 		# $a2: address offset 
+		# $a3: whether to paint in or erase heart
 	# Registers Used
 		# $s0: stores current color value
 		# $s1: temporary memory address storage for current unit (in bitmap)
 		# $s2: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
-		# $s3: row index for 'for loop' LOOP_OBJ_ROWS
-		# $s4: parameter for subfunction LOOP_OBJ_ROWS. Will store # rows to paint from the center row outwards
+		# $s3: starting row index for 'for loop' LOOP_OBJ_ROWS
+		# $s4: ending row index for 'for loop' LOOP_OBJ_ROWS
 		# $t8-9: used for multiplication operations
 
 PAINT_HEART:
-	    # Push $ra registers to stack
+	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
 	    push_reg_to_stack ($s0)
 	    push_reg_to_stack ($s1)
@@ -796,12 +800,14 @@ PAINT_HEART:
 						beq $s2, 0, HEART_ROW_0
 						beq $s2, 1024, HEART_ROW_1
 						beq $s2, 2048, HEART_ROW_2
-						beq $t3, 3072, HEART_ROW_3
-						beq $t3, 4096, HEART_ROW_4
-						beq $t3, 5120, HEART_ROW_5
-						beq $t3, 6144, HEART_ROW_6
-						beq $t3, 7168, HEART_ROW_7
-						beq $t3, 8192, HEART_ROW_8
+						beq $s2, 3072, HEART_ROW_3
+						beq $s2, 4096, HEART_ROW_4
+						beq $s2, 5120, HEART_ROW_5
+						beq $s2, 6144, HEART_ROW_6
+						beq $s2, 7168, HEART_ROW_7
+						beq $s2, 8192, HEART_ROW_8
+						
+						j UPDATE_HEART_ROW		# end iteration if not at specified index
 				HEART_ROW_0:
 						addi $s0, $0, 0x7f7f7f		# change current color
 						addi $s3, $0, 0			# paint starting from column ___
@@ -1157,8 +1163,8 @@ PAINT_HEART:
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
         		
-        		# If param. $a1 specifies to erase, then change color value stored in $s0
-        		IF_ERASE: beq $a1, 1, PAINT_HEART_PIXEL
+        		# If param. $a3 specifies to erase, then change color value stored in $s0
+        		IF_ERASE: beq $a3, 1, PAINT_HEART_PIXEL
         			addi $s0, $0, 0x868686
         		
         		PAINT_HEART_PIXEL:	sw $s0, ($s1)				# paint in value
@@ -1170,7 +1176,7 @@ PAINT_HEART:
 
     	# EXIT FUNCTION
        	EXIT_PAINT_HEART:
-        		# Restore $t registers
+        		# Restore used registers
 	    		pop_reg_from_stack ($s4)
 	    		pop_reg_from_stack ($s3)
 	    		pop_reg_from_stack ($s2)

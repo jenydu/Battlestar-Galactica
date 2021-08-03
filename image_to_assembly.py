@@ -3,6 +3,7 @@ from itertools import product
 import cv2
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 # Default Parameters
 label = 'GENERAL'
@@ -47,6 +48,8 @@ def create_assembly_indices(img_path: str, img_shape: tuple, skip_background=Tru
     # Resize image if over img_shape
     if img.shape[0] > img_shape[0] or img.shape[1] > img_shape[1]:
         img = cv2.resize(img, (img_shape[1], img_shape[0]), interpolation=cv2.INTER_AREA)
+        plt.imshow(img)
+        plt.show()
 
     # Make dark pixels black
     img[img < 20] = 0
@@ -135,9 +138,9 @@ def create_paint_segment(hex_color: str, start_idx: int, end_idx: int, ignore_he
     """Return assembly code for painting in <colors> at <address_offsets>
 
     ==Assumptions==:
-        - $t1 holds color value
-        - $t4 holds starting index for slicing along <by_inverse>
-        - $t5 holds exclusive end index for slicing along <by_inverse>
+        - $s0 holds color value
+        - $s3 holds starting index for slicing along <by_inverse>
+        - $s4 holds exclusive end index for slicing along <by_inverse>
     """
     global by, by_inverse, label, column_increment, row_increment
     if by == "row":
@@ -149,9 +152,9 @@ def create_paint_segment(hex_color: str, start_idx: int, end_idx: int, ignore_he
 
     base_code = \
 f"""
-\t\t\t\t\t\taddi $t1, $0, {extend_rgb_hex(hex_color)}\t\t# change current color
-\t\t\t\t\t\taddi $t4, $0, {start_idx_address}\t\t\t# paint starting from {by_inverse} ___
-\t\t\t\t\t\taddi $t5, $0, {end_idx_address}\t\t\t# ending at {by_inverse} ___
+\t\t\t\t\t\taddi $s0, $0, {extend_rgb_hex(hex_color)}\t\t# change current color
+\t\t\t\t\t\taddi $s3, $0, {start_idx_address}\t\t\t# paint starting from {by_inverse} ___
+\t\t\t\t\t\taddi $s4, $0, {end_idx_address}\t\t\t# ending at {by_inverse} ___
 \t\t\t\t\t\tjal LOOP_{label.upper()}_{by_inverse.upper()}\t\t# paint in
 """
     return base_code
@@ -177,8 +180,9 @@ def from_assembly_idx_to_conditionals(index_info):
             continue
 
         cond_code += \
-f"""\t\t\t\t\t\tbeq $t3, {idx * increment}, {label.upper()}_{by.upper()}_{idx}
+f"""\t\t\t\t\t\tbeq $s2, {idx * increment}, {label.upper()}_{by.upper()}_{idx}
 """
+    cond_code += f"\n\t\t\t\t\t\tj UPDATE_{label.upper()}_{by.upper()}\n"
     return cond_code
 
 
@@ -216,17 +220,22 @@ def create_assembly_code(img_path: str, img_shape: tuple, code_name: str, ignore
     start_code = \
 f"""
 PAINT_{label}:
-	    # Push $ra registers to stack
+	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
     
 	    # Initialize registers
-	    add $t1, $0, $0				# initialize current color to black
-	    add $t2, $0, $0				# holds temporary memory address
-	    add $t3, $0, $0				# 'column for loop' indexer
-	    add $t4, $0, $0				# 'row for loop' indexer
-	    add $t5, $0, $0				# last row index to paint in
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0				# 'column for loop' indexer
+	    add $s3, $0, $0				# 'row for loop' indexer
+	    add $s4, $0, $0				# last row index to paint in
 
-\t\tLOOP_{label.upper()}_{by.upper()}: bge $t3, {by}_max, EXIT_PAINT_{label.upper()}
+\t\tLOOP_{label.upper()}_{by.upper()}: bge $s2, {by}_max, EXIT_PAINT_{label.upper()}
 \t\t\t\t# Boolean Expressions: Paint in based on {by} index
 """
 
@@ -237,26 +246,31 @@ PAINT_{label}:
     end_code = \
 f"""
     	UPDATE_{label.upper()}_{by.upper()}:				# Update {by} value
-    	    	addi $t3, $t3, {by}_increment
+    	    	addi $s2, $s2, {by}_increment
 	        	j LOOP_{label.upper()}_{by.upper()}
 
     	# FOR LOOP: (through {by_inverse})
-    	# Paints in {by_inverse} from $t4 to $t5 at some {by}
-    	LOOP_{label.upper()}_{by_inverse.upper()}: bge $t4, $t5, EXIT_LOOP_{label}_{by_inverse.upper()}	# branch to UPDATE_{label}_COL; if {by_inverse} index >= last {by_inverse} index to paint
-        		addi $t2, $0, base_address			# Reinitialize t2; temporary address store
-        		add $t2, $t2, $t3				# update to specific {by} from base address
-        		add $t2, $t2, $t4				# update to specific {by_inverse}
-        		sw $t1, ($t2)					# paint in value
+    	# Paints in {by_inverse} from $s3 to $s4 at some {by}
+    	LOOP_{label.upper()}_{by_inverse.upper()}: bge $s3, $s4, EXIT_LOOP_{label}_{by_inverse.upper()}	# branch to UPDATE_{label}_COL; if {by_inverse} index >= last {by_inverse} index to paint
+        		addi $s1, $0, base_address			# Reinitialize t2; temporary address store
+        		add $s1, $s1, $s2				# update to specific {by} from base address
+        		add $s1, $s1, $s3				# update to specific {by_inverse}
+        		sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
-        		addi $t4, $t4, {by_inverse}_increment			# t4 += {by}_increment
+        		addi $s3, $s3, {by_inverse}_increment			# t4 += {by}_increment
         		j LOOP_{label}_{by_inverse.upper()}				# repeats LOOP_{label}_{by.upper()}
 	    EXIT_LOOP_{label}_{by_inverse.upper()}:
 		        jr $ra
 
     	# EXIT FUNCTION
        	EXIT_PAINT_{label.upper()}:
-        		# Restore $t registers
+        		# Restore used registers
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
         		pop_reg_from_stack ($ra)
         		jr $ra						# return to previous instruction
 """
