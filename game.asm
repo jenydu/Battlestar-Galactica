@@ -610,7 +610,7 @@ PAINT_BORDER:
 			or $t7, $t8, $t9		# if col <= 11 OR col index >= 244
 			beq $t7, 1, BORDER_INNERMOST
 
-
+		# Paint Settings
 		BORDER_OUTERMOST:
 			addi $t1, $0, 0x868686		# change current color to dark gray
 			add $t4, $0, $0			# paint in from top to bottom
