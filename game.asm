@@ -117,7 +117,6 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
-.main
 INITIALIZE:
 lw $a0, displayAddress 				# load base address of BitMap to temp. base address for plane
 
@@ -127,14 +126,14 @@ addi $s6, $zero, 3				# max. obstacles at once
 addi $s0, $0, 3					# starting number of hearts
 
 # Paint Border
-jal PAINT_BORDER
+# jal PAINT_BORDER
 # Paint Health
-jal UPDATE_HEALTH
+# jal UPDATE_HEALTH
 # Paint Plane
-addi $a1, $zero, 1				# set to paint
-addi $a0, $0, object_base_address
-push_reg_to_stack ($a0)				# store current plane address in stack
-jal PAINT_PLANE					# paint plane at $a0
+# addi $a1, $zero, 1				# set to paint
+# addi $a0, $0, object_base_address
+# push_reg_to_stack ($a0)				# store current plane address in stack
+# jal PAINT_PLANE					# paint plane at $a0
 
 
 
@@ -167,7 +166,7 @@ GENERATE_OBSTACLES:
 	end_loop:
 
 pop_reg_from_stack ($a0)			# restore current plane address from stack
-j EXIT
+
 # main game loop
 MAIN_LOOP:
 
