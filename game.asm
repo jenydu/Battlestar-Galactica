@@ -48,7 +48,8 @@
 
 .eqv plane_center 15360			# offset for center of plane. = 15 bytes * row_increment
 
-.eqv base_address 0x10008000		# display base address
+.eqv display_base_address 0x10008000		# display base address
+.eqv object_base_address 0x1000C82C		# starting point for all objects and plane
 #___________________________________________________________________________________________________________________________
 # ==VARIABLES==:
 .data
@@ -104,7 +105,7 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 		push_reg_to_stack ($s2)
 
 		# Calculate indices
-		subi $s1, $address, base_address	# subtract base display address (0x10008000)
+		subi $s1, $address, display_base_address	# subtract base display address (0x10008000)
 		addi $s2, $zero, row_increment
 		div $s1, $s2				# divide by row increment
 		mfhi $col_store				# remainder (which column it is on)
@@ -131,30 +132,31 @@ jal PAINT_BORDER
 jal UPDATE_HEALTH
 # Paint Plane
 addi $a1, $zero, 1				# set to paint
-addi $a0, $0, base_address 			# reload base address for plane
-addi $a0, $a0, 44				# add min column
-addi $a0, $a0, 18432				# add min row
+addi $a0, $0, object_base_address
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
 
 
 
 GENERATE_OBSTACLES:
-			la $s5, obstacle_positions	# $t9 holds the address of obstacle_positions
-			addi $s4, $zero, 0		# i = 0
+	# Initialize registers
+	addi $s4, $zero, 0		# i = 0		# for loop indexer
 
-	obstacle_gen_loop:
-			bge $s4, $s6, end_loop		# exit loop when i >= 3
-			addi $a0, $0, base_address	# load base address of BitMap to temp. base address for plane
-			jal RANDOM_OFFSET
-			addi $a1, $zero, 1		# set to paint
+	obstacle_gen_loop:	bge $s4, $s6, end_loop			# exit loop when i >= 3
+			jal RANDOM_OFFSET			# store random address offset in $v0
+			addi $a0, $0, object_base_address	# PAINT_OBJECT param. Load default object_base_address
+			addi $a1, $zero, 1			# PAINT_OBJECT param. Set to paint
+			addi $a2, $v0, 0			# PAINT_OBJECT param. Random address offset
 			jal PAINT_OBJECT
-			addi $s0, $a0, 0		# store previous randomly placed object base address
 
-			sw $a0, ($s5)			# save obstacle address into the array
-			add $s5, $s5, 4   		# increment array address pointer by 4
-
-			addi $s4, $s4, 1		# i++
+			# Store current obstacle address to memory
+			add $s0, $a0, $a2			# store current object base address (default + random offset)
+			addi $t0, $0, 4				# store memory address word increment (4)
+			mult $s4, $t0				# multiply current for loop index by increment to get memory address ofsset
+			mflo $s5				# store offset in $s5
+			sw $s0, obstacle_positions($s5)		# save obstacle address into the array
+			# Update loop
+			addi $s4, $s4, 1			# i += 1
 			j obstacle_gen_loop
 
 	end_loop:
@@ -173,17 +175,17 @@ MAIN_LOOP:
 		addi $s4, $zero, 0		# i = 0
 
 	obstacle_move_loop:				# move each obstacle one pixel left in a loop
-			bge $s4, $s6, end_move_loop		# exit loop when i >= 3
+		bge $s4, $s6, end_move_loop		# exit loop when i >= 3
 
-			add $s2, $a0, 0			# save avatar address to $s2 (temp.)
-			lw $a0, 0($s5)			# load the address of the current obstacle into $a0
-			jal MOVE_OBJECT
-			sw $a0, ($s5)
-			add $s5, $s5, 4   		# increment array address pointer by 4
+		add $s2, $a0, 0			# save avatar address to $s2 (temp.)
+		lw $a0, 0($s5)			# load the address of the current obstacle into $a0
+		jal MOVE_OBJECT
+		sw $a0, ($s5)
+		add $s5, $s5, 4   		# increment array address pointer by 4
 
-			add $a0, $s2, 0			# set $a0 back to avatar address
-			addi $s4, $s4, 1		# i++
-			j obstacle_move_loop
+		add $a0, $s2, 0			# set $a0 back to avatar address
+		addi $s4, $s4, 1		# i++
+		j obstacle_move_loop
 
 	end_move_loop:
 
@@ -425,40 +427,60 @@ erase_everything:	jr $ra
 
 EXIT_KEY_PRESS:		j AVATAR_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
-# FUNCTION: RANDOMIZE BASE ADDRESS
+# FUNCTION: Create random address offset
+	# Used Registers
+		# $a0: used to create random integer via syscall
+		# $a1: used to create random integer via syscall
+		# $v0: used to create random integer via syscall
+		# $s0: used to hold column/row offset
+		# $s1: used to hold column/row offset
+		# $s3: accumulator of random offset from column and height
+	# Outputs:
+		# $v0: stores return value for random address offset
 RANDOM_OFFSET:
-	# Check current base address (in $a0)
-	addi $t7, $a0, 0	# store temporarily in t7
-
+	# Store used registers to stack
+	push_reg_to_stack ($a0)
+	push_reg_to_stack ($a1)
+	push_reg_to_stack ($s0)
+	push_reg_to_stack ($s1)
+	push_reg_to_stack ($s3)
+	
 	# Randomly generate row value
 	li $v0, 42 		# Specify random integer
 	li $a0, 0 		# from 0
-	li $a1, 248 		# to 248
+	li $a1, 220 		# to 220
 	syscall 		# generate and store random integer in $a0
 
-	addi $t8, $0, row_increment	# store row increment in $t8
-	mult $a0, $t8			# multiply row index to row increment
-	mflo $t9			# store result in t9
-	add $s0, $t7, $t9		# add row address offset to base address
+	addi $s0, $0, row_increment	# store row increment in $s0
+	mult $a0, $s0			# multiply row index to row increment
+	mflo $s3			# store result in $s3
 
 	# Randomly generate col value
 	li $v0, 42 		# Specify random integer
 	li $a0, 0 		# from 0
-	li $a1, 248 		# to 248
+	li $a1, 220 		# to 220
 	syscall 		# Generate and store random integer in $a0
 
-	addi $t8, $0, column_increment	# store row increment in $t8
-	mult $a0, $t8			# multiply row index to row increment
-	mflo $t9			# store result in t9
-	add $s0, $s0, $t9		# add column address offset to base address
+	addi $s0, $0, column_increment	# store column increment in $s0
+	mult $a0, $s0			# multiply column index to column increment
+	mflo $s1			# store result in t9
+	add $s3, $s3, $s1		# add column address offset to base address
 
-	add $a0, $t7, $0	# place back stored base address
+	add $v0, $s3, $0		# store return value (address offset) in $v0
+	
+	# Restore used registers from stack
+	pop_reg_from_stack ($s3)
+	pop_reg_from_stack ($s1)
+	pop_reg_from_stack ($s0)
+	pop_reg_from_stack ($a1)
+	pop_reg_from_stack ($a0)
 	jr $ra			# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT OBJECT
 	# Inputs
+		# $a0: object base address
 		# $a1: If 0, paint in black. Elif 1, paint in color specified otherwise.
-		# $s0: random offset
+		# $a2: random address offset
 	# Registers Used
 		# $t1: stores current color value
 		# $t2: temporary memory address storage for current unit (in bitmap)
@@ -467,6 +489,14 @@ RANDOM_OFFSET:
 		# $t5: parameter for subfunction LOOP_OBJ_ROWS. Will store # rows to paint from the center row outwards
 		# $t8-9: used for multiplication operations
 PAINT_OBJECT:
+	# Store used registers to stack
+	push_reg_to_stack ($t1)
+	push_reg_to_stack ($t2)
+	push_reg_to_stack ($t3)
+	push_reg_to_stack ($t4)
+	push_reg_to_stack ($t5)
+	push_reg_to_stack ($t8)
+	push_reg_to_stack ($t9)
 	# Initialize registers
 	add $t1, $0, $0				# initialize current color to black
 	add $t2, $0, $0				# holds temporary memory address
@@ -484,14 +514,24 @@ PAINT_OBJECT:
 		addi $t3, $t3, column_increment	# add 4 bits (1 byte) to refer to memory address for next row
 		add $t4, $0, $0			# reinitialize index for LOOP_OBJ_ROWS
 		j LOOP_OBJ_COLS
-	EXIT_PAINT_OBJECT:				# return to previous instruction
-		jr $ra
+	EXIT_PAINT_OBJECT:
+		# Restore used registers from stack
+		pop_reg_from_stack ($t9)
+		pop_reg_from_stack ($t8)
+		pop_reg_from_stack ($t5)
+		pop_reg_from_stack ($t4)
+		pop_reg_from_stack ($t3)
+		pop_reg_from_stack ($t2)
+		pop_reg_from_stack ($t1)
+		jr $ra				# return to previous instruction
 
 	# FOR LOOP: (through row)
 	# Paints in symmetrically from center at given column
 	LOOP_OBJ_ROWS: bge $t4, $t5, UPDATE_OBJ_COL	# returns when row index (stored in $t4) >= (number of rows to paint in) /2
-		add $t2, $s0, $t3			# update to specific column with random offset from base address
+		add $t2, $a0, $0			# start from base address
+		add $t2, $t2, $t3			# update to specific column
 		add $t2, $t2, $t4			# update to specific row
+		add $t2, $t2, $a2			# update to random offset
 		sw $t1, ($t2)				# paint
 
 		# Updates for loop index
@@ -664,7 +704,7 @@ PAINT_BORDER:
 	# FOR LOOP: (through row)
 	# Paints in row from $t4 to $t5 at some column
 	LOOP_BORDER_ROWS: bge $t4, $t5, EXIT_LOOP_BORDER_ROWS	# branch to UPDATE_BORDER_COL; if row index >= last row index to paint
-		addi $t2, $0, base_address			# Reinitialize t2; temporary address store
+		addi $t2, $0, display_base_address			# Reinitialize t2; temporary address store
 		add $t2, $t2, $t3				# update to specific column from base address
 		add $t2, $t2, $t4				# update to specific row
 		sw $t1, ($t2)					# paint in value
@@ -713,7 +753,7 @@ CLEAR_SCREEN:
 	# FOR LOOP: (through row)
 	# Paints in row from $t4 to $t5 at some column
 	LOOP_CLEAR_ROW: bge $t4, $t5, EXIT_LOOP_CLEAR_ROW	# branch to UPDATE_CLEAR_COL; if row index >= last row index to paint
-		addi $t2, $0, base_address			# Reinitialize t2; temporary address store
+		addi $t2, $0, display_base_address			# Reinitialize t2; temporary address store
 		add $t2, $t2, $t3				# update to specific column from base address
 		add $t2, $t2, $t4				# update to specific row
 		sw $t1, ($t2)					# paint in value
@@ -1172,7 +1212,7 @@ PAINT_HEART:
     	# FOR LOOP: (through column)
     	# Paints in column from $s3 to $s4 at some row
     	LOOP_HEART_COLUMN: bge $s3, $s4, EXIT_LOOP_HEART_COLUMN	# branch to UPDATE_HEART_COL; if column index >= last column index to paint
-        		addi $s1, $0, base_address			# Reinitialize t2; temporary address store
+        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
         		
         		addi $s1, $s1, 250880				# shift row to bottom outermost border (row index 245)
         		addi $s1, $s1, 52				# shift column to column index 13
