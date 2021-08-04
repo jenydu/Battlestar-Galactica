@@ -152,11 +152,7 @@ def create_paint_segment(hex_color: str, start_idx: int, end_idx: int, ignore_he
 
     base_code = \
 f"""
-\t\t\t\t\t\taddi $s0, $0, {extend_rgb_hex(hex_color)}\t\t# change current color
-\t\t\t\t\t\taddi $s3, $0, {start_idx_address}\t\t\t# paint starting from {by_inverse} ___
-\t\t\t\t\t\taddi $s4, $0, {end_idx_address}\t\t\t# ending at {by_inverse} ___
-\t\t\t\t\t\tjal LOOP_{label.upper()}_{by_inverse.upper()}\t\t# paint in
-"""
+\t\t\t\t\tsetup_general_paint ({extend_rgb_hex(hex_color)}, {start_idx_address}, {end_idx_address}, LOOP_{label.upper()}_{by_inverse.upper()})"""
     return base_code
 
 
@@ -170,7 +166,7 @@ def from_assembly_idx_to_conditionals(index_info):
     else:
         increment = column_increment
 
-    cond_code = f"""\t\t\t\t{label.upper()}_COND:
+    cond_code = f"""\t\t\t{label.upper()}_COND:
 """
 
     for idx in index_info:
@@ -180,9 +176,9 @@ def from_assembly_idx_to_conditionals(index_info):
             continue
 
         cond_code += \
-f"""\t\t\t\t\t\tbeq $s2, {idx * increment}, {label.upper()}_{by.upper()}_{idx}
+f"""\t\t\t\t\tbeq $s2, {idx * increment}, {label.upper()}_{by.upper()}_{idx}
 """
-    cond_code += f"\n\t\t\t\t\t\tj UPDATE_{label.upper()}_{by.upper()}\n"
+    cond_code += f"\n\t\t\t\t\tj UPDATE_{label.upper()}_{by.upper()}\n"
     return cond_code
 
 
@@ -197,15 +193,15 @@ def from_assembly_idx_to_paint_settings(index_info, ignore_color=None):
         if len(curr_info[0]) == 0 and len(curr_info[1]) == 0:
             continue
 
-        paint_code += f"\t\t\t\t{label.upper()}_{by.upper()}_{idx}:"
+        paint_code += f"\t\t\t{label.upper()}_{by.upper()}_{idx}:"
         paint_code += create_paint_block(index_info[idx][0],
                                         index_info[idx][1],
                                         ignore_color)
-        paint_code += f"\n\t\t\t\t\t\tj UPDATE_{label.upper()}_{by.upper()}\n"
+        paint_code += f"\n\t\t\t\tj UPDATE_{label.upper()}_{by.upper()}\n"
     return paint_code
 
 
-def create_assembly_code(img_path: str, img_shape: tuple, code_name: str, ignore_color=None):
+def create_assembly_code(img_path: str, img_shape: tuple, code_name: str, ignore_color=None, base_address="display_base_address", offset=None):
     global by, by_inverse, label, column_increment, row_increment
 
     index_info, background = create_assembly_indices(img_path, img_shape)
@@ -219,6 +215,13 @@ def create_assembly_code(img_path: str, img_shape: tuple, code_name: str, ignore
 
     start_code = \
 f"""
+# FUNCTION: PAINT_{label}
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: {by} index for 'for loop' LOOP_{label.upper()}_{by.upper()}
+		# $s3: {by_inverse} index for 'for loop' LOOP_{label.upper()}_{by_inverse.upper()}
+		# $s4: parameter for subfunction LOOP_{label.upper()}_{by_inverse.upper()}
 PAINT_{label}:
 	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
@@ -231,9 +234,9 @@ PAINT_{label}:
 	    # Initialize registers
 	    add $s0, $0, $0				# initialize current color to black
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0				# 'column for loop' indexer
-	    add $s3, $0, $0				# 'row for loop' indexer
-	    add $s4, $0, $0				# last row index to paint in
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
 
 \t\tLOOP_{label.upper()}_{by.upper()}: bge $s2, {by}_max, EXIT_PAINT_{label.upper()}
 \t\t\t\t# Boolean Expressions: Paint in based on {by} index
@@ -252,10 +255,15 @@ f"""
     	# FOR LOOP: (through {by_inverse})
     	# Paints in {by_inverse} from $s3 to $s4 at some {by}
     	LOOP_{label.upper()}_{by_inverse.upper()}: bge $s3, $s4, EXIT_LOOP_{label}_{by_inverse.upper()}	# branch to UPDATE_{label}_COL; if {by_inverse} index >= last {by_inverse} index to paint
-        		addi $s1, $0, base_address			# Reinitialize t2; temporary address store
+        		addi $s1, $0, {base_address}			# Reinitialize t2; temporary address store
         		add $s1, $s1, $s2				# update to specific {by} from base address
         		add $s1, $s1, $s3				# update to specific {by_inverse}
-        		sw $s0, ($s1)					# paint in value
+"""
+    if offset is not None:
+        end_code += f"""        		addi $s1, $s1, {offset}				# add specified offset
+        """
+    end_code += \
+"""        		sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
         		addi $s3, $s3, {by_inverse}_increment			# t4 += {by}_increment
@@ -286,15 +294,18 @@ f"""
 
 
 if __name__ == "__main__":
-    # img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
-    # img_shape = (160, 251)       # row, column
     # ==PARAMETERS==:
-    label = 'HEART'
     column_increment = 4
     row_increment = 1024
     by = "row"      # 'row' or 'column'
     by_inverse = "column"
-    img_path = "D:/projects/Shoot-em-up-Game-Project/material/heart.png"
-    img_shape = (9, 9)
 
-    print(create_assembly_code(img_path, img_shape, "heart_code"))
+    # label = 'HEART'
+    # img_path = "D:/projects/Shoot-em-up-Game-Project/material/heart.png"
+    # img_shape = (9, 9)
+    # print(create_assembly_code(img_path, img_shape, "heart_code"))
+
+    label = 'GAME_OVER'
+    img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
+    img_shape = (160, 251)       # row, column
+    print(create_assembly_code(img_path, img_shape, "game_over_code", offset=16384))
