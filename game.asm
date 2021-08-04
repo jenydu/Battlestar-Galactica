@@ -54,7 +54,7 @@
 # ==VARIABLES==:
 .data
 displayAddress: 	.word 0x10008000
-obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same time
+
 #___________________________________________________________________________________________________________________________
 .text
 # ==MACROS==:
@@ -154,8 +154,6 @@ obstacle_positions: 	.word 10:20	# assume we have max. 20 obstacles at the same 
 INITIALIZE:
 
 # ==PARAMETERS==
-addi $s7, $zero, 0				# counter for how many main loop the game has looped
-addi $s6, $zero, 3				# max. obstacles at once
 addi $s0, $0, 3					# starting number of hearts
 
 # Paint Border
@@ -172,33 +170,29 @@ jal PAINT_PLANE					# paint plane at $a0
 
 
 GENERATE_OBSTACLES:
-	# Used Registers
-		# $a0, $a1, $a2: PAINT_OBJECT parameters
-		# $t0: temporarily stores memory address word increment (4). Also used in multiplication
-		# $t1: holds current object base address
-		# $s4: for loop indexer over the number of obstacles
-		# $s6: total number of obstacles
-	addi $s4, $zero, 0		# i = 0		# initialize for loop indexer
-
-	obstacle_gen_loop:	bge $s4, $s6, end_loop			# exit loop when i >= 3
-			jal RANDOM_OFFSET			# store random address offset in $v0
-			addi $a0, $0, object_base_address	# PAINT_OBJECT param. Load default object_base_address
-			addi $a1, $zero, 1			# PAINT_OBJECT param. Set to paint
-			addi $a2, $v0, 0			# PAINT_OBJECT param. Random address offset
-			jal PAINT_OBJECT
-
-			# Store current obstacle address to memory
-			add $t1, $a0, $a2			# store current object base address (default + random offset)
-			addi $t0, $0, 4				# initialize $t0
-			mult $s4, $t0				# multiply current for loop index by increment to get memory address ofsset
-			mflo $t0				# store memory address offset in $t0
-			sw $t1, obstacle_positions($t0)		# save obstacle address into the array
-			
-			# Update loop
-			addi $s4, $s4, 1			# i += 1
-			j obstacle_gen_loop
-
-	end_loop:
+	addi $s5, $zero, 0		# $s4 holds the offset of obs_1
+	jal RANDOM_OFFSET		
+	add $s5, $v0, 0			# save obstacle offset into the array
+	add $a2, $v0, 0			
+	addi $a1, $zero, 1		# set to paint
+	addi $a0, $0, display_base_address
+	jal PAINT_OBJECT
+	
+	addi $s6, $zero, 0		# $s5 holds the offset of obs_2
+	jal RANDOM_OFFSET		
+	add $s6, $v0, 0			# save obstacle offset into the array
+	add $a2, $v0, 0			
+	addi $a1, $zero, 1		
+	addi $a0, $0, display_base_address	
+	jal PAINT_OBJECT
+	
+	addi $s7, $zero, 0		# $s6 holds the offset of obs_3
+	jal RANDOM_OFFSET		
+	add $s7, $v0, 0			# save obstacle address into the array
+	add $a2, $v0, 0			
+	addi $a1, $zero, 1		# set to paint
+	addi $a0, $0, display_base_address		
+	jal PAINT_OBJECT
 
 pop_reg_from_stack ($a0)			# restore current plane address from stack
 
@@ -206,27 +200,56 @@ pop_reg_from_stack ($a0)			# restore current plane address from stack
 MAIN_LOOP:
 
 	AVATAR_MOVE:
+		jal PAINT_PLANE
 		jal check_key_press		# check for keyboard input and redraw avatar accordingly
-		add $s1, $a0, $0		# temporarily store plane's base address
 
 	OBSTACLE_MOVE:
-		la $s5, obstacle_positions	# $s5 holds the address of obstacle_positions
-		addi $s4, $zero, 0		# i = 0
-
-	obstacle_move_loop:				# move each obstacle one pixel left in a loop
-		bge $s4, $s6, end_move_loop		# exit loop when i >= 3
-
-		add $s2, $a0, 0			# save avatar address to $s2 (temp.)
-		lw $a0, 0($s5)			# load the address of the current obstacle into $a0
-		jal MOVE_OBJECT
-		sw $a0, ($s5)
-		add $s5, $s5, 4   		# increment array address pointer by 4
-
-		add $a0, $s2, 0			# set $a0 back to avatar address
-		addi $s4, $s4, 1		# i++
-		j obstacle_move_loop
-
-	end_move_loop:
+		push_reg_to_stack ($a0)	
+	move_obs_1:			
+		add $a2, $s5, 0			
+		addi $a1, $zero, 0		# set to erase
+		addi $a0, $0, display_base_address
+		jal PAINT_OBJECT			
+		
+		#calculate_indices ($a2, $t5, $t6)	# calculate column and row index
+		#ble $t5, 44, regen_obs_1
+		
+		subu $a2, $a2, 4		# set base position 1 pixel left
+		add $s5, $a2, 0		# set base position 1 pixel right
+		addi $a1, $zero, 1		# set to paint
+		addi $a0, $0, display_base_address
+		jal PAINT_OBJECT  
+	move_obs_2:	
+		add $a2, $s6, 0			
+		addi $a1, $zero, 0		# set to erase
+		addi $a0, $0, display_base_address
+		jal PAINT_OBJECT			
+		
+		#calculate_indices ($a2, $t5, $t6)	# calculate column and row index
+		#ble $t5, 44, regen_obs_2
+		
+		subu $a2, $a2, 4		# set base position 1 pixel left
+		add $s6, $a2, 0		# set base position 1 pixel right
+		addi $a1, $zero, 1		# set to paint
+		addi $a0, $0, display_base_address
+		jal PAINT_OBJECT  
+	move_obs_3:
+		add $a2, $s7, 0			
+		addi $a1, $zero, 0		# set to erase
+		addi $a0, $0, display_base_address
+		jal PAINT_OBJECT			
+		
+		#calculate_indices ($a2, $t5, $t6)	# calculate column and row index
+		#ble $t5, 44, regen_obs_3
+		
+		subu $a2, $a2, 4		# set base position 1 pixel right
+		add $s7, $a2, 0		# set base position 1 pixel right
+		addi $a1, $zero, 1		# set to paint
+		addi $a0, $0, display_base_address
+		jal PAINT_OBJECT  
+	
+	EXIT_OBSTACLE_MOVE:	
+		pop_reg_from_stack ($a0)
 
 	j MAIN_LOOP				# repeat loop
 	
@@ -238,6 +261,36 @@ END_SCREEN_LOOP:
 # Tells OS the program ends
 EXIT:	li $v0, 10
 	syscall
+#________________________________________________________
+regen_obs_1:	
+	addi $s5, $zero, 0	# $s5 holds the address of obstacle_positions
+	jal RANDOM_OFFSET		
+	add $s5, $v0, 0			# save obstacle address into the array
+	add $a2, $v0, 0			# save obstacle address into the array
+	addi $a1, $zero, 1		# set to paint
+	addi $a0, $0, display_base_address
+	jal PAINT_OBJECT
+	j move_obs_2
+
+regen_obs_2:
+	addi $s6, $zero, 0	# $s5 holds the address of obstacle_positions
+	jal RANDOM_OFFSET		
+	add $s6, $v0, 0			# save obstacle address into the array
+	add $a2, $v0, 0			# save obstacle address into the array
+	addi $a1, $zero, 1		# set to paint
+	addi $a0, $0, display_base_address
+	jal PAINT_OBJECT
+	j move_obs_3
+regen_obs_3:	
+	addi $s7, $zero, 0	# $s5 holds the address of obstacle_positions
+	jal RANDOM_OFFSET		
+	add $s7, $v0, 0			# save obstacle address into the array
+	add $a2, $v0, 0			# save obstacle address into the array
+	addi $a1, $zero, 1		# set to paint
+	addi $a0, $0, display_base_address
+	jal PAINT_OBJECT
+	j EXIT_OBSTACLE_MOVE
+	
 
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
@@ -431,7 +484,7 @@ check_border:		la $t0, ($a0)			# load ___ base address to $t0
 			beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
 			beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
 			beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
-			j OBSTACLE_MOVE			# invalid key, exit the input checking stage
+			j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
 
 respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
@@ -454,17 +507,13 @@ draw_new_avatar:	addi $a1, $zero, 0		# set $a1 as 0
 			jal PAINT_PLANE			# paint plane at new location
 			j EXIT_KEY_PRESS
 
-respond_to_p:		jal erase_everything
+respond_to_p:		jal CLEAR_SCREEN
 			j INITIALIZE
 
-respond_to_q:		jal erase_everything
+respond_to_q:		jal CLEAR_SCREEN
 			j EXIT
 
-erase_everything:	jr $ra
-
-
-
-EXIT_KEY_PRESS:		j AVATAR_MOVE			# avatar finished moving, move to next stage
+EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
 # FUNCTION: Create random address offset
 	# Used Registers
@@ -487,9 +536,10 @@ RANDOM_OFFSET:
 	# Randomly generate row value
 	li $v0, 42 		# Specify random integer
 	li $a0, 0 		# from 0
-	li $a1, 220 		# to 220
+	li $a1, 188 		# to 220
 	syscall 		# generate and store random integer in $a0
-
+	add $a0, $a0, 18
+	
 	addi $s0, $0, row_increment	# store row increment in $s0
 	mult $a0, $s0			# multiply row index to row increment
 	mflo $s2			# store result in $s2
@@ -497,8 +547,9 @@ RANDOM_OFFSET:
 	# Randomly generate col value
 	li $v0, 42 		# Specify random integer
 	li $a0, 0 		# from 0
-	li $a1, 220 		# to 220
+	li $a1, 12 		# to 220
 	syscall 		# Generate and store random integer in $a0
+	add $a0, $a0, 204
 
 	addi $s0, $0, column_increment	# store column increment in $s0
 	mult $a0, $s0			# multiply column index to column increment
@@ -582,13 +633,7 @@ PAINT_OBJECT:
 		addi $t4, $t4, row_increment		# t4 += row_increment
 		j LOOP_OBJ_ROWS				# repeats LOOP_OBJ_ROWS
 #___________________________________________________________________________________________________________________________
-MOVE_OBJECT:
-	addi $a1, $0, 0
-	jal PAINT_OBJECT
-	subu $a0, $a0, column_increment
-	addi $a1, $0, 1
-	jal PAINT_OBJECT
-	jr $ra
+
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT BORDER
 	# Registers Used
