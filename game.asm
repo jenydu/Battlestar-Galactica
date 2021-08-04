@@ -163,37 +163,40 @@ jal UPDATE_HEALTH
 # Paint Plane
 addi $a1, $zero, 1				# set to paint
 addi $a0, $0, object_base_address		# start painting plane from top-left border
-addi $a0, $a0, 96256				# center plane in 
+addi $a0, $a0, 96256				# center plane
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
 
-
-
+#---------------------------------------------------------------------------------------------------------------------------
 GENERATE_OBSTACLES:
-	addi $s5, $zero, 0		# $s4 holds the offset of obs_1
-	jal RANDOM_OFFSET		
-	add $s5, $v0, 0			# save obstacle offset into the array
-	add $a2, $v0, 0			
-	addi $a1, $zero, 1		# set to paint
-	addi $a0, $0, display_base_address
+	# Used Registers:
+		# $a0-2: parameters for PAINT_OBJECT
+	# Outputs:
+		# $s5: holds obstacle 1 base address
+		# $s6: holds obstacle 2 base address
+		# $s7: holds obstacle 3 base address
+	# Obstacle 1
+	jal RANDOM_OFFSET			# create random address offset
+	addi $s5, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	add $a0, $s5, $0			# PAINT_OBJECT param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
+	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 	jal PAINT_OBJECT
-	
-	addi $s6, $zero, 0		# $s5 holds the offset of obs_2
-	jal RANDOM_OFFSET		
-	add $s6, $v0, 0			# save obstacle offset into the array
-	add $a2, $v0, 0			
-	addi $a1, $zero, 1		
-	addi $a0, $0, display_base_address	
+	# Obstacle 2
+	jal RANDOM_OFFSET			# create random address offset
+	addi $s6, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	add $a0, $s6, $0			# PAINT_OBJECT param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
+	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 	jal PAINT_OBJECT
-	
-	addi $s7, $zero, 0		# $s6 holds the offset of obs_3
-	jal RANDOM_OFFSET		
-	add $s7, $v0, 0			# save obstacle address into the array
-	add $a2, $v0, 0			
-	addi $a1, $zero, 1		# set to paint
-	addi $a0, $0, display_base_address		
+	# Obstacle 3
+	jal RANDOM_OFFSET			# create random address offset
+	addi $s7, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	add $a0, $s7, $0			# PAINT_OBJECT param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
+	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 	jal PAINT_OBJECT
-
+#---------------------------------------------------------------------------------------------------------------------------
 pop_reg_from_stack ($a0)			# restore current plane address from stack
 
 # main game loop
@@ -205,48 +208,47 @@ MAIN_LOOP:
 
 	OBSTACLE_MOVE:
 		push_reg_to_stack ($a0)	
-	move_obs_1:			
-		add $a2, $s5, 0			
-		addi $a1, $zero, 0		# set to erase
-		addi $a0, $0, display_base_address
+	move_obs_1:
+		addi $a0, $s5, 0			# PAINT_OBJECT param. Load obstacle 1 base address
+		addi $a1, $zero, 0			# PAINT_OBJECT param. Set to erase
+		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 		jal PAINT_OBJECT			
 		
 		#calculate_indices ($a2, $t5, $t6)	# calculate column and row index
 		#ble $t5, 44, regen_obs_1
 		
-		subu $a2, $a2, 4		# set base position 1 pixel left
-		add $s5, $a2, 0		# set base position 1 pixel right
-		addi $a1, $zero, 1		# set to paint
-		addi $a0, $0, display_base_address
+		subu $s5, $s5, 4			# shift obstacle 1 unit left
+		add $a0, $s5, $0 			# PAINT_OBJECT param. Load obstacle 1 new base address
+		addi $a1, $zero, 1			# PAINT_OBJECT param. Set to paint
+		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 		jal PAINT_OBJECT  
-	move_obs_2:	
-		add $a2, $s6, 0			
-		addi $a1, $zero, 0		# set to erase
-		addi $a0, $0, display_base_address
+	move_obs_2:
+		addi $a0, $s6, 0			# PAINT_OBJECT param. Load obstacle 1 base address
+		addi $a1, $0, 0			# PAINT_OBJECT param. Set to erase
+		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 		jal PAINT_OBJECT			
 		
 		#calculate_indices ($a2, $t5, $t6)	# calculate column and row index
-		#ble $t5, 44, regen_obs_2
+		#ble $t5, 44, regen_obs_1
 		
-		subu $a2, $a2, 4		# set base position 1 pixel left
-		add $s6, $a2, 0		# set base position 1 pixel right
-		addi $a1, $zero, 1		# set to paint
-		addi $a0, $0, display_base_address
+		subu $s6, $s6, 4			# shift obstacle 1 unit left
+		add $a0, $s6, $0 			# PAINT_OBJECT param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
+		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 		jal PAINT_OBJECT  
 	move_obs_3:
-		add $a2, $s7, 0			
-		addi $a1, $zero, 0		# set to erase
-		addi $a0, $0, display_base_address
+		addi $a0, $s7, 0			# PAINT_OBJECT param. Load obstacle 1 base address
+		addi $a1, $0, 0			# PAINT_OBJECT param. Set to erase
+		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 		jal PAINT_OBJECT			
 		
 		#calculate_indices ($a2, $t5, $t6)	# calculate column and row index
-		#ble $t5, 44, regen_obs_3
+		#ble $t5, 44, regen_obs_1
 		
-		subu $a2, $a2, 4		# set base position 1 pixel right
-		add $s7, $a2, 0		# set base position 1 pixel right
-		addi $a1, $zero, 1		# set to paint
-		addi $a0, $0, display_base_address
-		jal PAINT_OBJECT  
+		subu $s7, $s7, 4			# shift obstacle 1 unit left
+		add $a0, $s7, $0			# PAINT_OBJECT param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
+		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
 	
 	EXIT_OBSTACLE_MOVE:	
 		pop_reg_from_stack ($a0)
@@ -263,34 +265,29 @@ EXIT:	li $v0, 10
 	syscall
 #________________________________________________________
 regen_obs_1:	
-	addi $s5, $zero, 0	# $s5 holds the address of obstacle_positions
-	jal RANDOM_OFFSET		
-	add $s5, $v0, 0			# save obstacle address into the array
-	add $a2, $v0, 0			# save obstacle address into the array
-	addi $a1, $zero, 1		# set to paint
-	addi $a0, $0, display_base_address
+	jal RANDOM_OFFSET			# create random address offset
+	addi $s5, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $0, object_base_address	# PAINT_OBJECT param. Load default object_base_address
+	addi $a1, $0, 1			# PAINT_OBJECT param. Set to paint
+	add $a2, $v0, 0				# PAINT_OBJECT param. Random address offset
 	jal PAINT_OBJECT
 	j move_obs_2
-
 regen_obs_2:
-	addi $s6, $zero, 0	# $s5 holds the address of obstacle_positions
-	jal RANDOM_OFFSET		
-	add $s6, $v0, 0			# save obstacle address into the array
-	add $a2, $v0, 0			# save obstacle address into the array
-	addi $a1, $zero, 1		# set to paint
-	addi $a0, $0, display_base_address
+	jal RANDOM_OFFSET			# create random address offset
+	addi $s6, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $0, object_base_address	# PAINT_OBJECT param. Load default object_base_address
+	addi $a1, $0, 1			# PAINT_OBJECT param. Set to paint
+	add $a2, $v0, 0				# PAINT_OBJECT param. Random address offset
 	jal PAINT_OBJECT
 	j move_obs_3
 regen_obs_3:	
-	addi $s7, $zero, 0	# $s5 holds the address of obstacle_positions
-	jal RANDOM_OFFSET		
-	add $s7, $v0, 0			# save obstacle address into the array
-	add $a2, $v0, 0			# save obstacle address into the array
-	addi $a1, $zero, 1		# set to paint
-	addi $a0, $0, display_base_address
+	jal RANDOM_OFFSET			# create random address offset
+	addi $s7, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $0, object_base_address	# PAINT_OBJECT param. Load default object_base_address
+	addi $a1, $0, 1			# PAINT_OBJECT param. Set to paint
+	add $a2, $v0, 0				# PAINT_OBJECT param. Random address offset
 	jal PAINT_OBJECT
 	j EXIT_OBSTACLE_MOVE
-	
 
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
@@ -538,7 +535,6 @@ RANDOM_OFFSET:
 	li $a0, 0 		# from 0
 	li $a1, 188 		# to 220
 	syscall 		# generate and store random integer in $a0
-	add $a0, $a0, 18
 	
 	addi $s0, $0, row_increment	# store row increment in $s0
 	mult $a0, $s0			# multiply row index to row increment
@@ -549,7 +545,6 @@ RANDOM_OFFSET:
 	li $a0, 0 		# from 0
 	li $a1, 12 		# to 220
 	syscall 		# Generate and store random integer in $a0
-	add $a0, $a0, 204
 
 	addi $s0, $0, column_increment	# store column increment in $s0
 	mult $a0, $s0			# multiply column index to column increment
@@ -625,7 +620,7 @@ PAINT_OBJECT:
 		
 		calculate_indices ($t2, $t8, $t9)	# get address indices. Store in $t8 and $t9
 		within_borders ($t8, $t9, $t9)		# check within borders. Store boolean result in $t9 
-		beq $t9, 1, SKIP_OBJ_PAINT		# skip painting pixel if out of border
+		beq $t9, 0, SKIP_OBJ_PAINT		# skip painting pixel if out of border
 		
 		sw $t1, ($t2)				# paint pixel
 		SKIP_OBJ_PAINT:
