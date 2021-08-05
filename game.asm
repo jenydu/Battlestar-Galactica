@@ -268,9 +268,6 @@ MAIN_LOOP:
 		jal check_plane_hitbox			# check if the plane's hitbox is overlapped with an object based on colour
 	
 	
-	
-	
-	
 	j MAIN_LOOP				# repeat loop
 #---------------------------------------------------------------------------------------------------------------------------
 END_SCREEN_LOOP:
@@ -292,9 +289,9 @@ EXIT:	li $v0, 10
 initiate_coin:	
 	jal RANDOM_OFFSET			# create random address offset
 	add $s2, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s2, $0			# PAINT_ASTEROID param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_PICKUP_COIN
+	add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
+	jal PAINT_PICKUP_COIN			
 	j CHECK_COLLISION
 
 check_plane_hitbox:
@@ -302,32 +299,32 @@ check_plane_hitbox:
 	push_reg_to_stack ($t1)
 	push_reg_to_stack ($t2)
 	push_reg_to_stack ($t9)
-	# check the top-most & bottom-most pixel colour from column 18 to 17 of the plane, if not plane colour, deduct heart
-	addi $t0, $0, 0
-	addi $t1, $0, 32
+	push_reg_to_stack ($ra)
+	# check column 20 of the plane, if not plane colour, deduct heart
+	addi $t0, $0, 0		# i = 0 
+	addi $t1, $0, 32	# 32(?) pixels in column 20
 	
-	addi $t9, $0, 20
+	addi $t9, $0, 20	
 	sll $t9, $t9, 2
-	
-	add $t9, $t9, $a0
+	add $t9, $t9, $a0	# $t9 stores the address of the top pixel on column 20
 
 plane_hitbox_loop:
-	beq $t0, $t1, exit_check_plane_hitbox
-	addi $t0, $t0, 1
-	lw $t2, ($t9)
-	addu $t9, $t9, row_increment
-	beq $t2, 0x896e5d, deduct_health
+	bgt $t0, $t1, exit_check_plane_hitbox	# if i > 32, exit loop
+	addi $t0, $t0, 1			# i += 1
+	lw $t2, ($t9)				# load pixel colour at the address
+	addu $t9, $t9, row_increment		# load $t9 of the next pixel (1 pixel down)
+	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart
 	j plane_hitbox_loop
 
 exit_check_plane_hitbox:
+	pop_reg_from_stack($ra)
 	jr $ra
 
 deduct_health:
-	subi $s0, $s0, 1
+	subi $s0, $s0, 1			# health - 1
 	addi $a3, $s0, 0
-	jal UPDATE_HEALTH
-	j plane_hitbox_loop
-
+	jal UPDATE_HEALTH			# update health
+	j exit_check_plane_hitbox
 
 
 #___________________________________________________________________________________________________________________________
