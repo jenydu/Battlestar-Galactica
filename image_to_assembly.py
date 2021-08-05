@@ -201,7 +201,7 @@ def from_assembly_idx_to_paint_settings(index_info, ignore_color=None):
     return paint_code
 
 
-def create_assembly_code(img_path: str, img_shape: tuple, code_name: str, ignore_color=None, base_address="display_base_address", offset=None):
+def create_assembly_code(img_path: str, img_shape: tuple, code_name: str, ignore_color=None, base_address="display_base_address", offset=None, save=True):
     global by, by_inverse, label, column_increment, row_increment
 
     index_info, background = create_assembly_indices(img_path, img_shape)
@@ -285,9 +285,10 @@ f"""
 
     full_code = start_code + cond_code + paint_code + end_code
 
-    # Save produced code to text file
-    with open(f"D:/projects/Shoot-em-up-Game-Project/{code_name}.txt", "w+") as f:
-        f.write(full_code)
+    if save:
+        # Save produced code to text file
+        with open(f"D:/projects/Shoot-em-up-Game-Project/{code_name}.txt", "w+") as f:
+            f.write(full_code)
 
     return full_code
 
@@ -305,7 +306,12 @@ if __name__ == "__main__":
     # img_shape = (9, 9)
     # print(create_assembly_code(img_path, img_shape, "heart_code"))
 
-    label = 'GAME_OVER'
-    img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
-    img_shape = (160, 251)       # row, column
-    print(create_assembly_code(img_path, img_shape, "game_over_code", offset=16384))
+    # label = 'GAME_OVER'
+    # img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
+    # img_shape = (160, 251)       # row, column
+    # print(create_assembly_code(img_path, img_shape, "game_over_code", offset=16384))
+
+    label = 'ASTEROID'
+    img_path = "D:/projects/Shoot-em-up-Game-Project/material/asteroid.png"
+    img_shape = (9, 9)       # row, column
+    print(create_assembly_code(img_path, img_shape, "asteroid_code", save=True))
