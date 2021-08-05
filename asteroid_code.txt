@@ -38,86 +38,54 @@ PAINT_ASTEROID:
 					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_0:
 					setup_general_paint (0x000000, 0, 8, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x201e1d, 8, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x292625, 12, 16, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x21201f, 16, 20, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x383330, 20, 24, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x443a33, 8, 12, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x7d6556, 12, 16, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x7c6455, 16, 20, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x564941, 20, 24, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x36312e, 24, 28, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_1:
-					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x35302d, 4, 8, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x8a6e5f, 8, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x83695a, 12, 16, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7d6656, 16, 20, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 20, 28, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x3a3532, 28, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x271f1a, 0, 4, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x826858, 4, 8, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 8, 28, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x82695a, 28, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_2:
-					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x735f54, 4, 8, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x836a5a, 8, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x69594e, 12, 16, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x69574b, 16, 20, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 20, 28, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x68584d, 28, 32, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x7c6454, 0, 4, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 4, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x332923, 32, 36, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_3:
-					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x735f53, 4, 8, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 8, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x655245, 12, 16, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x79604f, 16, 20, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x68584e, 20, 24, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x776152, 24, 28, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7c6556, 28, 32, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x312d2a, 32, 36, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x876c5b, 32, 36, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_4:
-					setup_general_paint (0x48403a, 0, 4, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 4, 20, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x64544a, 20, 24, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x645144, 24, 28, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 28, 32, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x433c37, 32, 36, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x876d5c, 32, 36, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_5:
-					setup_general_paint (0x322e2b, 0, 4, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7e6656, 4, 8, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x64554a, 8, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7e6656, 12, 16, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 16, 20, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7a6150, 20, 24, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7a6050, 24, 28, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x735c4f, 28, 32, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x272423, 32, 36, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x615045, 32, 36, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_6:
-					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x705d51, 4, 8, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x775f50, 8, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 12, 24, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x745c4f, 24, 28, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x4d423e, 28, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 0, 28, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x866b5b, 28, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_7:
 					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x332f2d, 4, 8, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x68584d, 8, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7e6656, 12, 16, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x7f6757, 16, 20, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x745d50, 20, 24, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x544540, 24, 28, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x161616, 28, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x876c5b, 4, 8, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 8, 24, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x866c5c, 24, 28, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x8a6e5f, 28, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_8:
-					setup_general_paint (0x000000, 0, 12, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x272524, 12, 16, LOOP_ASTEROID_COLUMN)
-					setup_general_paint (0x3a3431, 16, 20, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x40342c, 4, 8, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 8, 16, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x69564b, 16, 20, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x342f2d, 20, 24, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x161515, 24, 28, LOOP_ASTEROID_COLUMN)
 				j UPDATE_ASTEROID_ROW
@@ -135,13 +103,13 @@ PAINT_ASTEROID:
         		sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
-        		addi $s3, $s3, {by_inverse}_increment			# t4 += {by}_increment
-        		j LOOP_{label}_{by_inverse.upper()}				# repeats LOOP_{label}_{by.upper()}
-	    EXIT_LOOP_{label}_{by_inverse.upper()}:
+        		addi $s3, $s3, column_increment			# t4 += row_increment
+        		j LOOP_ASTEROID_COLUMN				# repeats LOOP_ASTEROID_ROW
+	    EXIT_LOOP_ASTEROID_COLUMN:
 		        jr $ra
 
     	# EXIT FUNCTION
-       	EXIT_PAINT_{label.upper()}:
+       	EXIT_PAINT_ASTEROID:
         		# Restore used registers
 	    		pop_reg_from_stack ($s4)
 	    		pop_reg_from_stack ($s3)

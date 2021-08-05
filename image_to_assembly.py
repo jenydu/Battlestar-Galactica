@@ -263,7 +263,7 @@ f"""
         end_code += f"""        		addi $s1, $s1, {offset}				# add specified offset
         """
     end_code += \
-"""        		sw $s0, ($s1)					# paint in value
+f"""        		sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
         		addi $s3, $s3, {by_inverse}_increment			# t4 += {by}_increment
@@ -312,6 +312,6 @@ if __name__ == "__main__":
     # print(create_assembly_code(img_path, img_shape, "game_over_code", offset=16384))
 
     label = 'ASTEROID'
-    img_path = "D:/projects/Shoot-em-up-Game-Project/material/asteroid.png"
+    img_path = "D:/projects/Shoot-em-up-Game-Project/material/asteroid_resized.png"
     img_shape = (9, 9)       # row, column
     print(create_assembly_code(img_path, img_shape, "asteroid_code", save=True))

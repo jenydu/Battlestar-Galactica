@@ -70,10 +70,10 @@ displayAddress: 	.word 0x10008000
 	# MACRO: Check whether to color normally or black. Update $t1 accordingly.
 		# $t1: contains color to be painted
 		# $a1: boolean to determine if color $t1 or black.
-		# NOTE: $t1 == $t1 if $a1 == 1. Otherwise, $t1 == 0.
-	.macro check_color
-		mult $a1, $t1
-		mflo $t1
+		# NOTE: $color_reg == $color_reg if $a1 == 1. Otherwise, $$color_reg == 0.
+	.macro check_color ($color_reg)
+		mult $a1, $color_reg
+		mflo $color_reg
 	.end_macro
 	# MACRO: Updates $s0, $s3-4 for painting.
 		# $s0: will hold %color
@@ -81,6 +81,7 @@ displayAddress: 	.word 0x10008000
 		# $s4: will hold end_idx
 	.macro setup_general_paint (%color, %start_idx, %end_idx, %label)
 		addi $s0, $0, %color		# change current color
+		check_color ($s0)		# check if current parameter $a1 to paint/erase
 		addi $s3, $0, %start_idx	# paint starting from column /row___
 		addi $s4, $0, %end_idx		# ending at column/row ___
 		jal %label			# jump to %label to paint
@@ -174,7 +175,7 @@ jal PAINT_PLANE					# paint plane at $a0
 #---------------------------------------------------------------------------------------------------------------------------
 GENERATE_OBSTACLES:
 	# Used Registers:
-		# $a0-2: parameters for PAINT_OBJECT
+		# $a0-2: parameters for painting obstacle
 	# Outputs:
 		# $s5: holds obstacle 1 base address
 		# $s6: holds obstacle 2 base address
@@ -182,26 +183,23 @@ GENERATE_OBSTACLES:
 	# Obstacle 1
 	jal RANDOM_OFFSET			# create random address offset
 	add $s5, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s5, $0			# PAINT_OBJECT param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-	jal PAINT_OBJECT
+	add $a0, $s5, $0			# PAINT_ASTEROID param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
 	
 	# Obstacle 2
 	jal RANDOM_OFFSET			# create random address offset
 	add $s6, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s6, $0			# PAINT_OBJECT param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-	jal PAINT_OBJECT
+	add $a0, $s6, $0			# PAINT_ASTEROID param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
 	
 	# Obstacle 3
 	jal RANDOM_OFFSET			# create random address offset
 	add $s7, $v0, object_base_address		# store obstacle address = object_base_address + random offset
-	add $a0, $s7, $0			# PAINT_OBJECT param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-	jal PAINT_OBJECT
+	add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
 	
 #---------------------------------------------------------------------------------------------------------------------------
 pop_reg_from_stack ($a0)			# restore current plane address from stack
@@ -216,49 +214,43 @@ MAIN_LOOP:
 	OBSTACLE_MOVE:
 		push_reg_to_stack ($a0)	
 	move_obs_1:
-		addi $a0, $s5, 0			# PAINT_OBJECT param. Load obstacle 1 base address
-		addi $a1, $zero, 0			# PAINT_OBJECT param. Set to erase
-		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-		jal PAINT_OBJECT			
+		addi $a0, $s5, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
+		jal PAINT_ASTEROID			
 		
 		calculate_indices ($s5, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_1
 		
 		subu $s5, $s5, 4			# shift obstacle 1 unit left
-		add $a0, $s5, $0 			# PAINT_OBJECT param. Load obstacle 1 new base address
-		addi $a1, $zero, 1			# PAINT_OBJECT param. Set to paint
-		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-		jal PAINT_OBJECT  
+		add $a0, $s5, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
+		jal PAINT_ASTEROID  
 	
 	move_obs_2:
-		addi $a0, $s6, 0			# PAINT_OBJECT param. Load obstacle 1 base address
-		addi $a1, $0, 0			# PAINT_OBJECT param. Set to erase
-		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-		jal PAINT_OBJECT			
+		addi $a0, $s6, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+		jal PAINT_ASTEROID			
 		
 		calculate_indices ($s6, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_2
 		
 		subu $s6, $s6, 4			# shift obstacle 1 unit left
-		add $a0, $s6, $0 			# PAINT_OBJECT param. Load obstacle 1 new base address
-		addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-		jal PAINT_OBJECT  
+		add $a0, $s6, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+		jal PAINT_ASTEROID  
 	
 	move_obs_3:
-		addi $a0, $s7, 0			# PAINT_OBJECT param. Load obstacle 1 base address
-		addi $a1, $0, 0			# PAINT_OBJECT param. Set to erase
-		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-		jal PAINT_OBJECT			
+		addi $a0, $s7, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $0, 0				# PAINT_OBJECT param. Set to erase
+		jal PAINT_ASTEROID			
 		
 		calculate_indices ($s7, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_3
 		
 		subu $s7, $s7, 4			# shift obstacle 1 unit left
-		add $a0, $s7, $0			# PAINT_OBJECT param. Load obstacle 1 new base address
-		addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-		add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-		jal PAINT_OBJECT 
+		add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+		jal PAINT_ASTEROID 
 	
 	EXIT_OBSTACLE_MOVE:	
 		pop_reg_from_stack ($a0)
@@ -284,26 +276,23 @@ EXIT:	li $v0, 10
 regen_obs_1:	
 	jal RANDOM_OFFSET			# create random address offset
 	addi $s5, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s5, $0			# PAINT_OBJECT param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-	jal PAINT_OBJECT
+	add $a0, $s5, $0			# PAINT_ASTEROID param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
 	j move_obs_2
 regen_obs_2:
 	jal RANDOM_OFFSET			# create random address offset
 	addi $s6, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s6, $0			# PAINT_OBJECT param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-	jal PAINT_OBJECT
+	add $a0, $s6, $0			# PAINT_ASTEROID param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
 	j move_obs_3
 regen_obs_3:	
 	jal RANDOM_OFFSET			# create random address offset
 	addi $s7, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s7, $0			# PAINT_OBJECT param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_OBJECT param. Set to paint
-	add $a2, $0, 0				# PAINT_OBJECT param. 0 offset
-	jal PAINT_OBJECT
+	add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
 	j EXIT_OBSTACLE_MOVE
 
 #___________________________________________________________________________________________________________________________
@@ -376,62 +365,62 @@ PAINT_PLANE:
 
 		PLANE_COL_0:
 			addi $t1, $0, 0x255E90		# change current color to dark blue
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	                add $t2, $a0, $t3		# update to specific column from base address
 	            	addi $t2, $t2, plane_center	# update to specified center axis
 	           	sw $t1, ($t2)			# paint at center axis
 	           	j UPDATE_COL			# end iteration
 		PLANE_COL_1_2:
 			addi $t1, $0, 0x255E90		# change current color to dark blue
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	    		set_row_incr (6)		# update row for column
 	    		j LOOP_PLANE_ROWS		# paint in row
 	                j UPDATE_COL			# end iteration
 		PLANE_COL_3:
 			addi $t1, $0, 0x29343D		# change current color to dark gray
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	    		set_row_incr (4)		# update row for column
 	    		j LOOP_PLANE_ROWS		# paint in row
 	                j UPDATE_COL			# end iteration
 		PLANE_COL_4_7:
 			addi $t1, $0, 0x29343D		# change current color to dark gray
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	    		set_row_incr (2)		# update row for column
 	    		j LOOP_PLANE_ROWS		# paint in row
 	                j UPDATE_COL			# end iteration
 		PLANE_COL_8_13:
 			addi $t1, $0, 0x29343D		# change current color to dark gray
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	    		set_row_incr (3)		# update row for column
     			j LOOP_PLANE_ROWS		# paint in row
                 	j UPDATE_COL			# end iteration
 		PLANE_COL_14:
 			addi $t1, $0, 0x29343D		# change current color to dark gray
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	    		set_row_incr (8)		# update row for column
 	    		j LOOP_PLANE_ROWS		# paint in row
         	        j UPDATE_COL			# end iteration
 		PLANE_COL_15_18:
 			addi $t1, $0, 0x255E90		# change current color to dark blue
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	    		set_row_incr (16)		# update row for column
 	    		j LOOP_PLANE_ROWS		# paint in row
 	                j UPDATE_COL			# end iteration
 		PLANE_COL_19_21:
 			addi $t1, $0, 0x29343D		# change current color to dark gray
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 	    		set_row_incr (3)		# update row for column
 	            	j LOOP_PLANE_ROWS		# paint in row
 	            	j UPDATE_COL			# end iteration
 		PLANE_COL_22_24:
 			addi $t1, $0, 0x29343D		# change current color to dark gray
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 			set_row_incr (2)		# update row for column
 			j LOOP_PLANE_ROWS		# paint in row
 			j UPDATE_COL			# end iteration
 		PLANE_COL_25:
 			addi $t1, $0, 0x29343D		# change current color to dark gray
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 			add $t2, $0, $0			# reinitialize temporary address store
 			add $t2, $a0, $t3		# update to specific column from base address
 			addi $t2, $t2, plane_center	# update to specified center axis
@@ -439,13 +428,13 @@ PAINT_PLANE:
 			j UPDATE_COL			# end iteration
 		PLANE_COL_26:
 			addi $t1, $0, 0x255E90		# change current color to dark blue
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 			set_row_incr (2)		# update row for column
 			j LOOP_PLANE_ROWS		# paint in row
 			j UPDATE_COL			# end iteration
 		PLANE_COL_27:
 			addi $t1, $0, 0x803635		# change current color to dark red
-			check_color			# updates color according to func. param. $a1
+			check_color ($t1)			# updates color according to func. param. $a1
 			add $t2, $0, $0			# reinitialize temporary address store
 			add $t2, $a0, $t3		# update to specific column from base address
 			addi $t2, $t2, plane_center	# update to specified center axis
@@ -610,7 +599,7 @@ PAINT_OBJECT:
 	add $t4, $0, $0				# holds 'row for loop' indexer
 
 	addi $t1, $0, 0xFFFFFF			# change current color to white
-	check_color				# updates color according to func. param. $a1
+	check_color ($t1)				# updates color according to func. param. $a1
 
 	# FOR LOOP: (through col)
 	LOOP_OBJ_COLS: bge $t3, 24, EXIT_PAINT_OBJECT
@@ -648,6 +637,139 @@ PAINT_OBJECT:
 		# Updates for loop index
 		addi $t4, $t4, row_increment		# t4 += row_increment
 		j LOOP_OBJ_ROWS				# repeats LOOP_OBJ_ROWS
+#___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT_ASTEROID
+	# Inputs
+		# $a0: object base address
+		# $a1: If 0, paint in black. Elif 1, paint in color specified otherwise.
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: row index for 'for loop' LOOP_ASTEROID_ROW
+		# $s3: column index for 'for loop' LOOP_ASTEROID_COLUMN
+		# $s4: parameter for subfunction LOOP_ASTEROID_COLUMN
+		# $s5-6: used in calculating pixel address row/col indices
+PAINT_ASTEROID:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
+	    push_reg_to_stack ($s5)
+	    push_reg_to_stack ($s6)
+    
+	    # Initialize registers
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+
+		LOOP_ASTEROID_ROW: bge $s2, row_max, EXIT_PAINT_ASTEROID
+				# Boolean Expressions: Paint in based on row index
+			ASTEROID_COND:
+					beq $s2, 0, ASTEROID_ROW_0
+					beq $s2, 1024, ASTEROID_ROW_1
+					beq $s2, 2048, ASTEROID_ROW_2
+					beq $s2, 3072, ASTEROID_ROW_3
+					beq $s2, 4096, ASTEROID_ROW_4
+					beq $s2, 5120, ASTEROID_ROW_5
+					beq $s2, 6144, ASTEROID_ROW_6
+					beq $s2, 7168, ASTEROID_ROW_7
+					beq $s2, 8192, ASTEROID_ROW_8
+
+					j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_0:
+					setup_general_paint (0x000000, 0, 8, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x443a33, 8, 12, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x7d6556, 12, 16, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x7c6455, 16, 20, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x564941, 20, 24, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x36312e, 24, 28, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_1:
+					setup_general_paint (0x271f1a, 0, 4, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x826858, 4, 8, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 8, 28, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x82695a, 28, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_2:
+					setup_general_paint (0x7c6454, 0, 4, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 4, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x332923, 32, 36, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_3:
+					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x876c5b, 32, 36, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_4:
+					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x876d5c, 32, 36, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_5:
+					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x615045, 32, 36, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_6:
+					setup_general_paint (0x896e5d, 0, 28, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x866b5b, 28, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_7:
+					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x876c5b, 4, 8, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 8, 24, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x866c5c, 24, 28, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x8a6e5f, 28, 32, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+			ASTEROID_ROW_8:
+					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x40342c, 4, 8, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x896e5d, 8, 16, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x69564b, 16, 20, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x342f2d, 20, 24, LOOP_ASTEROID_COLUMN)
+					setup_general_paint (0x161515, 24, 28, LOOP_ASTEROID_COLUMN)
+				j UPDATE_ASTEROID_ROW
+
+    	UPDATE_ASTEROID_ROW:				# Update row value
+    	    	addi $s2, $s2, row_increment
+	        	j LOOP_ASTEROID_ROW
+
+    	# FOR LOOP: (through column)
+    	# Paints in column from $s3 to $s4 at some row
+    	LOOP_ASTEROID_COLUMN: bge $s3, $s4, EXIT_LOOP_ASTEROID_COLUMN	# branch to UPDATE_ASTEROID_COL; if column index >= last column index to paint
+			add $s1, $a0, $0			# start from given address
+			add $s1, $s1, $s3			# update to specific column
+			add $s1, $s1, $s2			# update to specific row
+			add $s1, $s1, $a2			# update to random offset
+		
+			calculate_indices ($s1, $s5, $s6)	# get address indices. Store in $s5-6
+			within_borders ($s5, $s6, $s6)		# check within borders. Store boolean result in $s6
+			beq $s6, 0, SKIP_ASTEROID_PAINT		# skip painting pixel if out of border
+			sw $s0, ($s1)				# paint pixel
+			SKIP_ASTEROID_PAINT:
+        		# Updates for loop index
+        		addi $s3, $s3, column_increment			# t4 += row_increment
+        		j LOOP_ASTEROID_COLUMN				# repeats LOOP_ASTEROID_ROW
+	    EXIT_LOOP_ASTEROID_COLUMN:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_ASTEROID:
+        		# Restore used registers
+        		pop_reg_from_stack ($s6)
+        		pop_reg_from_stack ($s5)
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction
 
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT BORDER
@@ -1355,3 +1477,4 @@ PAINT_HEART:
 		# $s3: column index for 'for loop' LOOP_GAME_OVER_COLUMN
 		# $s4: parameter for subfunction LOOP_GAME_OVER_COLUMN
 PAINT_GAME_OVER:
+	j EXIT
