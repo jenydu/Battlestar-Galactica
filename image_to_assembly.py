@@ -13,29 +13,6 @@ by = "row"                      # 'row' or 'column'
 by_inverse = "column"
 
 
-def image_to_rgb_hex(img):
-    """Return new <img> where each location in the image array is now its RGB
-    value in hexadecimal.
-    """
-    array = np.asarray(img, dtype='uint32')
-    decimal_rgb_values = (array[:, :, 0]<<16) + (array[:, :, 1]<<8) + array[:, :, 2]
-
-    # Convert decimal RGB values to hexadecimal
-    to_hex = np.vectorize(lambda x: hex(x))
-
-    return to_hex(decimal_rgb_values)
-
-
-def extend_rgb_hex(hex_color):
-    """If hex_color is less than 32 bits, zero extend. Else, return the input.
-    """
-    if len(str(hex_color)) != 8:
-        lacks = abs(len(str(hex_color)) - 8)                       # how many zeroes to add
-        return hex_color.replace("0x", f"0x{'0' * lacks}")
-
-    return hex_color
-
-
 def create_assembly_indices(img_path: str, img_shape: tuple, skip_background=True):
     """Return tuple of:
         - dictionary containing <by> index to (hex_color, (start_idx, end_idx))
@@ -82,6 +59,29 @@ def create_assembly_indices(img_path: str, img_shape: tuple, skip_background=Tru
             #     curr_offset = str(((i - foreground_starts[1]) * column_increment) + ((j - foreground_starts[0]) * row_increment))
             #     address_offsets.append(curr_offset)
     return index_info, background
+
+
+def image_to_rgb_hex(img):
+    """Return new <img> where each location in the image array is now its RGB
+    value in hexadecimal.
+    """
+    array = np.asarray(img, dtype='uint32')
+    decimal_rgb_values = (array[:, :, 0]<<16) + (array[:, :, 1]<<8) + array[:, :, 2]
+
+    # Convert decimal RGB values to hexadecimal
+    to_hex = np.vectorize(lambda x: hex(x))
+
+    return to_hex(decimal_rgb_values)
+
+
+def extend_rgb_hex(hex_color):
+    """If hex_color is less than 32 bits, zero extend. Else, return the input.
+    """
+    if len(str(hex_color)) != 8:
+        lacks = abs(len(str(hex_color)) - 8)                       # how many zeroes to add
+        return hex_color.replace("0x", f"0x{'0' * lacks}")
+
+    return hex_color
 
 
 def find_consecutive_colors(x):
@@ -301,17 +301,25 @@ if __name__ == "__main__":
     by = "row"      # 'row' or 'column'
     by_inverse = "column"
 
-    # label = 'HEART'
-    # img_path = "D:/projects/Shoot-em-up-Game-Project/material/heart.png"
-    # img_shape = (9, 9)
-    # print(create_assembly_code(img_path, img_shape, "heart_code"))
+    paint_in = 'coin'
 
-    # label = 'GAME_OVER'
-    # img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
-    # img_shape = (160, 251)       # row, column
-    # print(create_assembly_code(img_path, img_shape, "game_over_code", offset=16384))
-
-    label = 'ASTEROID'
-    img_path = "D:/projects/Shoot-em-up-Game-Project/material/asteroid_resized.png"
-    img_shape = (9, 9)       # row, column
-    print(create_assembly_code(img_path, img_shape, "asteroid_code", save=True))
+    if paint_in == 'heart':
+        label = 'HEART'
+        img_path = "D:/projects/Shoot-em-up-Game-Project/material/heart.png"
+        img_shape = (9, 9)
+        print(create_assembly_code(img_path, img_shape, "heart_code", save=True))
+    elif paint_in == 'game_over':
+        label = 'GAME_OVER'
+        img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
+        img_shape = (160, 251)       # row, column
+        print(create_assembly_code(img_path, img_shape, "game_over_code", offset=16384, save=True))
+    elif paint_in == 'asteroid':
+        label = 'ASTEROID'
+        img_path = "D:/projects/Shoot-em-up-Game-Project/material/asteroid_resized.png"
+        img_shape = (9, 9)       # row, column
+        print(create_assembly_code(img_path, img_shape, "asteroid_code", save=True))
+    elif paint_in == 'coin':
+        label = 'COIN'
+        img_path = "D:/projects/Shoot-em-up-Game-Project/material/coin_resized.png"
+        img_shape = (9, 9)       # row, column
+        print(create_assembly_code(img_path, img_shape, "coin", save=True))

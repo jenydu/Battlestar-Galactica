@@ -1,4 +1,11 @@
 
+# FUNCTION: PAINT_HEART
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: row index for 'for loop' LOOP_HEART_ROW
+		# $s3: column index for 'for loop' LOOP_HEART_COLUMN
+		# $s4: parameter for subfunction LOOP_HEART_COLUMN
 PAINT_HEART:
 	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
@@ -11,362 +18,106 @@ PAINT_HEART:
 	    # Initialize registers
 	    add $s0, $0, $0				# initialize current color to black
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0				# 'column for loop' indexer
-	    add $s3, $0, $0				# 'row for loop' indexer
-	    add $s4, $0, $0				# last row index to paint in
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
 
 		LOOP_HEART_ROW: bge $s2, row_max, EXIT_PAINT_HEART
 				# Boolean Expressions: Paint in based on row index
-				HEART_COND:
-						beq $s2, 0, HEART_ROW_0
-						beq $s2, 1024, HEART_ROW_1
-						beq $s2, 2048, HEART_ROW_2
-						beq $s2, 3072, HEART_ROW_3
-						beq $s2, 4096, HEART_ROW_4
-						beq $s2, 5120, HEART_ROW_5
-						beq $s2, 6144, HEART_ROW_6
-						beq $s2, 7168, HEART_ROW_7
-						beq $s2, 8192, HEART_ROW_8
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_0:
-						addi $s0, $0, 0x7f7f7f		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 4			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x797979		# change current color
-						addi $s3, $0, 4			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x4c4c4c		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 12			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x666666		# change current color
-						addi $s3, $0, 12			# paint starting from column ___
-						addi $s4, $0, 16			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x7f7f7f		# change current color
-						addi $s3, $0, 16			# paint starting from column ___
-						addi $s4, $0, 20			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x6b6b6b		# change current color
-						addi $s3, $0, 20			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x4c4c4c		# change current color
-						addi $s3, $0, 24			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x747474		# change current color
-						addi $s3, $0, 28			# paint starting from column ___
-						addi $s4, $0, 32			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x7f7f7f		# change current color
-						addi $s3, $0, 32			# paint starting from column ___
-						addi $s4, $0, 36			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_1:
-						addi $s0, $0, 0x777777		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 4			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x6c2a2a		# change current color
-						addi $s3, $0, 4			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xdc3131		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 12			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x9f1616		# change current color
-						addi $s3, $0, 12			# paint starting from column ___
-						addi $s4, $0, 16			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x545353		# change current color
-						addi $s3, $0, 16			# paint starting from column ___
-						addi $s4, $0, 20			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x900000		# change current color
-						addi $s3, $0, 20			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xd80000		# change current color
-						addi $s3, $0, 24			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x741e1e		# change current color
-						addi $s3, $0, 28			# paint starting from column ___
-						addi $s4, $0, 32			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x737373		# change current color
-						addi $s3, $0, 32			# paint starting from column ___
-						addi $s4, $0, 36			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_2:
-						addi $s0, $0, 0x553131		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 4			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xed4343		# change current color
-						addi $s3, $0, 4			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff4d4d		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 12			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff0000		# change current color
-						addi $s3, $0, 12			# paint starting from column ___
-						addi $s4, $0, 16			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xcc0000		# change current color
-						addi $s3, $0, 16			# paint starting from column ___
-						addi $s4, $0, 20			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xfb0000		# change current color
-						addi $s3, $0, 20			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff0000		# change current color
-						addi $s3, $0, 24			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xdb0000		# change current color
-						addi $s3, $0, 28			# paint starting from column ___
-						addi $s4, $0, 32			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x502424		# change current color
-						addi $s3, $0, 32			# paint starting from column ___
-						addi $s4, $0, 36			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_3:
-						addi $s0, $0, 0x512424		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 4			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff3535		# change current color
-						addi $s3, $0, 4			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff0000		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xe50000		# change current color
-						addi $s3, $0, 28			# paint starting from column ___
-						addi $s4, $0, 32			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x4f1717		# change current color
-						addi $s3, $0, 32			# paint starting from column ___
-						addi $s4, $0, 36			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_4:
-						addi $s0, $0, 0x5f5050		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 4			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xc30000		# change current color
-						addi $s3, $0, 4			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff0000		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xfa0000		# change current color
-						addi $s3, $0, 24			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xb40000		# change current color
-						addi $s3, $0, 28			# paint starting from column ___
-						addi $s4, $0, 32			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x564343		# change current color
-						addi $s3, $0, 32			# paint starting from column ___
-						addi $s4, $0, 36			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_5:
-						addi $s0, $0, 0x757575		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 4			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x701e1e		# change current color
-						addi $s3, $0, 4			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xf80000		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 12			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff0000		# change current color
-						addi $s3, $0, 12			# paint starting from column ___
-						addi $s4, $0, 20			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xfe0000		# change current color
-						addi $s3, $0, 20			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xe50000		# change current color
-						addi $s3, $0, 24			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x6c1717		# change current color
-						addi $s3, $0, 28			# paint starting from column ___
-						addi $s4, $0, 32			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x707070		# change current color
-						addi $s3, $0, 32			# paint starting from column ___
-						addi $s4, $0, 36			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_6:
-						addi $s0, $0, 0x7f7f7f		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 4			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x787878		# change current color
-						addi $s3, $0, 4			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x671c1c		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 12			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xff0000		# change current color
-						addi $s3, $0, 12			# paint starting from column ___
-						addi $s4, $0, 20			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xe90000		# change current color
-						addi $s3, $0, 20			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x651414		# change current color
-						addi $s3, $0, 24			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x727272		# change current color
-						addi $s3, $0, 28			# paint starting from column ___
-						addi $s4, $0, 32			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x7f7f7f		# change current color
-						addi $s3, $0, 32			# paint starting from column ___
-						addi $s4, $0, 36			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_7:
-						addi $s0, $0, 0x7f7f7f		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 8			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x7b7b7b		# change current color
-						addi $s3, $0, 8			# paint starting from column ___
-						addi $s4, $0, 12			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x621c1c		# change current color
-						addi $s3, $0, 12			# paint starting from column ___
-						addi $s4, $0, 16			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0xe60000		# change current color
-						addi $s3, $0, 16			# paint starting from column ___
-						addi $s4, $0, 20			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x611616		# change current color
-						addi $s3, $0, 20			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x747474		# change current color
-						addi $s3, $0, 24			# paint starting from column ___
-						addi $s4, $0, 28			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
-				HEART_ROW_8:
-						addi $s0, $0, 0x7f7f7f		# change current color
-						addi $s3, $0, 0			# paint starting from column ___
-						addi $s4, $0, 12			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x7a7a7a		# change current color
-						addi $s3, $0, 12			# paint starting from column ___
-						addi $s4, $0, 16			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x423333		# change current color
-						addi $s3, $0, 16			# paint starting from column ___
-						addi $s4, $0, 20			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						addi $s0, $0, 0x747373		# change current color
-						addi $s3, $0, 20			# paint starting from column ___
-						addi $s4, $0, 24			# ending at column ___
-						jal LOOP_HEART_COLUMN		# paint in
-
-						j UPDATE_HEART_ROW
+			HEART_COND:
+					beq $s2, 0, HEART_ROW_0
+					beq $s2, 1024, HEART_ROW_1
+					beq $s2, 2048, HEART_ROW_2
+					beq $s2, 3072, HEART_ROW_3
+					beq $s2, 4096, HEART_ROW_4
+					beq $s2, 5120, HEART_ROW_5
+					beq $s2, 6144, HEART_ROW_6
+					beq $s2, 7168, HEART_ROW_7
+					beq $s2, 8192, HEART_ROW_8
+
+					j UPDATE_HEART_ROW
+			HEART_ROW_0:
+					setup_general_paint (0x7f7f7f, 0, 4, LOOP_HEART_COLUMN)
+					setup_general_paint (0x797979, 4, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0x4c4c4c, 8, 12, LOOP_HEART_COLUMN)
+					setup_general_paint (0x666666, 12, 16, LOOP_HEART_COLUMN)
+					setup_general_paint (0x7f7f7f, 16, 20, LOOP_HEART_COLUMN)
+					setup_general_paint (0x6b6b6b, 20, 24, LOOP_HEART_COLUMN)
+					setup_general_paint (0x4c4c4c, 24, 28, LOOP_HEART_COLUMN)
+					setup_general_paint (0x747474, 28, 32, LOOP_HEART_COLUMN)
+					setup_general_paint (0x7f7f7f, 32, 36, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_1:
+					setup_general_paint (0x777777, 0, 4, LOOP_HEART_COLUMN)
+					setup_general_paint (0x6c2a2a, 4, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0xdc3131, 8, 12, LOOP_HEART_COLUMN)
+					setup_general_paint (0x9f1616, 12, 16, LOOP_HEART_COLUMN)
+					setup_general_paint (0x545353, 16, 20, LOOP_HEART_COLUMN)
+					setup_general_paint (0x900000, 20, 24, LOOP_HEART_COLUMN)
+					setup_general_paint (0xd80000, 24, 28, LOOP_HEART_COLUMN)
+					setup_general_paint (0x741e1e, 28, 32, LOOP_HEART_COLUMN)
+					setup_general_paint (0x737373, 32, 36, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_2:
+					setup_general_paint (0x553131, 0, 4, LOOP_HEART_COLUMN)
+					setup_general_paint (0xed4343, 4, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff4d4d, 8, 12, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 12, 16, LOOP_HEART_COLUMN)
+					setup_general_paint (0xcc0000, 16, 20, LOOP_HEART_COLUMN)
+					setup_general_paint (0xfb0000, 20, 24, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 24, 28, LOOP_HEART_COLUMN)
+					setup_general_paint (0xdb0000, 28, 32, LOOP_HEART_COLUMN)
+					setup_general_paint (0x502424, 32, 36, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_3:
+					setup_general_paint (0x512424, 0, 4, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff3535, 4, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 8, 28, LOOP_HEART_COLUMN)
+					setup_general_paint (0xe50000, 28, 32, LOOP_HEART_COLUMN)
+					setup_general_paint (0x4f1717, 32, 36, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_4:
+					setup_general_paint (0x5f5050, 0, 4, LOOP_HEART_COLUMN)
+					setup_general_paint (0xc30000, 4, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 8, 24, LOOP_HEART_COLUMN)
+					setup_general_paint (0xfa0000, 24, 28, LOOP_HEART_COLUMN)
+					setup_general_paint (0xb40000, 28, 32, LOOP_HEART_COLUMN)
+					setup_general_paint (0x564343, 32, 36, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_5:
+					setup_general_paint (0x757575, 0, 4, LOOP_HEART_COLUMN)
+					setup_general_paint (0x701e1e, 4, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0xf80000, 8, 12, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 12, 20, LOOP_HEART_COLUMN)
+					setup_general_paint (0xfe0000, 20, 24, LOOP_HEART_COLUMN)
+					setup_general_paint (0xe50000, 24, 28, LOOP_HEART_COLUMN)
+					setup_general_paint (0x6c1717, 28, 32, LOOP_HEART_COLUMN)
+					setup_general_paint (0x707070, 32, 36, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_6:
+					setup_general_paint (0x7f7f7f, 0, 4, LOOP_HEART_COLUMN)
+					setup_general_paint (0x787878, 4, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0x671c1c, 8, 12, LOOP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 12, 20, LOOP_HEART_COLUMN)
+					setup_general_paint (0xe90000, 20, 24, LOOP_HEART_COLUMN)
+					setup_general_paint (0x651414, 24, 28, LOOP_HEART_COLUMN)
+					setup_general_paint (0x727272, 28, 32, LOOP_HEART_COLUMN)
+					setup_general_paint (0x7f7f7f, 32, 36, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_7:
+					setup_general_paint (0x7f7f7f, 0, 8, LOOP_HEART_COLUMN)
+					setup_general_paint (0x7b7b7b, 8, 12, LOOP_HEART_COLUMN)
+					setup_general_paint (0x621c1c, 12, 16, LOOP_HEART_COLUMN)
+					setup_general_paint (0xe60000, 16, 20, LOOP_HEART_COLUMN)
+					setup_general_paint (0x611616, 20, 24, LOOP_HEART_COLUMN)
+					setup_general_paint (0x747474, 24, 28, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
+			HEART_ROW_8:
+					setup_general_paint (0x7f7f7f, 0, 12, LOOP_HEART_COLUMN)
+					setup_general_paint (0x7a7a7a, 12, 16, LOOP_HEART_COLUMN)
+					setup_general_paint (0x423333, 16, 20, LOOP_HEART_COLUMN)
+					setup_general_paint (0x747373, 20, 24, LOOP_HEART_COLUMN)
+				j UPDATE_HEART_ROW
 
     	UPDATE_HEART_ROW:				# Update row value
     	    	addi $s2, $s2, row_increment
@@ -375,7 +126,7 @@ PAINT_HEART:
     	# FOR LOOP: (through column)
     	# Paints in column from $s3 to $s4 at some row
     	LOOP_HEART_COLUMN: bge $s3, $s4, EXIT_LOOP_HEART_COLUMN	# branch to UPDATE_HEART_COL; if column index >= last column index to paint
-        		addi $s1, $0, base_address			# Reinitialize t2; temporary address store
+        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
         		sw $s0, ($s1)					# paint in value
