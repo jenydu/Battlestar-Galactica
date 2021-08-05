@@ -161,10 +161,15 @@ addi $s0, $0, 3					# starting number of hearts
 addi $s1, $0, 0					# score counter
 
 # ==SETUP==:
-addi $a1, $zero, 1				# set to paint
-
 # Paint Border
 jal PAINT_BORDER
+
+addi $a0, $0, object_base_address
+addi $a1, $0, 1				# set to paint
+
+jal PAINT_COIN
+jal PAINT_LASER
+
 # Paint Health
 jal UPDATE_HEALTH
 # Paint Plane
@@ -605,17 +610,16 @@ PAINT_LASER:
 	push_reg_to_stack ($t8)
 	push_reg_to_stack ($t9)
 	# Initialize registers
-	add $t1, $0, $0				# initialize current color to black
+	addi $t1, $0, 0x7af21f			# change current color to bright freen
 	add $t2, $0, $0				# holds temporary memory address
 	add $t3, $0, $0				# holds 'column for loop' indexer
 	add $t4, $0, $0				# holds 'row for loop' indexer
 
-	addi $t1, $0, 0x7af21f			# change current color to white
 	check_color ($t1)			# updates color according to func. param. $a1
 
 	# FOR LOOP: (through col)
-	LOOP_LASER_COLS: bge $t3, 24, EXIT_PAINT_LASER
-		set_row_incr (8)		# update row for column
+	LOOP_LASER_COLS: bge $t3, 128, EXIT_PAINT_LASER
+		addi $t5, $0, 2048				# $t5 = %y * row_increment		(lower 32 bits)
 		j LOOP_LASER_ROWS			# paint in row
 	UPDATE_LASER_COL:				# Update column value
 		addi $t3, $t3, column_increment	# add 4 bits (1 byte) to refer to memory address for next row
@@ -643,7 +647,6 @@ PAINT_LASER:
 		calculate_indices ($t2, $t8, $t9)	# get address indices. Store in $t8 and $t9
 		within_borders ($t8, $t9, $t9)		# check within borders. Store boolean result in $t9 
 		beq $t9, 0, SKIP_LASER_PAINT		# skip painting pixel if out of border
-		
 		sw $t1, ($t2)				# paint pixel
 		SKIP_LASER_PAINT:
 		# Updates for loop index
@@ -1063,6 +1066,8 @@ UPDATE_HEALTH:
 		jr $ra
 #___________________________________________________________________________________________________________________________
 # HELPER FUNCTION: PAINT_HEART
+	# Precondition: 
+		# $a1 must be equal to 1 to avoid painting black.
 	# Inputs:
 		# $a2: address offset 
 		# $a3: whether to paint in or erase heart
@@ -1360,7 +1365,7 @@ PAINT_COIN:
     	# FOR LOOP: (through column)
     	# Paints in column from $s3 to $s4 at some row
     	LOOP_COIN_COLUMN: bge $s3, $s4, EXIT_LOOP_COIN_COLUMN	# branch to UPDATE_COIN_COL; if column index >= last column index to paint
-        		addi $s1, $0, object_base_address		# Reinitialize t2; temporary address store
+        		add $s1, $a0, $0				# start from specified address in $a0
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
         		sw $s0, ($s1)					# paint in value
