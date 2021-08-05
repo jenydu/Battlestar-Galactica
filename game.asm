@@ -262,14 +262,15 @@ MAIN_LOOP:
 		
 	GENERATE_COIN:
 		beq $s2, 0, initiate_coin		# if there isn't a coin already, draw a coin	
-	
+		
 	CHECK_COLLISION:
+		pop_reg_from_stack ($a0)			# restore $a0 to plane's address
+		jal check_plane_hitbox			# check if the plane's hitbox is overlapped with an object based on colour
 	
 	
 	
 	
 	
-	pop_reg_from_stack ($a0)
 	j MAIN_LOOP				# repeat loop
 #---------------------------------------------------------------------------------------------------------------------------
 END_SCREEN_LOOP:
@@ -296,6 +297,36 @@ initiate_coin:
 	jal PAINT_PICKUP_COIN
 	j CHECK_COLLISION
 
+check_plane_hitbox:
+	push_reg_to_stack ($t0)
+	push_reg_to_stack ($t1)
+	push_reg_to_stack ($t2)
+	push_reg_to_stack ($t9)
+	# check the top-most & bottom-most pixel colour from column 18 to 17 of the plane, if not plane colour, deduct heart
+	addi $t0, $0, 0
+	addi $t1, $0, 32
+	
+	addi $t9, $0, 20
+	sll $t9, $t9, 2
+	
+	add $t9, $t9, $a0
+
+plane_hitbox_loop:
+	beq $t0, $t1, exit_check_plane_hitbox
+	addi $t0, $t0, 1
+	lw $t2, ($t9)
+	addu $t9, $t9, row_increment
+	beq $t2, 0x896e5d, deduct_health
+	j plane_hitbox_loop
+
+exit_check_plane_hitbox:
+	jr $ra
+
+deduct_health:
+	subi $s0, $s0, 1
+	addi $a3, $s0, 0
+	jal UPDATE_HEALTH
+	j plane_hitbox_loop
 
 
 
