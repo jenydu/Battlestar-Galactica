@@ -609,8 +609,8 @@ PAINT_LASER:
 	add $t3, $0, $0				# holds 'column for loop' indexer
 	add $t4, $0, $0				# holds 'row for loop' indexer
 
-	addi $t1, $0, 0xFFFFFF			# change current color to white
-	check_color ($t1)				# updates color according to func. param. $a1
+	addi $t1, $0, 0x7af21f			# change current color to white
+	check_color ($t1)			# updates color according to func. param. $a1
 
 	# FOR LOOP: (through col)
 	LOOP_LASER_COLS: bge $t3, 24, EXIT_PAINT_LASER
@@ -1189,8 +1189,21 @@ PAINT_HEART:
     	# Paints in column from $s3 to $s4 at some row
     	LOOP_HEART_COLUMN: bge $s3, $s4, EXIT_LOOP_HEART_COLUMN	# branch to UPDATE_HEART_COL; if column index >= last column index to paint
         		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
+        		
+        		addi $s1, $s1, 250880				# shift row to bottom outermost border (row index 245)
+        		addi $s1, $s1, 52				# shift column to column index 13
+        		add $s1, $s1, $a2				# add offset from parameter $a2
+        		
+        		
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
+        		
+        		# If param. $a3 specifies to erase, then change color value stored in $s0
+        		IF_ERASE: beq $a3, 1, PAINT_HEART_PIXEL
+        			addi $s0, $0, 0x868686
+        		
+        		PAINT_HEART_PIXEL:	sw $s0, ($s1)				# paint in value
+        		
         		sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
@@ -1346,7 +1359,7 @@ PAINT_COIN:
     	# FOR LOOP: (through column)
     	# Paints in column from $s3 to $s4 at some row
     	LOOP_COIN_COLUMN: bge $s3, $s4, EXIT_LOOP_COIN_COLUMN	# branch to UPDATE_COIN_COL; if column index >= last column index to paint
-        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
+        		addi $s1, $0, object_base_address		# Reinitialize t2; temporary address store
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
         		sw $s0, ($s1)					# paint in value
