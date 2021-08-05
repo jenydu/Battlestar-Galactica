@@ -321,25 +321,33 @@ check_border:		la $t0, ($a0)			# load ___ base address to $t0
 
 respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
+			ble $t6, 12, draw_new_avatar	# if after movement, avatar is now at border, draw
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
+			ble $t6, 13, draw_new_avatar	# if after movement, avatar is now at border, draw
 			subu $t0, $t0, column_increment	# set base position 1 pixel left
 			j draw_new_avatar
 
 respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
 			subu $t0, $t0, row_increment	# set base position 1 pixel up
+			ble $t6, 19, draw_new_avatar	# if after movement, avatar is now at border, draw
 			subu $t0, $t0, row_increment	# set base position 1 pixel up
+			ble $t6, 20, draw_new_avatar	# if after movement, avatar is now at border, draw
 			subu $t0, $t0, row_increment	# set base position 1 pixel up
 			j draw_new_avatar
 
 respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			ble $t6, 207, draw_new_avatar	# if after movement, avatar is now at border, draw
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			ble $t6, 208, draw_new_avatar	# if after movement, avatar is now at border, draw
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
 			j draw_new_avatar
 
 respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
+			ble $t6, 217, draw_new_avatar	# if after movement, avatar is now at border, draw
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
+			ble $t6, 218, draw_new_avatar	# if after movement, avatar is now at border, draw
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
 			j draw_new_avatar
 
@@ -610,7 +618,7 @@ PAINT_LASER:
 	push_reg_to_stack ($t8)
 	push_reg_to_stack ($t9)
 	# Initialize registers
-	addi $t1, $0, 0x7af21f			# change current color to bright freen
+	addi $t1, $0, 0x43b543			# change current color to bright freen
 	add $t2, $0, $0				# holds temporary memory address
 	add $t3, $0, $0				# holds 'column for loop' indexer
 	add $t4, $0, $0				# holds 'row for loop' indexer
