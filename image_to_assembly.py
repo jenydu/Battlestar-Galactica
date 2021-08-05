@@ -197,7 +197,7 @@ def from_assembly_idx_to_paint_settings(index_info, ignore_color=None):
         paint_code += create_paint_block(index_info[idx][0],
                                         index_info[idx][1],
                                         ignore_color)
-        paint_code += f"\n\t\t\t\tj UPDATE_{label.upper()}_{by.upper()}\n"
+        paint_code += f"\n\t\t\t\t\tj UPDATE_{label.upper()}_{by.upper()}\n"
     return paint_code
 
 

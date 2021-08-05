@@ -142,10 +142,10 @@ displayAddress: 	.word 0x10008000
 		sgt $s0, $col, 11
 		slti $s1, $col, 216
 		and $s2, $s0, $s1			# 11 < col < 216
-		# Row index in (18, 206)
+		# Row index in (18, 238)
 		sgt $s0, $row, 18
-		slti $s1, $row, 206
-		and $bool_store, $s0, $s1		# 18 < row < 206
+		slti $s1, $row, 238
+		and $bool_store, $s0, $s1		# 18 < row < 238
 		and $bool_store, $bool_store, $s2	# make sure both inequalities are true
 		# Restore $s0-1 values from stack.
 		pop_reg_from_stack ($s2)
@@ -700,36 +700,36 @@ PAINT_ASTEROID:
 					setup_general_paint (0x7c6455, 16, 20, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x564941, 20, 24, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x36312e, 24, 28, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_1:
 					setup_general_paint (0x271f1a, 0, 4, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x826858, 4, 8, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x896e5d, 8, 28, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x82695a, 28, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_2:
 					setup_general_paint (0x7c6454, 0, 4, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x896e5d, 4, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x332923, 32, 36, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_3:
 					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x876c5b, 32, 36, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_4:
 					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x876d5c, 32, 36, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_5:
 					setup_general_paint (0x896e5d, 0, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x615045, 32, 36, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_6:
 					setup_general_paint (0x896e5d, 0, 28, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x866b5b, 28, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_7:
 					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x876c5b, 4, 8, LOOP_ASTEROID_COLUMN)
@@ -737,7 +737,7 @@ PAINT_ASTEROID:
 					setup_general_paint (0x866c5c, 24, 28, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x8a6e5f, 28, 32, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 			ASTEROID_ROW_8:
 					setup_general_paint (0x000000, 0, 4, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x40342c, 4, 8, LOOP_ASTEROID_COLUMN)
@@ -745,7 +745,7 @@ PAINT_ASTEROID:
 					setup_general_paint (0x69564b, 16, 20, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x342f2d, 20, 24, LOOP_ASTEROID_COLUMN)
 					setup_general_paint (0x161515, 24, 28, LOOP_ASTEROID_COLUMN)
-				j UPDATE_ASTEROID_ROW
+					j UPDATE_ASTEROID_ROW
 
     	UPDATE_ASTEROID_ROW:				# Update row value
     	    	addi $s2, $s2, row_increment
