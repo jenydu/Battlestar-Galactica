@@ -161,12 +161,13 @@ addi $s0, $0, 3					# starting number of hearts
 addi $s1, $0, 0					# score counter
 
 # ==SETUP==:
+addi $a1, $zero, 1				# set to paint
+
 # Paint Border
 jal PAINT_BORDER
 # Paint Health
 jal UPDATE_HEALTH
 # Paint Plane
-addi $a1, $zero, 1				# set to paint
 addi $a0, $0, object_base_address		# start painting plane from top-left border
 addi $a0, $a0, 96256				# center plane
 push_reg_to_stack ($a0)				# store current plane address in stack
@@ -1061,13 +1062,16 @@ UPDATE_HEALTH:
 		pop_reg_from_stack ($ra)
 		jr $ra
 #___________________________________________________________________________________________________________________________
-# FUNCTION: PAINT_HEART
+# HELPER FUNCTION: PAINT_HEART
+	# Inputs:
+		# $a2: address offset 
+		# $a3: whether to paint in or erase heart
 	# Registers Used
 		# $s0: stores current color value
 		# $s1: temporary memory address storage for current unit (in bitmap)
-		# $s2: row index for 'for loop' LOOP_HEART_ROW
-		# $s3: column index for 'for loop' LOOP_HEART_COLUMN
-		# $s4: parameter for subfunction LOOP_HEART_COLUMN
+		# $s2: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $s3: starting row index for 'for loop' LOOP_OBJ_ROWS
+		# $s4: ending row index for 'for loop' LOOP_OBJ_ROWS
 PAINT_HEART:
 	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
@@ -1203,9 +1207,6 @@ PAINT_HEART:
         			addi $s0, $0, 0x868686
         		
         		PAINT_HEART_PIXEL:	sw $s0, ($s1)				# paint in value
-        		
-        		sw $s0, ($s1)					# paint in value
-
         		# Updates for loop index
         		addi $s3, $s3, column_increment			# t4 += row_increment
         		j LOOP_HEART_COLUMN				# repeats LOOP_HEART_ROW
