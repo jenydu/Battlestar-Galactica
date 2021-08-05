@@ -159,6 +159,7 @@ INITIALIZE:
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
 addi $s1, $0, 0					# score counter
+addi $s2, $0, 0					# address for coin
 
 # ==SETUP==:
 # Paint Border
@@ -258,8 +259,17 @@ MAIN_LOOP:
 		jal PAINT_ASTEROID 
 	
 	EXIT_OBSTACLE_MOVE:	
-		pop_reg_from_stack ($a0)
-
+		
+	GENERATE_COIN:
+		beq $s2, 0, initiate_coin		# if there isn't a coin already, draw a coin	
+	
+	CHECK_COLLISION:
+	
+	
+	
+	
+	
+	pop_reg_from_stack ($a0)
 	j MAIN_LOOP				# repeat loop
 #---------------------------------------------------------------------------------------------------------------------------
 END_SCREEN_LOOP:
@@ -277,6 +287,18 @@ END_SCREEN_LOOP:
 # Tells OS the program ends
 EXIT:	li $v0, 10
 	syscall
+#___________________________________________________________________________________________________________________________
+initiate_coin:	
+	jal RANDOM_OFFSET			# create random address offset
+	add $s2, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	add $a0, $s2, $0			# PAINT_ASTEROID param. Load obstacle address
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_PICKUP_COIN
+	j CHECK_COLLISION
+
+
+
+
 #___________________________________________________________________________________________________________________________
 regen_obs_1:	
 	jal RANDOM_OFFSET			# create random address offset
@@ -335,19 +357,19 @@ respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, can
 			j draw_new_avatar
 
 respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
-			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			add $t0, $t0, row_increment	# set base position 1 pixel down
 			ble $t6, 207, draw_new_avatar	# if after movement, avatar is now at border, draw
-			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			add $t0, $t0, row_increment	# set base position 1 pixel down
 			ble $t6, 208, draw_new_avatar	# if after movement, avatar is now at border, draw
-			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			add $t0, $t0, row_increment	# set base position 1 pixel down
 			j draw_new_avatar
 
 respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
-			addu $t0, $t0, column_increment	# set base position 1 pixel right
+			add $t0, $t0, column_increment	# set base position 1 pixel right
 			ble $t6, 217, draw_new_avatar	# if after movement, avatar is now at border, draw
-			addu $t0, $t0, column_increment	# set base position 1 pixel right
+			add $t0, $t0, column_increment	# set base position 1 pixel right
 			ble $t6, 218, draw_new_avatar	# if after movement, avatar is now at border, draw
-			addu $t0, $t0, column_increment	# set base position 1 pixel right
+			add $t0, $t0, column_increment	# set base position 1 pixel right
 			j draw_new_avatar
 
 draw_new_avatar:	addi $a1, $zero, 0		# set $a1 as 0
