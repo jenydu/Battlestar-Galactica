@@ -386,17 +386,17 @@ respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, can
 
 respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
 			add $t0, $t0, row_increment	# set base position 1 pixel down
-			ble $t6, 207, draw_new_avatar	# if after movement, avatar is now at border, draw
+			bge $t6, 207, draw_new_avatar	# if after movement, avatar is now at border, draw
 			add $t0, $t0, row_increment	# set base position 1 pixel down
-			ble $t6, 208, draw_new_avatar	# if after movement, avatar is now at border, draw
+			bge $t6, 208, draw_new_avatar	# if after movement, avatar is now at border, draw
 			add $t0, $t0, row_increment	# set base position 1 pixel down
 			j draw_new_avatar
 
 respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
 			add $t0, $t0, column_increment	# set base position 1 pixel right
-			ble $t6, 217, draw_new_avatar	# if after movement, avatar is now at border, draw
+			bge $t6, 217, draw_new_avatar	# if after movement, avatar is now at border, draw
 			add $t0, $t0, column_increment	# set base position 1 pixel right
-			ble $t6, 218, draw_new_avatar	# if after movement, avatar is now at border, draw
+			bge $t6, 218, draw_new_avatar	# if after movement, avatar is now at border, draw
 			add $t0, $t0, column_increment	# set base position 1 pixel right
 			j draw_new_avatar
 
