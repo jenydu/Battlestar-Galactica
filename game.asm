@@ -490,16 +490,27 @@ check_border:		la $t0, ($a0)			# load ___ base address to $t0
 			beq $t4, 0x67, respond_to_g	# if 'g', branch to END_SCREEN_LOOP
 			j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
 
-respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
-			subu $t0, $t0, column_increment	# set base position 1 pixel left
+respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up 
+			subu $t0, $t0, column_increment	# set base position 1 pixel up
+			subu $t0, $t0, column_increment	# set base position 1 pixel up
+			subu $t0, $t0, column_increment	# set base position 1 pixel up
 			j draw_new_avatar
+
 respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
 			subu $t0, $t0, row_increment	# set base position 1 pixel up
+			subu $t0, $t0, row_increment	# set base position 1 pixel up
+			subu $t0, $t0, row_increment	# set base position 1 pixel up
 			j draw_new_avatar
+
 respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
 			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			addu $t0, $t0, row_increment	# set base position 1 pixel down
+			addu $t0, $t0, row_increment	# set base position 1 pixel down
 			j draw_new_avatar
+
 respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
+			addu $t0, $t0, column_increment	# set base position 1 pixel right
+			addu $t0, $t0, column_increment	# set base position 1 pixel right
 			addu $t0, $t0, column_increment	# set base position 1 pixel right
 			j draw_new_avatar
 
