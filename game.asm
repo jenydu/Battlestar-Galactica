@@ -167,8 +167,7 @@ jal PAINT_BORDER
 addi $a0, $0, object_base_address
 addi $a1, $0, 1				# set to paint
 
-jal PAINT_COIN
-jal PAINT_LASER
+jal PAINT_BORDER_COIN
 
 # Paint Health
 jal UPDATE_HEALTH
@@ -618,7 +617,7 @@ PAINT_LASER:
 	push_reg_to_stack ($t8)
 	push_reg_to_stack ($t9)
 	# Initialize registers
-	addi $t1, $0, 0x43b543			# change current color to bright freen
+	addi $t1, $0, 0x00cb0d			# change current color to bright freen
 	add $t2, $0, $0				# holds temporary memory address
 	add $t3, $0, $0				# holds 'column for loop' indexer
 	add $t4, $0, $0				# holds 'row for loop' indexer
@@ -964,6 +963,167 @@ PAINT_BORDER:
 	EXIT_LOOP_BORDER_ROWS:
 		jr $ra
 #___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT_BORDER_COIN
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: row index for 'for loop' LOOP_BORDER_COIN_ROW
+		# $s3: column index for 'for loop' LOOP_BORDER_COIN_COLUMN
+		# $s4: parameter for subfunction LOOP_BORDER_COIN_COLUMN
+PAINT_BORDER_COIN:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
+    
+	    # Initialize registers
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+
+		LOOP_BORDER_COIN_ROW: bge $s2, row_max, EXIT_PAINT_BORDER_COIN
+				# Boolean Expressions: Paint in based on row index
+			BORDER_COIN_COND:
+					beq $s2, 0, BORDER_COIN_ROW_0
+					beq $s2, 1024, BORDER_COIN_ROW_1
+					beq $s2, 2048, BORDER_COIN_ROW_2
+					beq $s2, 3072, BORDER_COIN_ROW_3
+					beq $s2, 4096, BORDER_COIN_ROW_4
+					beq $s2, 5120, BORDER_COIN_ROW_5
+					beq $s2, 6144, BORDER_COIN_ROW_6
+					beq $s2, 7168, BORDER_COIN_ROW_7
+					beq $s2, 8192, BORDER_COIN_ROW_8
+
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_0:
+					setup_general_paint (0x868686, 0, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 12, 16, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 16, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x5c5c37, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_1:
+					setup_general_paint (0x868686, 0, 4, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x535300, 4, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb8b800, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x939300, 12, 16, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x5d5d00, 16, 20, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x8f8f16, 20, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xd8d854, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xd1d15c, 28, 32, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_2:
+					setup_general_paint (0x868686, 0, 4, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 4, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x979700, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x40403a, 12, 16, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 16, 20, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x4c4c46, 20, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xaaa900, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xe1e0a6, 28, 32, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x717131, 32, 36, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_3:
+					setup_general_paint (0x5f5f00, 0, 4, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 4, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 12, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x5e5e00, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x787854, 32, 36, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 36, 44, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xffffff, 44, 48, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 48, 52, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xffffff, 52, 56, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_4:
+					setup_general_paint (0x5e5f00, 0, 4, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 4, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x2f2f00, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 12, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x595b1b, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb8b800, 28, 32, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x74745d, 32, 36, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 36, 48, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xffffff, 48, 52, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 52, 56, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_5:
+					setup_general_paint (0x5e5f00, 0, 4, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x484800, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 12, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x5b5c00, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb8b800, 28, 32, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x6e6e57, 32, 36, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 36, 44, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xffffff, 44, 48, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 48, 52, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xffffff, 52, 56, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_6:
+					setup_general_paint (0x868686, 0, 4, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb8b800, 4, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xafaf00, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x343416, 12, 16, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x868686, 16, 20, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x333400, 20, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xa5a500, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 28, 32, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x414224, 32, 36, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_7:
+					setup_general_paint (0x868686, 0, 4, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x494900, 4, 8, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb2b200, 8, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb5b500, 12, 16, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x909000, 16, 20, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x939300, 20, 24, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 24, 28, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0x777700, 28, 32, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+			BORDER_COIN_ROW_8:
+					setup_general_paint (0x868686, 0, 12, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb6b600, 12, 16, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 16, 20, LOOP_BORDER_COIN_COLUMN)
+					setup_general_paint (0xb3b300, 20, 24, LOOP_BORDER_COIN_COLUMN)
+					j UPDATE_BORDER_COIN_ROW
+
+    	UPDATE_BORDER_COIN_ROW:				# Update row value
+    	    	addi $s2, $s2, row_increment
+	        	j LOOP_BORDER_COIN_ROW
+
+    	# FOR LOOP: (through column)
+    	# Paints in column from $s3 to $s4 at some row
+    	LOOP_BORDER_COIN_COLUMN: bge $s3, $s4, EXIT_LOOP_BORDER_COIN_COLUMN	# branch to UPDATE_BORDER_COIN_COL; if column index >= last column index to paint
+        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
+        		add $s1, $s1, $s2				# update to specific row from base address
+        		add $s1, $s1, $s3				# update to specific column
+        		addi $s1, $s1, 2888				# add specified offset
+                		sw $s0, ($s1)					# paint in value
+
+        		# Updates for loop index
+        		addi $s3, $s3, column_increment			# t4 += row_increment
+        		j LOOP_BORDER_COIN_COLUMN				# repeats LOOP_BORDER_COIN_ROW
+	    EXIT_LOOP_BORDER_COIN_COLUMN:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_BORDER_COIN:
+        		# Restore used registers
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction
+#___________________________________________________________________________________________________________________________
 # FUNCTION: CLEAR_SCREEN
 	# Registers Used
 		# $t1: stores current color value
@@ -1237,14 +1397,14 @@ PAINT_HEART:
         		pop_reg_from_stack ($ra)
         		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
-# FUNCTION: PAINT_COIN
+# FUNCTION: PAINT_PICKUP_COIN
 	# Registers Used
 		# $s0: stores current color value
 		# $s1: temporary memory address storage for current unit (in bitmap)
-		# $s2: row index for 'for loop' LOOP_COIN_ROW
-		# $s3: column index for 'for loop' LOOP_COIN_COLUMN
-		# $s4: parameter for subfunction LOOP_COIN_COLUMN
-PAINT_COIN:
+		# $s2: row index for 'for loop' LOOP_PICKUP_COIN_ROW
+		# $s3: column index for 'for loop' LOOP_PICKUP_COIN_COLUMN
+		# $s4: parameter for subfunction LOOP_PICKUP_COIN_COLUMN
+PAINT_PICKUP_COIN:
 	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
 	    push_reg_to_stack ($s0)
@@ -1260,132 +1420,132 @@ PAINT_COIN:
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 
-		LOOP_COIN_ROW: bge $s2, row_max, EXIT_PAINT_COIN
+		LOOP_PICKUP_COIN_ROW: bge $s2, row_max, EXIT_PAINT_PICKUP_COIN
 				# Boolean Expressions: Paint in based on row index
-			COIN_COND:
-					beq $s2, 0, COIN_ROW_0
-					beq $s2, 1024, COIN_ROW_1
-					beq $s2, 2048, COIN_ROW_2
-					beq $s2, 3072, COIN_ROW_3
-					beq $s2, 4096, COIN_ROW_4
-					beq $s2, 5120, COIN_ROW_5
-					beq $s2, 6144, COIN_ROW_6
-					beq $s2, 7168, COIN_ROW_7
-					beq $s2, 8192, COIN_ROW_8
+			PICKUP_COIN_COND:
+					beq $s2, 0, PICKUP_COIN_ROW_0
+					beq $s2, 1024, PICKUP_COIN_ROW_1
+					beq $s2, 2048, PICKUP_COIN_ROW_2
+					beq $s2, 3072, PICKUP_COIN_ROW_3
+					beq $s2, 4096, PICKUP_COIN_ROW_4
+					beq $s2, 5120, PICKUP_COIN_ROW_5
+					beq $s2, 6144, PICKUP_COIN_ROW_6
+					beq $s2, 7168, PICKUP_COIN_ROW_7
+					beq $s2, 8192, PICKUP_COIN_ROW_8
 
-					j UPDATE_COIN_ROW
-			COIN_ROW_0:
-					setup_general_paint (0x000000, 0, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0x494900, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 12, 16, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 16, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0x5c5c37, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0x222100, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_1:
-					setup_general_paint (0x000000, 0, 4, LOOP_COIN_COLUMN)
-					setup_general_paint (0x535300, 4, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0x8f8f00, 12, 16, LOOP_COIN_COLUMN)
-					setup_general_paint (0x5b5b00, 16, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0x8d8d00, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0xd8d851, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0xd1d15c, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_2:
-					setup_general_paint (0x303016, 0, 4, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 4, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0x939300, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0x212100, 12, 16, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 16, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0x333300, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0xa3a200, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0xe2e1a6, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0x878715, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_3:
-					setup_general_paint (0x5f5f00, 0, 4, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 4, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0x494900, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 12, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0x161600, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0x5e5f00, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbcbc00, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0xa9a853, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_4:
-					setup_general_paint (0x5e5f00, 0, 4, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 4, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0x2f2f00, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 12, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0x161600, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0x5e5f00, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0xa6a66b, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_5:
-					setup_general_paint (0x5e5f00, 0, 4, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 4, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0x494900, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 12, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0x161600, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0x5e5f00, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0x8c8c59, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_6:
-					setup_general_paint (0x272700, 0, 4, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb8b800, 4, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0xafaf00, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0x333315, 12, 16, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 16, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0x353600, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0xa7a700, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0x393a00, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_7:
-					setup_general_paint (0x000000, 0, 4, LOOP_COIN_COLUMN)
-					setup_general_paint (0x494900, 4, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb2b200, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb5b500, 12, 16, LOOP_COIN_COLUMN)
-					setup_general_paint (0x909000, 16, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0x939300, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 24, 28, LOOP_COIN_COLUMN)
-					setup_general_paint (0x777700, 28, 32, LOOP_COIN_COLUMN)
-					setup_general_paint (0x000000, 32, 36, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
-			COIN_ROW_8:
-					setup_general_paint (0x000000, 0, 8, LOOP_COIN_COLUMN)
-					setup_general_paint (0x252500, 8, 12, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb6b600, 12, 16, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 16, 20, LOOP_COIN_COLUMN)
-					setup_general_paint (0xb3b300, 20, 24, LOOP_COIN_COLUMN)
-					setup_general_paint (0x202100, 24, 28, LOOP_COIN_COLUMN)
-				j UPDATE_COIN_ROW
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_0:
+					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 16, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5c5c37, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x222100, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_1:
+					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x535300, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x8f8f00, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5b5b00, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x8d8d00, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xd8d851, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xd1d15c, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_2:
+					setup_general_paint (0x303016, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x939300, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x212100, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x333300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa3a200, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xe2e1a6, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x878715, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_3:
+					setup_general_paint (0x5f5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbcbc00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa9a853, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_4:
+					setup_general_paint (0x5e5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x2f2f00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa6a66b, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_5:
+					setup_general_paint (0x5e5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x8c8c59, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_6:
+					setup_general_paint (0x272700, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb8b800, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xafaf00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x333315, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x353600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa7a700, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x393a00, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_7:
+					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb2b200, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb5b500, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x909000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x939300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x777700, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_8:
+					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x252500, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb6b600, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb3b300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x202100, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
 
-    	UPDATE_COIN_ROW:				# Update row value
+    	UPDATE_PICKUP_COIN_ROW:				# Update row value
     	    	addi $s2, $s2, row_increment
-	        	j LOOP_COIN_ROW
+	        	j LOOP_PICKUP_COIN_ROW
 
     	# FOR LOOP: (through column)
     	# Paints in column from $s3 to $s4 at some row
-    	LOOP_COIN_COLUMN: bge $s3, $s4, EXIT_LOOP_COIN_COLUMN	# branch to UPDATE_COIN_COL; if column index >= last column index to paint
-        		add $s1, $a0, $0				# start from specified address in $a0
+    	LOOP_PICKUP_COIN_COLUMN: bge $s3, $s4, EXIT_LOOP_PICKUP_COIN_COLUMN	# branch to UPDATE_PICKUP_COIN_COL; if column index >= last column index to paint
+        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
         		sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
         		addi $s3, $s3, column_increment			# t4 += row_increment
-        		j LOOP_COIN_COLUMN				# repeats LOOP_COIN_ROW
-	    EXIT_LOOP_COIN_COLUMN:
+        		j LOOP_PICKUP_COIN_COLUMN				# repeats LOOP_PICKUP_COIN_ROW
+	    EXIT_LOOP_PICKUP_COIN_COLUMN:
 		        jr $ra
 
     	# EXIT FUNCTION
-       	EXIT_PAINT_COIN:
+       	EXIT_PAINT_PICKUP_COIN:
         		# Restore used registers
 	    		pop_reg_from_stack ($s4)
 	    		pop_reg_from_stack ($s3)
