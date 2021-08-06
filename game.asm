@@ -325,6 +325,10 @@ deduct_health:
 	subi $s0, $s0, 1			# health - 1
 	addi $a3, $s0, 0
 	jal UPDATE_HEALTH			# update health
+	
+	# Go to game over screen if 0 health
+	beq $s0, 0, END_SCREEN_LOOP			
+	# Else continue
 	j exit_check_plane_hitbox
 
 
