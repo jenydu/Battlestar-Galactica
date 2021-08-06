@@ -165,12 +165,12 @@ addi $s3, $0, 0					# stores current base address for heart
 jal PAINT_BORDER		# Paint Border
 jal UPDATE_HEALTH		# Paint Health Status
 jal PAINT_BORDER_COIN		# Paint Score
-jal UPDATE_SCORE
 # Paint Plane
 addi $a0, $0, object_base_address		# start painting plane from top-left border
 addi $a0, $a0, 96256				# center plane
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
+
 #---------------------------------------------------------------------------------------------------------------------------
 GENERATE_OBSTACLES:
 	# Used Registers:
@@ -1382,6 +1382,7 @@ UPDATE_SCORE:
 	
 	# Erase old score
 	addi $a0, $0, display_base_address
+	addi $a0, $a0, 2948
 	addi $a1, $0, 0
 	add $a2, $0, $t0		
 	jal PAINT_NUMBER		# erase tenths digit
@@ -1534,17 +1535,13 @@ PAINT_NUMBER:
 					j UPDATE_NUMBER_COLUMN
 			NUMBER_COLUMN_4:
 					# number-specific painting conditionals
-					beq $a2, 1, SKIP_LOWER_NUMBER_COLUMN_4	
-					beq $a2, 3, SKIP_LOWER_NUMBER_COLUMN_4
-					beq $a2, 7, SKIP_LOWER_NUMBER_COLUMN_4
-					beq $a2, 2, SKIP_UPPER_NUMBER_COLUMN_4
+					beq $a2, 5, SKIP_UPPER_NUMBER_COLUMN_4
+					beq $a2, 6, SKIP_UPPER_NUMBER_COLUMN_4
 					
 					setup_general_paint (0xffffff, 1024, 4096, LOOP_NUMBER_ROW)
 					SKIP_UPPER_NUMBER_COLUMN_4:
 					
-					beq $a2, 4, SKIP_LOWER_NUMBER_COLUMN_4
-					beq $a2, 5, SKIP_LOWER_NUMBER_COLUMN_4
-					beq $a2, 9, SKIP_LOWER_NUMBER_COLUMN_4
+					beq $a2, 2, SKIP_LOWER_NUMBER_COLUMN_4
 					
 					setup_general_paint (0xffffff, 5120, 8192, LOOP_NUMBER_ROW)
 					SKIP_LOWER_NUMBER_COLUMN_4:
@@ -1592,7 +1589,9 @@ PAINT_NUMBER:
 PAINT_BORDER_COIN:
 	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($a0)
 	    push_reg_to_stack ($a1)
+	    push_reg_to_stack ($a2)
 	    push_reg_to_stack ($s0)
 	    push_reg_to_stack ($s1)
 	    push_reg_to_stack ($s2)
@@ -1736,15 +1735,28 @@ PAINT_BORDER_COIN:
 
     	# EXIT FUNCTION
        	EXIT_PAINT_BORDER_COIN:
-        		# Restore used registers
-	    		pop_reg_from_stack ($s4)
-	    		pop_reg_from_stack ($s3)
-	    		pop_reg_from_stack ($s2)
-	    		pop_reg_from_stack ($s1)
-	    		pop_reg_from_stack ($s0)
-	    		pop_reg_from_stack ($a1)
-        		pop_reg_from_stack ($ra)
-        		jr $ra						# return to previous instruction
+       		# Paint 00 as initial score
+		addi $a0, $0, display_base_address
+		addi $a0, $a0, 2948
+		addi $a1, $0, 1
+		addi $a2, $0, 0		
+		jal PAINT_NUMBER
+		addi $a0, $a0, 24
+		addi $a1, $0, 1
+		addi $a2, $0, 0
+		jal PAINT_NUMBER
+       	
+        	# Restore used registers
+    		pop_reg_from_stack ($s4)
+    		pop_reg_from_stack ($s3)
+    		pop_reg_from_stack ($s2)
+    		pop_reg_from_stack ($s1)
+    		pop_reg_from_stack ($s0)
+    		pop_reg_from_stack ($a2)
+    		pop_reg_from_stack ($a1)
+    		pop_reg_from_stack ($a0)
+       		pop_reg_from_stack ($ra)
+       		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: CLEAR_SCREEN
 	# Registers Used
