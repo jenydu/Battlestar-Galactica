@@ -244,7 +244,12 @@ MAIN_LOOP:
 	EXIT_OBSTACLE_MOVE:	
 		
 	GENERATE_COIN:
-		beq $s2, 0, generate_coin		# if there isn't a coin already, draw a coin	
+		beq $s2, 0, generate_coin		# if there isn't a coin already, draw a coin
+		
+		# RE-DRAW the coin every loop so that it doesn't get erased when an obstacle flies over it
+		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
+		addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
+		jal PAINT_PICKUP_COIN	
 		
 	CHECK_COLLISION:
 		pop_reg_from_stack ($a0)			# restore $a0 to plane's address
@@ -281,9 +286,19 @@ generate_asteroid:
 	pop_reg_from_stack ($ra)	
 	jr $ra
 	
-	
-	
-	
+# REGENERATE OBSTACLES
+regen_obs_1:	
+	jal generate_asteroid
+	addi $s5, $a0, 0
+	j move_obs_2
+regen_obs_2:
+	jal generate_asteroid
+	addi $s6, $a0, 0
+	j move_obs_3
+regen_obs_3:	
+	jal generate_asteroid
+	addi $s7, $a0, 0
+	j EXIT_OBSTACLE_MOVE	
 	
 #___________________________________________________________________________________________________________________________
 # COLLISION
@@ -329,37 +344,20 @@ COLLISION_DETECTOR:
 
         add_score:
         	addi $s1, $s1, 1			# score += 1
-        	#jal UPDATE_SCORE
+        	# jal UPDATE_SCORE
+        	
+        	# erase coin (coin will be regenerated in the next loop)
+		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
+		addi $a1, $0, 0				# PAINT_PICKUP_COIN param. Set to erase
+		jal PAINT_PICKUP_COIN
         	j exit_check_plane_hitbox
-#___________________________________________________________________________________________________________________________
-# REGENERATE OBSTACLES
-regen_obs_1:	
-	jal RANDOM_OFFSET			# create random address offset
-	addi $s5, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s5, $0			# PAINT_ASTEROID param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_ASTEROID
-	j move_obs_2
-regen_obs_2:
-	jal RANDOM_OFFSET			# create random address offset
-	addi $s6, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s6, $0			# PAINT_ASTEROID param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_ASTEROID
-	j move_obs_3
-regen_obs_3:	
-	jal RANDOM_OFFSET			# create random address offset
-	addi $s7, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_ASTEROID
-	j EXIT_OBSTACLE_MOVE
+
 # -------------------------------------------------------------------------------------------------------------------------
 # REGENERATE PICKUPS
 generate_coin:	
 	jal RANDOM_OFFSET			# create random address offset
-	add $s2, $v0, object_base_address	# store pickup coin address
-	add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
+	add $a0, $v0, object_base_address	# store pickup coin address
+	add $s2, $a0, $0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
 	jal PAINT_PICKUP_COIN			
 	j CHECK_COLLISION			# check for collision
