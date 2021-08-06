@@ -326,8 +326,7 @@ deduct_health:
 	addi $a3, $s0, 0
 	jal UPDATE_HEALTH			# update health
 	
-	# Go to game over screen if 0 health
-	beq $s0, 0, END_SCREEN_LOOP			
+	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
 	# Else continue
 	j exit_check_plane_hitbox
 
@@ -1133,9 +1132,10 @@ PAINT_PICKUP_COIN:
 UPDATE_HEALTH:
 	# Store current state of used registers
 	push_reg_to_stack ($ra)
-	push_reg_to_stack ($s0)
+	push_reg_to_stack ($a0)
 	push_reg_to_stack ($a2)
 	push_reg_to_stack ($a3)
+	push_reg_to_stack ($s0)
 	push_reg_to_stack ($t0)
 	push_reg_to_stack ($t1)
 	push_reg_to_stack ($t2)
@@ -1167,9 +1167,11 @@ UPDATE_HEALTH:
 		pop_reg_from_stack ($t2)
 		pop_reg_from_stack ($t1)
 		pop_reg_from_stack ($t0)
+		pop_reg_from_stack ($s0)
+		
 		pop_reg_from_stack ($a3)
 		pop_reg_from_stack ($a2)
-		pop_reg_from_stack ($s0)
+		pop_reg_from_stack ($a0)
 		pop_reg_from_stack ($ra)
 		jr $ra
 #___________________________________________________________________________________________________________________________
