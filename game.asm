@@ -190,6 +190,9 @@ GENERATE_OBSTACLES:
 	# Obstacle 3
 	jal generate_asteroid
 	addi $s7, $a0, 0
+	
+	# coin
+	jal generate_coin
 #---------------------------------------------------------------------------------------------------------------------------
 pop_reg_from_stack ($a0)			# restore current plane address from stack
 
@@ -243,9 +246,7 @@ MAIN_LOOP:
 	
 	EXIT_OBSTACLE_MOVE:	
 		
-	GENERATE_COIN:
-		beq $s2, 0, generate_coin		# if there isn't a coin already, draw a coin
-		
+	GENERATE_COIN:		
 		# RE-DRAW the coin every loop so that it doesn't get erased when an obstacle flies over it
 		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
 		addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
@@ -327,10 +328,6 @@ COLLISION_DETECTOR:
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
         	j plane_hitbox_loop
 
-        exit_check_plane_hitbox:			# return to previous instruction
-        	pop_reg_from_stack($ra)
-        	jr $ra
-
         deduct_health:
         	subi $s0, $s0, 1			# health -= 1
         	jal UPDATE_HEALTH			# update health on border
@@ -347,20 +344,29 @@ COLLISION_DETECTOR:
         	# jal UPDATE_SCORE
         	
         	# erase coin (coin will be regenerated in the next loop)
+		push_reg_to_stack ($a0)			# stores away plane address
 		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
 		addi $a1, $0, 0				# PAINT_PICKUP_COIN param. Set to erase
 		jal PAINT_PICKUP_COIN
+		jal generate_coin
+		pop_reg_from_stack($a0)			# retrieve plane address
+        	
         	j exit_check_plane_hitbox
-
+	
+	exit_check_plane_hitbox:			# return to previous instruction
+        	pop_reg_from_stack($ra)
+        	jr $ra
 # -------------------------------------------------------------------------------------------------------------------------
 # REGENERATE PICKUPS
 generate_coin:	
+	push_reg_to_stack($ra)
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store pickup coin address
 	add $s2, $a0, $0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
-	jal PAINT_PICKUP_COIN			
-	j CHECK_COLLISION			# check for collision
+	jal PAINT_PICKUP_COIN	
+	pop_reg_from_stack($ra)		
+	jr $ra
 
 generate_heart:
 	jal RANDOM_OFFSET			# create random address offset
