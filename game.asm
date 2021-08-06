@@ -193,6 +193,9 @@ GENERATE_OBSTACLES:
 	
 	# coin
 	jal generate_coin
+	
+	# heart
+	jal generate_heart
 #---------------------------------------------------------------------------------------------------------------------------
 pop_reg_from_stack ($a0)			# restore current plane address from stack
 
@@ -244,8 +247,20 @@ MAIN_LOOP:
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 		jal PAINT_ASTEROID 
 	
-	EXIT_OBSTACLE_MOVE:	
+	move_heart:	
+		addi $a0, $s3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+		jal PAINT_PICKUP_HEART			
 		
+		calculate_indices ($s3, $t5, $t6)	# calculate column and row index
+		ble $t5, 11, regen_heart
+		
+		subu $s3, $s3, 4			# shift obstacle 1 unit left
+		add $a0, $s3, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+		jal PAINT_PICKUP_HEART 
+	EXIT_OBSTACLE_MOVE:
+			
 	GENERATE_COIN:		
 		# RE-DRAW the coin every loop so that it doesn't get erased when an obstacle flies over it
 		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
@@ -299,8 +314,12 @@ regen_obs_2:
 regen_obs_3:	
 	jal generate_asteroid
 	addi $s7, $a0, 0
-	j EXIT_OBSTACLE_MOVE	
-	
+	j move_heart	
+
+regen_heart:
+	jal generate_heart
+	addi $s3, $a0, 0
+	j EXIT_OBSTACLE_MOVE
 #___________________________________________________________________________________________________________________________
 # COLLISION
 COLLISION_DETECTOR:
@@ -368,12 +387,14 @@ generate_coin:
 	jr $ra
 
 generate_heart:
+	push_reg_to_stack($ra)
 	jal RANDOM_OFFSET			# create random address offset
 	add $s3, $v0, object_base_address	# store pickup heart address
 	addi $a0, $s3, 0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
-	jal PAINT_PICKUP_HEART			
-	j CHECK_COLLISION			# check for collision
+	jal PAINT_PICKUP_HEART
+	pop_reg_from_stack($ra)			
+	jr $ra
 #___________________________________________________________________________________________________________________________
 # ==USER INPUT==
 USER_INPUT:
