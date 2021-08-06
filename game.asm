@@ -53,8 +53,6 @@
 #___________________________________________________________________________________________________________________________
 # ==VARIABLES==:
 .data
-displayAddress: 	.word 0x10008000
-
 #___________________________________________________________________________________________________________________________
 .text
 # ==MACROS==:
@@ -1372,7 +1370,8 @@ UPDATE_SCORE:
 	push_reg_to_stack ($t1)
 	
 	# Find tenths and ones place value to display
-	div $s1, 10			# divide current score by 10
+	addi $t0, $0, 10
+	div $s1, $t0			# divide current score by 10
 	mflo $t0			# holds tenths place value of score
 	mfhi $t1			# holds ones place value of score
 	
@@ -1388,7 +1387,8 @@ UPDATE_SCORE:
 	
 	# Paint new score
 	addi $s1, $s1, 1		# update new score
-	div $s1, 10			# divide current score by 10
+	addi $t0, $0, 10
+	div $s1, $t0			# divide current score by 10
 	mflo $t0			# holds tenths place value of score
 	mfhi $t1			# holds ones place value of score
 	
