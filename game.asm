@@ -180,25 +180,16 @@ GENERATE_OBSTACLES:
 		# $s6: holds obstacle 2 base address
 		# $s7: holds obstacle 3 base address
 	# Obstacle 1
-	jal RANDOM_OFFSET			# create random address offset
-	add $s5, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s5, $0			# PAINT_ASTEROID param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $s5, $a0, 0
 	
 	# Obstacle 2
-	jal RANDOM_OFFSET			# create random address offset
-	add $s6, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s6, $0			# PAINT_ASTEROID param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $s6, $a0, 0
 	
 	# Obstacle 3
-	jal RANDOM_OFFSET			# create random address offset
-	add $s7, $v0, object_base_address		# store obstacle address = object_base_address + random offset
-	add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $s7, $a0, 0
 #---------------------------------------------------------------------------------------------------------------------------
 pop_reg_from_stack ($a0)			# restore current plane address from stack
 
@@ -278,6 +269,22 @@ END_SCREEN_LOOP:
 # Tells OS the program ends
 EXIT:	li $v0, 10
 	syscall
+	
+#___________________________________________________________________________________________________________________________	
+generate_asteroid:
+	# randomly generates an obstacle with address stored in $a0
+	push_reg_to_stack ($ra)
+	jal RANDOM_OFFSET			# create random address offset
+	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
+	pop_reg_from_stack ($ra)	
+	jr $ra
+	
+	
+	
+	
+	
 #___________________________________________________________________________________________________________________________
 # COLLISION
 COLLISION_DETECTOR:
@@ -322,7 +329,7 @@ COLLISION_DETECTOR:
 
         add_score:
         	addi $s1, $s1, 1			# score += 1
-        	jal UPDATE_SCORE
+        	#jal UPDATE_SCORE
         	j exit_check_plane_hitbox
 #___________________________________________________________________________________________________________________________
 # REGENERATE OBSTACLES
