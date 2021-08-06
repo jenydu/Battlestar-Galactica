@@ -159,26 +159,18 @@ INITIALIZE:
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
 addi $s1, $0, 0					# score counter
-addi $s2, $0, 0					# address for coin
+addi $s2, $0, 0					# stores current base address for coin
+addi $s3, $0, 0					# stores current base address for heart
 
 # ==SETUP==:
-# Paint Border
-jal PAINT_BORDER
-
-addi $a0, $0, object_base_address
-addi $a1, $0, 1				# set to paint
-
-jal PAINT_BORDER_COIN
-jal PAINT_PICKUP_HEART
-
-# Paint Health
-jal UPDATE_HEALTH
+jal PAINT_BORDER		# Paint Border
+jal UPDATE_HEALTH		# Paint Health Status
+jal PAINT_BORDER_COIN		# Paint Score
 # Paint Plane
 addi $a0, $0, object_base_address		# start painting plane from top-left border
 addi $a0, $a0, 96256				# center plane
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
-
 #---------------------------------------------------------------------------------------------------------------------------
 GENERATE_OBSTACLES:
 	# Used Registers:
@@ -207,7 +199,6 @@ GENERATE_OBSTACLES:
 	add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle address
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_ASTEROID
-	
 #---------------------------------------------------------------------------------------------------------------------------
 pop_reg_from_stack ($a0)			# restore current plane address from stack
 
@@ -262,7 +253,7 @@ MAIN_LOOP:
 	EXIT_OBSTACLE_MOVE:	
 		
 	GENERATE_COIN:
-		beq $s2, 0, initiate_coin		# if there isn't a coin already, draw a coin	
+		beq $s2, 0, generate_coin		# if there isn't a coin already, draw a coin	
 		
 	CHECK_COLLISION:
 		pop_reg_from_stack ($a0)			# restore $a0 to plane's address
@@ -271,6 +262,7 @@ MAIN_LOOP:
 	
 	j MAIN_LOOP				# repeat loop
 #---------------------------------------------------------------------------------------------------------------------------
+# END GAME LOOP
 END_SCREEN_LOOP:
 	jal CLEAR_SCREEN			# reset to black screen
 	jal PAINT_GAME_OVER			# create game over screen
@@ -287,51 +279,53 @@ END_SCREEN_LOOP:
 EXIT:	li $v0, 10
 	syscall
 #___________________________________________________________________________________________________________________________
-initiate_coin:	
-	jal RANDOM_OFFSET			# create random address offset
-	add $s2, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load obstacle address
-	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
-	jal PAINT_PICKUP_COIN			
-	j CHECK_COLLISION
+# COLLISION
+COLLISION_DETECTOR:
+        check_plane_hitbox:
+        	push_reg_to_stack ($t0)
+        	push_reg_to_stack ($t1)
+        	push_reg_to_stack ($t2)
+        	push_reg_to_stack ($t9)
+        	push_reg_to_stack ($ra)
+        	# check column 20 of the plane, if not plane colour, deduct heart
+        	addi $t0, $0, 0		# i = 0 
+        	addi $t1, $0, 32	# 32(?) pixels in column 20
+        	
+        	addi $t9, $0, 20	
+        	sll $t9, $t9, 2
+        	add $t9, $t9, $a0	# $t9 stores the address of the top pixel on column 20
 
-check_plane_hitbox:
-	push_reg_to_stack ($t0)
-	push_reg_to_stack ($t1)
-	push_reg_to_stack ($t2)
-	push_reg_to_stack ($t9)
-	push_reg_to_stack ($ra)
-	# check column 20 of the plane, if not plane colour, deduct heart
-	addi $t0, $0, 0		# i = 0 
-	addi $t1, $0, 32	# 32(?) pixels in column 20
-	
-	addi $t9, $0, 20	
-	sll $t9, $t9, 2
-	add $t9, $t9, $a0	# $t9 stores the address of the top pixel on column 20
+        plane_hitbox_loop:
+        	bgt $t0, $t1, exit_check_plane_hitbox	# if i > 32, exit loop
+        	addi $t0, $t0, 1			# i += 1
+        	lw $t2, ($t9)				# load pixel colour at the address
+        	addu $t9, $t9, row_increment		# load $t9 of the next pixel (1 pixel down)
+        	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
+        	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
+        	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
+        	j plane_hitbox_loop
 
-plane_hitbox_loop:
-	bgt $t0, $t1, exit_check_plane_hitbox	# if i > 32, exit loop
-	addi $t0, $t0, 1			# i += 1
-	lw $t2, ($t9)				# load pixel colour at the address
-	addu $t9, $t9, row_increment		# load $t9 of the next pixel (1 pixel down)
-	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart
-	j plane_hitbox_loop
+        exit_check_plane_hitbox:			# return to previous instruction
+        	pop_reg_from_stack($ra)
+        	jr $ra
 
-exit_check_plane_hitbox:
-	pop_reg_from_stack($ra)
-	jr $ra
+        deduct_health:
+        	subi $s0, $s0, 1			# health -= 1
+        	jal UPDATE_HEALTH			# update health on border
+        	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
+        	j exit_check_plane_hitbox		# exit collision check
 
-deduct_health:
-	subi $s0, $s0, 1			# health - 1
-	addi $a3, $s0, 0
-	jal UPDATE_HEALTH			# update health
-	
-	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
-	# Else continue
-	j exit_check_plane_hitbox
+        add_health:
+        	addi $s0, $s0, 1			# health += 1
+        	jal UPDATE_HEALTH			# update health on border
+        	j exit_check_plane_hitbox		# exit collision check
 
-
+        add_score:
+        	addi $s1, $s1, 1			# score += 1
+        	jal UPDATE_SCORE
+        	j exit_check_plane_hitbox
 #___________________________________________________________________________________________________________________________
+# REGENERATE OBSTACLES
 regen_obs_1:	
 	jal RANDOM_OFFSET			# create random address offset
 	addi $s5, $v0, object_base_address	# store obstacle address = object_base_address + random offset
@@ -353,74 +347,91 @@ regen_obs_3:
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_ASTEROID
 	j EXIT_OBSTACLE_MOVE
+# -------------------------------------------------------------------------------------------------------------------------
+# REGENERATE PICKUPS
+generate_coin:	
+	jal RANDOM_OFFSET			# create random address offset
+	add $s2, $v0, object_base_address	# store pickup coin address
+	add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
+	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
+	jal PAINT_PICKUP_COIN			
+	j CHECK_COLLISION			# check for collision
 
+generate_heart:
+	jal RANDOM_OFFSET			# create random address offset
+	add $s3, $v0, object_base_address	# store pickup heart address
+	addi $a0, $s3, 0			# PAINT_PICKUP_COIN param. Load base address
+	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
+	jal PAINT_PICKUP_HEART			
+	j CHECK_COLLISION			# check for collision
 #___________________________________________________________________________________________________________________________
-
-check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
-			bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
-			lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
-
-check_border:		la $t0, ($a0)			# load ___ base address to $t0
-			calculate_indices ($t0, $t5, $t6)	# calculate column and row index
-
-			beq $t4, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
-			beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
-			beq $t4, 0x73, respond_to_s	# ASCII code of 's'
-			beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
-			beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
-			beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
-			beq $t4, 0x67, respond_to_g	# if 'g', branch to END_SCREEN_LOOP
-			j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
-
-respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
-			subu $t0, $t0, column_increment	# set base position 1 pixel left
-			ble $t6, 12, draw_new_avatar	# if after movement, avatar is now at border, draw
-			subu $t0, $t0, column_increment	# set base position 1 pixel left
-			ble $t6, 13, draw_new_avatar	# if after movement, avatar is now at border, draw
-			subu $t0, $t0, column_increment	# set base position 1 pixel left
-			j draw_new_avatar
-
-respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
-			subu $t0, $t0, row_increment	# set base position 1 pixel up
-			ble $t6, 19, draw_new_avatar	# if after movement, avatar is now at border, draw
-			subu $t0, $t0, row_increment	# set base position 1 pixel up
-			ble $t6, 20, draw_new_avatar	# if after movement, avatar is now at border, draw
-			subu $t0, $t0, row_increment	# set base position 1 pixel up
-			j draw_new_avatar
-
-respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
-			add $t0, $t0, row_increment	# set base position 1 pixel down
-			bge $t6, 207, draw_new_avatar	# if after movement, avatar is now at border, draw
-			add $t0, $t0, row_increment	# set base position 1 pixel down
-			bge $t6, 208, draw_new_avatar	# if after movement, avatar is now at border, draw
-			add $t0, $t0, row_increment	# set base position 1 pixel down
-			j draw_new_avatar
-
-respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
-			add $t0, $t0, column_increment	# set base position 1 pixel right
-			bge $t6, 217, draw_new_avatar	# if after movement, avatar is now at border, draw
-			add $t0, $t0, column_increment	# set base position 1 pixel right
-			bge $t6, 218, draw_new_avatar	# if after movement, avatar is now at border, draw
-			add $t0, $t0, column_increment	# set base position 1 pixel right
-			j draw_new_avatar
-
-draw_new_avatar:	addi $a1, $zero, 0		# set $a1 as 0
-			jal PAINT_PLANE			# (erase plane) paint plane black
-
-			la $a0, ($t0)			# load new base address to $a0
-			addi $a1, $zero, 1		# set $a1 as 1
-			jal PAINT_PLANE			# paint plane at new location
-			j EXIT_KEY_PRESS
-
-respond_to_p:		jal CLEAR_SCREEN
-			j INITIALIZE
-
-respond_to_q:		jal CLEAR_SCREEN
-			j EXIT
-
-respond_to_g:		j END_SCREEN_LOOP		# TEMPORARY OPTION: Go to ending screen
-
-EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
+# ==USER INPUT==
+USER_INPUT:
+	check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
+				bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
+				lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
+	
+	check_border:		la $t0, ($a0)			# load ___ base address to $t0
+				calculate_indices ($t0, $t5, $t6)	# calculate column and row index
+	
+				beq $t4, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
+				beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
+				beq $t4, 0x73, respond_to_s	# ASCII code of 's'
+				beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
+				beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
+				beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
+				beq $t4, 0x67, respond_to_g	# if 'g', branch to END_SCREEN_LOOP
+				j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
+	
+	respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
+				subu $t0, $t0, column_increment	# set base position 1 pixel left
+				ble $t6, 12, draw_new_avatar	# if after movement, avatar is now at border, draw
+				subu $t0, $t0, column_increment	# set base position 1 pixel left
+				ble $t6, 13, draw_new_avatar	# if after movement, avatar is now at border, draw
+				subu $t0, $t0, column_increment	# set base position 1 pixel left
+				j draw_new_avatar
+	
+	respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
+				subu $t0, $t0, row_increment	# set base position 1 pixel up
+				ble $t6, 19, draw_new_avatar	# if after movement, avatar is now at border, draw
+				subu $t0, $t0, row_increment	# set base position 1 pixel up
+				ble $t6, 20, draw_new_avatar	# if after movement, avatar is now at border, draw
+				subu $t0, $t0, row_increment	# set base position 1 pixel up
+				j draw_new_avatar
+	
+	respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
+				add $t0, $t0, row_increment	# set base position 1 pixel down
+				bge $t6, 207, draw_new_avatar	# if after movement, avatar is now at border, draw
+				add $t0, $t0, row_increment	# set base position 1 pixel down
+				bge $t6, 208, draw_new_avatar	# if after movement, avatar is now at border, draw
+				add $t0, $t0, row_increment	# set base position 1 pixel down
+				j draw_new_avatar
+	
+	respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
+				add $t0, $t0, column_increment	# set base position 1 pixel right
+				bge $t6, 217, draw_new_avatar	# if after movement, avatar is now at border, draw
+				add $t0, $t0, column_increment	# set base position 1 pixel right
+				bge $t6, 218, draw_new_avatar	# if after movement, avatar is now at border, draw
+				add $t0, $t0, column_increment	# set base position 1 pixel right
+				j draw_new_avatar
+	
+	draw_new_avatar:	addi $a1, $zero, 0		# set $a1 as 0
+				jal PAINT_PLANE			# (erase plane) paint plane black
+	
+				la $a0, ($t0)			# load new base address to $a0
+				addi $a1, $zero, 1		# set $a1 as 1
+				jal PAINT_PLANE			# paint plane at new location
+				j EXIT_KEY_PRESS
+	# restart game
+	respond_to_p:		jal CLEAR_SCREEN		
+				j INITIALIZE
+	# quit game
+	respond_to_q:		jal CLEAR_SCREEN
+				j EXIT
+	# go to gameover screen
+	respond_to_g:		j END_SCREEN_LOOP
+	
+	EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
 # FUNCTION: Create random address offset
