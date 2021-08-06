@@ -1,0 +1,98 @@
+
+# FUNCTION: PAINT_NUMBER
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: column index for 'for loop' LOOP_NUMBER_COLUMN
+		# $s3: row index for 'for loop' LOOP_NUMBER_ROW
+		# $s4: parameter for subfunction LOOP_NUMBER_ROW
+PAINT_NUMBER:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
+    
+	    # Initialize registers
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+
+		LOOP_NUMBER_COLUMN: bge $s2, column_max, EXIT_PAINT_NUMBER
+				# Boolean Expressions: Paint in based on column index
+			NUMBER_COND:
+					beq $s2, 0, NUMBER_COLUMN_0
+					beq $s2, 4, NUMBER_COLUMN_1
+					beq $s2, 8, NUMBER_COLUMN_2
+					beq $s2, 12, NUMBER_COLUMN_3
+					beq $s2, 16, NUMBER_COLUMN_4
+
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_0:
+					setup_general_paint (0x868686, 0, 1024, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 1024, 4096, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 4096, 5120, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 5120, 8192, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 8192, 9216, LOOP_NUMBER_ROW)
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_1:
+					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 1024, 4096, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 5120, 8192, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_2:
+					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 1024, 4096, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 5120, 8192, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_3:
+					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 1024, 4096, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 5120, 8192, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_4:
+					setup_general_paint (0x868686, 0, 1024, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 1024, 4096, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 4096, 5120, LOOP_NUMBER_ROW)
+					setup_general_paint (0xffffff, 5120, 8192, LOOP_NUMBER_ROW)
+					setup_general_paint (0x868686, 8192, 9216, LOOP_NUMBER_ROW)
+					j UPDATE_NUMBER_COLUMN
+
+    	UPDATE_NUMBER_COLUMN:				# Update column value
+    	    	addi $s2, $s2, column_increment
+	        	j LOOP_NUMBER_COLUMN
+
+    	# FOR LOOP: (through row)
+    	# Paints in row from $s3 to $s4 at some column
+    	LOOP_NUMBER_ROW: bge $s3, $s4, EXIT_LOOP_NUMBER_ROW	# branch to UPDATE_NUMBER_COL; if row index >= last row index to paint
+        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
+        		add $s1, $s1, $s2				# update to specific column from base address
+        		add $s1, $s1, $s3				# update to specific row
+        		sw $s0, ($s1)					# paint in value
+
+        		# Updates for loop index
+        		addi $s3, $s3, row_increment			# s3 += column_increment
+        		j LOOP_NUMBER_ROW				# repeats LOOP_NUMBER_COLUMN
+	    EXIT_LOOP_NUMBER_ROW:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_NUMBER:
+        		# Restore used registers
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction

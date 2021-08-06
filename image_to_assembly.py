@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 label = 'GENERAL'
 column_increment = 4
 row_increment = 1024
-by = "row"                      # 'row' or 'column'
-by_inverse = "column"
+by = "column"                      # 'row' or 'column'
+by_inverse = "row"
 
 
 def create_assembly_indices(img_path: str, img_shape: tuple, skip_background=True):
@@ -266,7 +266,7 @@ f"""
 f"""        		sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
-        		addi $s3, $s3, {by_inverse}_increment			# t4 += {by}_increment
+        		addi $s3, $s3, {by_inverse}_increment			# s3 += {by}_increment
         		j LOOP_{label}_{by_inverse.upper()}				# repeats LOOP_{label}_{by.upper()}
 	    EXIT_LOOP_{label}_{by_inverse.upper()}:
 		        jr $ra
@@ -298,10 +298,10 @@ if __name__ == "__main__":
     # ==PARAMETERS==:
     column_increment = 4
     row_increment = 1024
-    by = "row"      # 'row' or 'column'
-    by_inverse = "column"
+    by = "column"      # 'row' or 'column'
+    by_inverse = "row"
 
-    paint_in = 'pickup_heart'
+    paint_in = 'number'
 
     if paint_in == 'border_heart':
         label = 'BORDER_HEART'
@@ -332,5 +332,9 @@ if __name__ == "__main__":
         label = 'BORDER_COIN'
         img_path = "D:/projects/Shoot-em-up-Game-Project/material/border_coin.png"
         img_shape = (9, 14)       # row, column
-        print(create_assembly_code(img_path, img_shape, "border_coin", save=True, offset=2888))
-
+        print(create_assembly_code(img_path, img_shape, "border_coin_code", save=True, offset=2888))
+    elif paint_in == 'number':
+        label = 'NUMBER'
+        img_path = "D:/projects/Shoot-em-up-Game-Project/material/number.png"
+        img_shape = (9, 5)       # row, column
+        print(create_assembly_code(img_path, img_shape, "number_code", save=True))

@@ -1226,7 +1226,7 @@ PAINT_BORDER_HEART:
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 	    addi $a1, $0, 1				# precondition
-	    
+        	
 		LOOP_BORDER_HEART_ROW: bge $s2, row_max, EXIT_PAINT_BORDER_HEART
 				# Boolean Expressions: Paint in based on row index
 			BORDER_HEART_COND:
@@ -1340,11 +1340,9 @@ PAINT_BORDER_HEART:
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
         		
-        		# If param. $a3 specifies to erase, then change color value stored in $s0
-        		IF_ERASE: beq $a3, 1, PAINT_BORDER_HEART_PIXEL
+			beq $a3, 1, PAINT_BORDER_HEART_PIXEL		# check if parameter specifies to erase/paint 
         			addi $s0, $0, 0x868686
-        		
-        		PAINT_BORDER_HEART_PIXEL:	sw $s0, ($s1)				# paint in value
+        		PAINT_BORDER_HEART_PIXEL: sw $s0, ($s1)					# paint in value
         		# Updates for loop index
         		addi $s3, $s3, column_increment			# t4 += row_increment
         		j LOOP_BORDER_HEART_COLUMN			
@@ -1364,9 +1362,16 @@ PAINT_BORDER_HEART:
         		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: UPDATE_SCORE
+	# Inputs
+		# $s1: 
 UPDATE_SCORE:
+	
+
+	addi $a0, $0, 2948
+	jal PAINT_NUMBER
 
 
+#___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_NUMBER
 	# Inputs
 		# $a0: address to start painting number
@@ -1375,53 +1380,162 @@ UPDATE_SCORE:
 	# Registers Used
 		# $s0: stores current color value
 		# $s1: temporary memory address storage for current unit (in bitmap)
-		# $s2: column index for 'for loop' LOOP_BORDER_HEART_COLS
-		# $s3: starting row index for 'for loop' LOOP_BORDER_HEART_ROWS
-		# $s4: ending row index for 'for loop' LOOP_BORDER_HEART_ROWS
+		# $s2: column index for 'for loop' LOOP_NUMBER_COLUMN
+		# $s3: row index for 'for loop' LOOP_NUMBER_ROW
+		# $s4: parameter for subfunction LOOP_NUMBER_ROW
 PAINT_NUMBER:
 	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
 	    push_reg_to_stack ($s0)
 	    push_reg_to_stack ($s1)
 	    push_reg_to_stack ($s2)
-    
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
 	    # Initialize registers
-	    addi $s0, $0, 0xffffff			# initialize current color to black
+	    add $s0, $0, 0xffffff			# initialize current color to white
 	    add $s1, $0, $0				# holds temporary memory address
 	    add $s2, $0, $0	
-	   
-	   beq $a1, 1, PAINT_NUMBER_COND		# if $a1 == 0, set to erase
-	   addi $s0, $0, 0x868686			# update color to border gray 
-	   
-	PAINT_NUMBER_COND:
-	   
-	PAINT_0:
-		
-	PAINT_1:
-		
-	PAINT_2:
-		
-	PAINT_3:	
-		
-	PAINT_4:
-		
-	PAINT_5:
-		
-	PAINT_6:
-		
-	PAINT_7:
-		
-	PAINT_8:
-		
-	PAINT_9:
-		
-	
-	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+		LOOP_NUMBER_COLUMN: bge $s2, column_max, EXIT_PAINT_NUMBER
+			# Boolean Expressions: Paint in based on column index
+			NUMBER_COND:
+					beq $s2, 0, NUMBER_COLUMN_0
+					beq $s2, 4, NUMBER_COLUMN_1
+					beq $s2, 8, NUMBER_COLUMN_2
+					beq $s2, 12, NUMBER_COLUMN_3
+					beq $s2, 16, NUMBER_COLUMN_4
+
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_0:
+					# number-specific painting conditionals
+					beq $a2, 1, SKIP_LOWER_NUMBER_COLUMN_0	
+					beq $a2, 3, SKIP_LOWER_NUMBER_COLUMN_0
+					beq $a2, 7, SKIP_LOWER_NUMBER_COLUMN_0
+					beq $a2, 2, SKIP_UPPER_NUMBER_COLUMN_0
+					
+					setup_general_paint (0xffffff, 1024, 4096, LOOP_NUMBER_ROW)
+					SKIP_UPPER_NUMBER_COLUMN_0:
+					
+					beq $a2, 4, SKIP_LOWER_NUMBER_COLUMN_0
+					beq $a2, 5, SKIP_LOWER_NUMBER_COLUMN_0
+					beq $a2, 9, SKIP_LOWER_NUMBER_COLUMN_0
+					
+					setup_general_paint (0xffffff, 5120, 8192, LOOP_NUMBER_ROW)
+					SKIP_LOWER_NUMBER_COLUMN_0:
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_1:
+					# number-specific painting conditionals
+					beq $a2, 1, SKIP_BOTTOM_NUMBER_COLUMN_1
+					beq $a2, 4, SKIP_TOP_NUMBER_COLUMN_1
+					beq $a2, 6, SKIP_TOP_NUMBER_COLUMN_1
+					
+					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
+					SKIP_TOP_NUMBER_COLUMN_1:
+					
+					beq $a2, 0, SKIP_MIDDLE_NUMBER_COLUMN_1
+					beq $a2, 7, SKIP_BOTTOM_NUMBER_COLUMN_1
+					
+					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
+					SKIP_MIDDLE_NUMBER_COLUMN_1:
+					
+					beq $a2, 4, SKIP_BOTTOM_NUMBER_COLUMN_1
+					beq $a2, 9, SKIP_BOTTOM_NUMBER_COLUMN_1
+					
+					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
+					SKIP_BOTTOM_NUMBER_COLUMN_1:
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_2:
+					# number-specific painting conditionals
+					beq $a2, 1, SKIP_BOTTOM_NUMBER_COLUMN_2
+					beq $a2, 4, SKIP_TOP_NUMBER_COLUMN_2
+					beq $a2, 6, SKIP_TOP_NUMBER_COLUMN_2
+					
+					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
+					SKIP_TOP_NUMBER_COLUMN_2:
+					
+					beq $a2, 0, SKIP_MIDDLE_NUMBER_COLUMN_2
+					beq $a2, 7, SKIP_BOTTOM_NUMBER_COLUMN_2
+					
+					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
+					SKIP_MIDDLE_NUMBER_COLUMN_2:
+					
+					beq $a2, 4, SKIP_BOTTOM_NUMBER_COLUMN_2
+					beq $a2, 9, SKIP_BOTTOM_NUMBER_COLUMN_2
+					
+					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
+					SKIP_BOTTOM_NUMBER_COLUMN_2:
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_3:
+					# number-specific painting conditionals
+					beq $a2, 1, SKIP_BOTTOM_NUMBER_COLUMN_3
+					beq $a2, 4, SKIP_TOP_NUMBER_COLUMN_3
+					beq $a2, 6, SKIP_TOP_NUMBER_COLUMN_3
+					
+					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
+					SKIP_TOP_NUMBER_COLUMN_3:
+					
+					beq $a2, 0, SKIP_MIDDLE_NUMBER_COLUMN_3
+					beq $a2, 7, SKIP_BOTTOM_NUMBER_COLUMN_3
+					
+					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
+					SKIP_MIDDLE_NUMBER_COLUMN_3:
+					
+					beq $a2, 4, SKIP_BOTTOM_NUMBER_COLUMN_3
+					beq $a2, 9, SKIP_BOTTOM_NUMBER_COLUMN_3
+					
+					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
+					SKIP_BOTTOM_NUMBER_COLUMN_3:
+					j UPDATE_NUMBER_COLUMN
+			NUMBER_COLUMN_4:
+					# number-specific painting conditionals
+					beq $a2, 1, SKIP_LOWER_NUMBER_COLUMN_4	
+					beq $a2, 3, SKIP_LOWER_NUMBER_COLUMN_4
+					beq $a2, 7, SKIP_LOWER_NUMBER_COLUMN_4
+					beq $a2, 2, SKIP_UPPER_NUMBER_COLUMN_4
+					
+					setup_general_paint (0xffffff, 1024, 4096, LOOP_NUMBER_ROW)
+					SKIP_UPPER_NUMBER_COLUMN_4:
+					
+					beq $a2, 4, SKIP_LOWER_NUMBER_COLUMN_4
+					beq $a2, 5, SKIP_LOWER_NUMBER_COLUMN_4
+					beq $a2, 9, SKIP_LOWER_NUMBER_COLUMN_4
+					
+					setup_general_paint (0xffffff, 5120, 8192, LOOP_NUMBER_ROW)
+					SKIP_LOWER_NUMBER_COLUMN_4:
+					j UPDATE_NUMBER_COLUMN
+
+    	UPDATE_NUMBER_COLUMN:				# Update column value
+    	    	addi $s2, $s2, column_increment
+	        	j LOOP_NUMBER_COLUMN
+
+    	# FOR LOOP: (through row)
+    	# Paints in row from $s3 to $s4 at some column
+    	LOOP_NUMBER_ROW: bge $s3, $s4, EXIT_LOOP_NUMBER_ROW			# branch to UPDATE_NUMBER_COL; if row index >= last row index to paint
+        		addi $s1, $a0, 0					# start from base address given by $a0
+        		add $s1, $s1, $s2					# update to specific column from base address
+        		add $s1, $s1, $s3					# update to specific row
+	    		beq $a1, 1, PAINT_NUMBER_PIXEL				# if $a1 == 0, set to erase
+	    		addi $s0, $0, 0x868686					# update color to border gray 
+	    		PAINT_NUMBER_PIXEL: sw $s0, ($s1)			# paint in value
+	    		
+        		# Updates for loop index
+        		addi $s3, $s3, row_increment				# s3 += column_increment
+        		j LOOP_NUMBER_ROW					# repeats LOOP_NUMBER_COLUMN
+	    EXIT_LOOP_NUMBER_ROW:
+		        jr $ra
+
+    	# EXIT FUNCTION
        	EXIT_PAINT_NUMBER:
         		# Restore used registers
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
 	    		pop_reg_from_stack ($s2)
 	    		pop_reg_from_stack ($s1)
 	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
         		jr $ra						# return to previous instruction
+
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_BORDER_COIN
 	# Registers Used
