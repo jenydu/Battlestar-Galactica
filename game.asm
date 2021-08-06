@@ -1159,10 +1159,6 @@ UPDATE_HEALTH:
 		j LOOP_HEART
 	# Restore previouos state of used registers
 	EXIT_UPDATE_HEALTH:
-		pop_reg_from_stack ($t9)
-		pop_reg_from_stack ($t8)
-		pop_reg_from_stack ($t5)
-		pop_reg_from_stack ($t4)
 		pop_reg_from_stack ($t3)
 		pop_reg_from_stack ($t2)
 		pop_reg_from_stack ($t1)
