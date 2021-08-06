@@ -1206,9 +1206,9 @@ UPDATE_HEALTH:
 	# Registers Used
 		# $s0: stores current color value
 		# $s1: temporary memory address storage for current unit (in bitmap)
-		# $s2: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
-		# $s3: starting row index for 'for loop' LOOP_OBJ_ROWS
-		# $s4: ending row index for 'for loop' LOOP_OBJ_ROWS
+		# $s2: column index for 'for loop' LOOP_BORDER_HEART_COLS
+		# $s3: starting row index for 'for loop' LOOP_BORDER_HEART_ROWS
+		# $s4: ending row index for 'for loop' LOOP_BORDER_HEART_ROWS
 PAINT_BORDER_HEART:
 	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
@@ -1363,6 +1363,66 @@ PAINT_BORDER_HEART:
         		pop_reg_from_stack ($ra)
         		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
+# FUNCTION: UPDATE_SCORE
+UPDATE_SCORE:
+
+
+# FUNCTION: PAINT_NUMBER
+	# Inputs
+		# $a0: address to start painting number
+		# $a1: whether to paint in or erase
+		# $a2: number to paint in
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: column index for 'for loop' LOOP_BORDER_HEART_COLS
+		# $s3: starting row index for 'for loop' LOOP_BORDER_HEART_ROWS
+		# $s4: ending row index for 'for loop' LOOP_BORDER_HEART_ROWS
+PAINT_NUMBER:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+    
+	    # Initialize registers
+	    addi $s0, $0, 0xffffff			# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	   
+	   beq $a1, 1, PAINT_NUMBER_COND		# if $a1 == 0, set to erase
+	   addi $s0, $0, 0x868686			# update color to border gray 
+	   
+	PAINT_NUMBER_COND:
+	   
+	PAINT_0:
+		
+	PAINT_1:
+		
+	PAINT_2:
+		
+	PAINT_3:	
+		
+	PAINT_4:
+		
+	PAINT_5:
+		
+	PAINT_6:
+		
+	PAINT_7:
+		
+	PAINT_8:
+		
+	PAINT_9:
+		
+	
+	
+       	EXIT_PAINT_NUMBER:
+        		# Restore used registers
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		jr $ra						# return to previous instruction
+#___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_BORDER_COIN
 	# Registers Used
 		# $s0: stores current color value
@@ -1505,7 +1565,7 @@ PAINT_BORDER_COIN:
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
         		addi $s1, $s1, 2888				# add specified offset
-                		sw $s0, ($s1)					# paint in value
+                	sw $s0, ($s1)					# paint in value
 
         		# Updates for loop index
         		addi $s3, $s3, column_increment			# t4 += row_increment
