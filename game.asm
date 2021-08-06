@@ -160,10 +160,12 @@ addi $s1, $0, 0					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 
+
 # ==SETUP==:
 jal PAINT_BORDER		# Paint Border
 jal UPDATE_HEALTH		# Paint Health Status
 jal PAINT_BORDER_COIN		# Paint Score
+jal UPDATE_SCORE
 # Paint Plane
 addi $a0, $0, object_base_address		# start painting plane from top-left border
 addi $a0, $a0, 96256				# center plane
@@ -1366,6 +1368,9 @@ PAINT_BORDER_HEART:
 UPDATE_SCORE:
 	# Store used registers to stack
 	push_reg_to_stack ($ra)
+	push_reg_to_stack ($a0)
+	push_reg_to_stack ($a1)
+	push_reg_to_stack ($a2)
 	push_reg_to_stack ($t0)
 	push_reg_to_stack ($t1)
 	
@@ -1376,27 +1381,29 @@ UPDATE_SCORE:
 	mfhi $t1			# holds ones place value of score
 	
 	# Erase old score
-	addi $a0, $0, 2948
+	addi $a0, $0, display_base_address
 	addi $a1, $0, 0
 	add $a2, $0, $t0		
-	jal PAINT_NUMBER
-	addi $a0, $0, 2972
+	jal PAINT_NUMBER		# erase tenths digit
+	addi $a0, $a0, 24
 	addi $a1, $0, 0
 	add $a2, $0, $t1
-	jal PAINT_NUMBER
+	jal PAINT_NUMBER		# erase ones digit
 	
-	# Paint new score
+	# Find tenths and ones place value to display
 	addi $s1, $s1, 1		# update new score
 	addi $t0, $0, 10
 	div $s1, $t0			# divide current score by 10
 	mflo $t0			# holds tenths place value of score
 	mfhi $t1			# holds ones place value of score
 	
-	addi $a0, $0, 2948
+	# Paint new score
+	addi $a0, $0, display_base_address
+	addi $a0, $a0, 2948
 	addi $a1, $0, 1
 	add $a2, $0, $t0		
 	jal PAINT_NUMBER
-	addi $a0, $0, 2972
+	addi $a0, $a0, 24
 	addi $a1, $0, 1
 	add $a2, $0, $t1
 	jal PAINT_NUMBER
@@ -1404,6 +1411,9 @@ UPDATE_SCORE:
 	# EXIT UPDATE_SCORE
 	pop_reg_from_stack ($t1)	# Restore used registers
 	pop_reg_from_stack ($t0)
+	pop_reg_from_stack ($a2)
+	pop_reg_from_stack ($a1)
+	pop_reg_from_stack ($a0)
 	pop_reg_from_stack ($ra)
 	jr $ra				# return to previous instruction
 #___________________________________________________________________________________________________________________________
@@ -1582,6 +1592,7 @@ PAINT_NUMBER:
 PAINT_BORDER_COIN:
 	    # Store used registers in the stack
 	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($a1)
 	    push_reg_to_stack ($s0)
 	    push_reg_to_stack ($s1)
 	    push_reg_to_stack ($s2)
@@ -1594,6 +1605,7 @@ PAINT_BORDER_COIN:
 	    add $s2, $0, $0	
 	    add $s3, $0, $0
 	    add $s4, $0, $0
+	    addi $a1, $0, 1				# precondition for painting
 
 		LOOP_BORDER_COIN_ROW: bge $s2, row_max, EXIT_PAINT_BORDER_COIN
 				# Boolean Expressions: Paint in based on row index
@@ -1730,6 +1742,7 @@ PAINT_BORDER_COIN:
 	    		pop_reg_from_stack ($s2)
 	    		pop_reg_from_stack ($s1)
 	    		pop_reg_from_stack ($s0)
+	    		pop_reg_from_stack ($a1)
         		pop_reg_from_stack ($ra)
         		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
