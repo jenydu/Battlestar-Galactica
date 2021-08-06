@@ -340,8 +340,7 @@ COLLISION_DETECTOR:
         	j exit_check_plane_hitbox		# exit collision check
 
         add_score:
-        	addi $s1, $s1, 1			# score += 1
-        	# jal UPDATE_SCORE
+        	jal UPDATE_SCORE			# score += 1
         	
         	# erase coin (coin will be regenerated in the next loop)
 		push_reg_to_stack ($a0)			# stores away plane address
@@ -1363,14 +1362,50 @@ PAINT_BORDER_HEART:
 #___________________________________________________________________________________________________________________________
 # FUNCTION: UPDATE_SCORE
 	# Inputs
-		# $s1: 
+		# $s1: score counter
+	# Used Registers:
+		# $t0-1: used as temporary storages from division
 UPDATE_SCORE:
+	# Store used registers to stack
+	push_reg_to_stack ($ra)
+	push_reg_to_stack ($t0)
+	push_reg_to_stack ($t1)
 	
-
+	# Find tenths and ones place value to display
+	div $s1, 10			# divide current score by 10
+	mflo $t0			# holds tenths place value of score
+	mfhi $t1			# holds ones place value of score
+	
+	# Erase old score
 	addi $a0, $0, 2948
+	addi $a1, $0, 0
+	add $a2, $0, $t0		
 	jal PAINT_NUMBER
-
-
+	addi $a0, $0, 2972
+	addi $a1, $0, 0
+	add $a2, $0, $t1
+	jal PAINT_NUMBER
+	
+	# Paint new score
+	addi $s1, $s1, 1		# update new score
+	div $s1, 10			# divide current score by 10
+	mflo $t0			# holds tenths place value of score
+	mfhi $t1			# holds ones place value of score
+	
+	addi $a0, $0, 2948
+	addi $a1, $0, 1
+	add $a2, $0, $t0		
+	jal PAINT_NUMBER
+	addi $a0, $0, 2972
+	addi $a1, $0, 1
+	add $a2, $0, $t1
+	jal PAINT_NUMBER
+	
+	# EXIT UPDATE_SCORE
+	pop_reg_from_stack ($t1)	# Restore used registers
+	pop_reg_from_stack ($t0)
+	pop_reg_from_stack ($ra)
+	jr $ra				# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_NUMBER
 	# Inputs
