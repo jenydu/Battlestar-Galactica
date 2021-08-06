@@ -169,6 +169,7 @@ addi $a0, $0, object_base_address
 addi $a1, $0, 1				# set to paint
 
 jal PAINT_BORDER_COIN
+jal PAINT_PICKUP_HEART
 
 # Paint Health
 jal UPDATE_HEALTH
@@ -842,176 +843,501 @@ PAINT_ASTEROID:
 	    		pop_reg_from_stack ($s0)
         		pop_reg_from_stack ($ra)
         		jr $ra						# return to previous instruction
-
 #___________________________________________________________________________________________________________________________
-# FUNCTION: PAINT BORDER
+# FUNCTION: PAINT_PICKUP_HEART
 	# Registers Used
-		# $t1: parameter for LOOP_BORDER_ROWS. Stores color value
-		# $t2: temporary memory address storage for current unit (in bitmap)
-		# $t3: column index for 'for loop' LOOP_BORDER_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
-		# $t4: beginning row index for 'for loop' LOOP_BORDER_ROWS
-		# $t5: parameter for LOOP_BORDER_ROWS. Stores row index for last row to be painted in
-		# $t6: parameter for LOOP_BORDER_ROWS. Stores # rows to paint from top to bottom
-		# $t7: stores result from logical operations
-		# $t8-9: used for logical operations
-PAINT_BORDER:
-	# Push $ra to stack
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: row index for 'for loop' LOOP_PICKUP_HEART_ROW
+		# $s3: column index for 'for loop' LOOP_PICKUP_HEART_COLUMN
+		# $s4: parameter for subfunction LOOP_PICKUP_HEART_COLUMN
+		# $s5-6: used in calculating pixel address row/col indices
+PAINT_PICKUP_HEART:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
+	    push_reg_to_stack ($s5)
+	    push_reg_to_stack ($s6)
+    
+	    # Initialize registers
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+
+		LOOP_PICKUP_HEART_ROW: bge $s2, row_max, EXIT_PAINT_PICKUP_HEART
+				# Boolean Expressions: Paint in based on row index
+			PICKUP_HEART_COND:
+					beq $s2, 1024, PICKUP_HEART_ROW_1
+					beq $s2, 2048, PICKUP_HEART_ROW_2
+					beq $s2, 3072, PICKUP_HEART_ROW_3
+					beq $s2, 4096, PICKUP_HEART_ROW_4
+					beq $s2, 5120, PICKUP_HEART_ROW_5
+					beq $s2, 6144, PICKUP_HEART_ROW_6
+
+					j UPDATE_PICKUP_HEART_ROW
+			PICKUP_HEART_ROW_1:
+					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xd63a3a, 4, 8, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xe92828, 8, 12, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x5b0000, 12, 16, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xe30000, 16, 20, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xd90000, 20, 24, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x000000, 24, 28, LOOP_PICKUP_HEART_COLUMN)
+					j UPDATE_PICKUP_HEART_ROW
+			PICKUP_HEART_ROW_2:
+					setup_general_paint (0x5c0000, 0, 4, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xff4141, 4, 8, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 8, 20, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xf60000, 20, 24, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x580000, 24, 28, LOOP_PICKUP_HEART_COLUMN)
+					j UPDATE_PICKUP_HEART_ROW
+			PICKUP_HEART_ROW_3:
+					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 4, 20, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xe80000, 20, 24, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x000000, 24, 28, LOOP_PICKUP_HEART_COLUMN)
+					j UPDATE_PICKUP_HEART_ROW
+			PICKUP_HEART_ROW_4:
+					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x750000, 4, 8, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 8, 20, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x710000, 20, 24, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x000000, 24, 28, LOOP_PICKUP_HEART_COLUMN)
+					j UPDATE_PICKUP_HEART_ROW
+			PICKUP_HEART_ROW_5:
+					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x710000, 8, 12, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0xff0000, 12, 16, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x6b0000, 16, 20, LOOP_PICKUP_HEART_COLUMN)
+					j UPDATE_PICKUP_HEART_ROW
+			PICKUP_HEART_ROW_6:
+					setup_general_paint (0x000000, 0, 12, LOOP_PICKUP_HEART_COLUMN)
+					setup_general_paint (0x310000, 12, 16, LOOP_PICKUP_HEART_COLUMN)
+					j UPDATE_PICKUP_HEART_ROW
+
+    	UPDATE_PICKUP_HEART_ROW:				# Update row value
+    	    	addi $s2, $s2, row_increment
+	        	j LOOP_PICKUP_HEART_ROW
+
+    	# FOR LOOP: (through column)
+    	# Paints in column from $s3 to $s4 at some row
+    	LOOP_PICKUP_HEART_COLUMN: bge $s3, $s4, EXIT_LOOP_PICKUP_HEART_COLUMN	# branch to UPDATE_PICKUP_HEART_COL; if column index >= last column index to paint
+        		addi $s1, $a0, 0				# Reinitialize t2; temporary address store
+        		add $s1, $s1, $s2				# update to specific row from base address
+        		add $s1, $s1, $s3				# update to specific column
+        		sw $s0, ($s1)					# paint in value
+
+			calculate_indices ($s1, $s5, $s6)	# get address indices. Store in $s5-6
+			within_borders ($s5, $s6, $s6)		# check within borders. Store boolean result in $s6
+			beq $s6, 0, SKIP_PICKUP_HEART_PAINT	# skip painting pixel if out of border
+			sw $s0, ($s1)				# paint pixel
+			SKIP_PICKUP_HEART_PAINT:
+
+        		# Updates for loop index
+        		addi $s3, $s3, column_increment			# t4 += row_increment
+        		j LOOP_PICKUP_HEART_COLUMN				# repeats LOOP_PICKUP_HEART_ROW
+	    EXIT_LOOP_PICKUP_HEART_COLUMN:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_PICKUP_HEART:
+        		# Restore used registers
+        		pop_reg_from_stack ($s6)
+        		pop_reg_from_stack ($s5)
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction
+#___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT_PICKUP_COIN
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: row index for 'for loop' LOOP_PICKUP_COIN_ROW
+		# $s3: column index for 'for loop' LOOP_PICKUP_COIN_COLUMN
+		# $s4: parameter for subfunction LOOP_PICKUP_COIN_COLUMN
+PAINT_PICKUP_COIN:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
+    
+	    # Initialize registers
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+
+		LOOP_PICKUP_COIN_ROW: bge $s2, row_max, EXIT_PAINT_PICKUP_COIN
+				# Boolean Expressions: Paint in based on row index
+			PICKUP_COIN_COND:
+					beq $s2, 0, PICKUP_COIN_ROW_0
+					beq $s2, 1024, PICKUP_COIN_ROW_1
+					beq $s2, 2048, PICKUP_COIN_ROW_2
+					beq $s2, 3072, PICKUP_COIN_ROW_3
+					beq $s2, 4096, PICKUP_COIN_ROW_4
+					beq $s2, 5120, PICKUP_COIN_ROW_5
+					beq $s2, 6144, PICKUP_COIN_ROW_6
+					beq $s2, 7168, PICKUP_COIN_ROW_7
+					beq $s2, 8192, PICKUP_COIN_ROW_8
+
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_0:
+					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 16, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5c5c37, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x222100, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_1:
+					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x535300, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x8f8f00, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5b5b00, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x8d8d00, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xd8d851, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xd1d15c, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_2:
+					setup_general_paint (0x303016, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x939300, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x212100, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x333300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa3a200, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xe2e1a6, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x878715, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_3:
+					setup_general_paint (0x5f5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbcbc00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa9a853, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_4:
+					setup_general_paint (0x5e5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x2f2f00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa6a66b, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_5:
+					setup_general_paint (0x5e5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x8c8c59, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_6:
+					setup_general_paint (0x272700, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb8b800, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xafaf00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x333315, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x353600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xa7a700, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x393a00, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_7:
+					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x494900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb2b200, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb5b500, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x909000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x939300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x777700, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+			PICKUP_COIN_ROW_8:
+					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x252500, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb6b600, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb9b900, 16, 20, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xb3b300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0x202100, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					j UPDATE_PICKUP_COIN_ROW
+
+    	UPDATE_PICKUP_COIN_ROW:				# Update row value
+    	    	addi $s2, $s2, row_increment
+	        	j LOOP_PICKUP_COIN_ROW
+
+    	# FOR LOOP: (through column)
+    	# Paints in column from $s3 to $s4 at some row
+    	LOOP_PICKUP_COIN_COLUMN: bge $s3, $s4, EXIT_LOOP_PICKUP_COIN_COLUMN	# branch to UPDATE_PICKUP_COIN_COL; if column index >= last column index to paint
+        		addi $s1, $a0, 0				# initialize from base address specified in $a0
+        		add $s1, $s1, $s2				# update to specific row from base address
+        		add $s1, $s1, $s3				# update to specific column
+        		sw $s0, ($s1)					# paint in value
+
+        		# Updates for loop index
+        		addi $s3, $s3, column_increment			# t4 += row_increment
+        		j LOOP_PICKUP_COIN_COLUMN				# repeats LOOP_PICKUP_COIN_ROW
+	    EXIT_LOOP_PICKUP_COIN_COLUMN:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_PICKUP_COIN:
+        		# Restore used registers
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction
+#___________________________________________________________________________________________________________________________
+# FUNCTION: UPDATE_HEALTH
+	# Inputs:
+		# $s0: Current number of health points (min = 0, max = 5)
+	# Registers Used:
+		# $a2: address offset
+		# $a3: whether to paint in or erase heart
+		# $t0: for loop indexer
+		# $t1: used to store column_increment temporarily
+		# $t2: temporary storage for manipulating number of health points
+		
+UPDATE_HEALTH:
+	# Store current state of used registers
 	push_reg_to_stack ($ra)
-
-	# Initialize registers
-	add $t1, $0, $0				# initialize current color to black
-	add $t2, $0, $0				# holds temporary memory address
-	add $t3, $0, $0				# 'column for loop' indexer
-	add $t4, $0, $0				# 'row for loop' indexer
-	add $t5, $0, $0				# last row index to paint in
-
-	LOOP_BORDER_COLS: bge $t3, column_max, EXIT_BORDER_PAINT
-		# Boolean Expressions: Paint in border piece based on column index
-		BORDER_COND:
-			# BORDER_OUTER
-			sle $t8, $t3, 36
-			sge $t9, $t3, 24
-			and $t7, $t8, $t9		# 6 <= col index <= 9
-
-			sle $t8, $t3, 996
-			sge $t9, $t3, 984
-			and $t9, $t8, $t9		# 246 <= col index <= 249
-
-			or $t7, $t7, $t9		# if 6 <= col index <= 9 	|	246 <= col index <= 249
-			beq $t7, 1, BORDER_OUTER
-
-			# BORDER_OUTERMOST
-			sle $t8, $t3, 20
-			sge $t9, $t3, 1000
-			or $t7, $t8, $t9		# if col <= 5 OR col index >= 250
-			beq $t7, 1, BORDER_OUTERMOST
-
-			# BORDER_INNER
-			seq $t8, $t3, 40
-			seq $t9, $t3, 980
-			or $t7, $t8, $t9		# if col == 10 OR == 245
-			beq $t7, 1, BORDER_INNER
-
-			# BORDER_OUTER
-			sge $t9, $t3, 44
-			sle $t8, $t3, 976
-			or $t7, $t8, $t9		# if col <= 11 OR col index >= 244
-			beq $t7, 1, BORDER_INNERMOST
-
-		# Paint Settings
-		BORDER_OUTERMOST:
-			addi $t1, $0, 0x868686		# change current color to dark gray
-			add $t4, $0, $0			# paint in from top to bottom
-			addi $t5, $0, row_max
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	                j UPDATE_BORDER_COL		# end iteration
-		BORDER_OUTER:
-			# Paint dark gray section
-			addi $t1, $0, 0x868686		# change current color to dark gray
-			add $t4, $0, $0			# paint starting from row ___
-			addi $t5, $0, 13312		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint light gray section
-	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
-			addi $t4, $0, 13312		# paint starting from row ___
-			addi $t5, $0, 248832		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-			# Paint dark gray section
-			addi $t1, $0, 0x868686		# change current color to dark gray
-			addi $t4, $0, 248832		# paint starting from row ___
-			addi $t5, $0, row_max		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	                j UPDATE_BORDER_COL		# end iteration
-		BORDER_INNER:
-			# Paint dark gray section
-			addi $t1, $0, 0x868686		# change current color to dark gray
-			add $t4, $0, $0			# paint starting from row ___
-			addi $t5, $0, 13312		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint light gray section
-	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
-			addi $t4, $0, 13312		# paint starting from row ___
-			addi $t5, $0, 17408		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint white section
-	    		addi $t1, $0, 0xFFFFFF		# change current color to white
-			addi $t4, $0, 17408		# paint starting from row ___
-			addi $t5, $0, 244736		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint light gray section
-	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
-			addi $t4, $0, 244736		# paint starting from row ___
-			addi $t5, $0, 248832		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-			# Paint dark gray section
-			addi $t1, $0, 0x868686		# change current color to dark gray
-			addi $t4, $0, 248832		# paint starting from row ___
-			addi $t5, $0, row_max		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-
-	                j UPDATE_BORDER_COL		# end iteration
-		BORDER_INNERMOST:
-			# Paint dark gray section
-			addi $t1, $0, 0x868686		# change current color to dark gray
-			add $t4, $0, $0			# paint starting from row ___
-			addi $t5, $0, 13312		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint light gray section
-	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
-			addi $t4, $0, 13312		# paint starting from row ___
-			addi $t5, $0, 17408		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint white section
-	    		addi $t1, $0, 0xFFFFFF		# change current color to white
-			addi $t4, $0, 17408		# paint starting from row ___
-			addi $t5, $0, 18432		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint black selection
-	    		addi $t1, $0, 0			# change current color to black
-			addi $t4, $0, 18432		# paint starting from row ___
-			addi $t5, $0, 243712		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint white section
-	    		addi $t1, $0, 0xFFFFFF		# change current color to white
-			addi $t4, $0, 243712		# paint starting from row ___
-			addi $t5, $0, 244736		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-	    		# Paint light gray section
-	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
-			addi $t4, $0, 244736		# paint starting from row ___
-			addi $t5, $0, 248832		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-			# Paint dark gray section
-			addi $t1, $0, 0x868686		# change current color to dark gray
-			addi $t4, $0, 248832		# paint starting from row ___
-			addi $t5, $0, row_max		# ending at row ___
-	    		jal LOOP_BORDER_ROWS		# paint in column
-
-	                j UPDATE_BORDER_COL		# end iteration
-
-	UPDATE_BORDER_COL:				# Update column value
-		addi $t3, $t3, column_increment		# add 4 bits (1 byte) to refer to memory address for next row
-		j LOOP_BORDER_COLS
-
-	# EXIT FUNCTION
-	EXIT_BORDER_PAINT:
-		# Restore $t registers
+	push_reg_to_stack ($s0)
+	push_reg_to_stack ($a2)
+	push_reg_to_stack ($a3)
+	push_reg_to_stack ($t0)
+	push_reg_to_stack ($t1)
+	push_reg_to_stack ($t2)
+	push_reg_to_stack ($t3)
+	
+	# Initialize for loop indexer
+	add $t0, $0, $0
+	# Loop 5 times through all possible hearts. Subtract 1 from number of hearts each time.
+	LOOP_HEART: beq $t0, 5, EXIT_UPDATE_HEALTH	# branch if $t0 = 5
+		addi $t1, $0, column_increment	# store column increment temporarily
+		addi $t2, $0, 12			
+		mult $t1, $t2
+		mflo $t1			
+		mult $t0, $t1			# address offset = current index * (3 * column_increment)
+		mflo $t3			
+		addi $a0, $t3, display_base_address	# param. address to start painting at
+		
+		add $t2, $s0, $0		# store number of hit points
+		sub $t2, $t2, $t0		# subtract number of hit points by current indexer
+		sge $a3, $t2, 1			# param. for helper function to paint/erase heart. If number of hearts > curr index, paint in heart. Otherwise, erase.		
+		jal PAINT_BORDER_HEART		# paint/erase heart
+		
+		# Update for loop indexer
+		addi $t0, $t0, 1		# $t0 = $t0 + 1
+		j LOOP_HEART
+	# Restore previouos state of used registers
+	EXIT_UPDATE_HEALTH:
+		pop_reg_from_stack ($t9)
+		pop_reg_from_stack ($t8)
+		pop_reg_from_stack ($t5)
+		pop_reg_from_stack ($t4)
+		pop_reg_from_stack ($t3)
+		pop_reg_from_stack ($t2)
+		pop_reg_from_stack ($t1)
+		pop_reg_from_stack ($t0)
+		pop_reg_from_stack ($a3)
+		pop_reg_from_stack ($a2)
+		pop_reg_from_stack ($s0)
 		pop_reg_from_stack ($ra)
-		jr $ra						# return to previous instruction
-
-	# FOR LOOP: (through row)
-	# Paints in row from $t4 to $t5 at some column
-	LOOP_BORDER_ROWS: bge $t4, $t5, EXIT_LOOP_BORDER_ROWS	# branch to UPDATE_BORDER_COL; if row index >= last row index to paint
-		addi $t2, $0, display_base_address			# Reinitialize t2; temporary address store
-		add $t2, $t2, $t3				# update to specific column from base address
-		add $t2, $t2, $t4				# update to specific row
-		sw $t1, ($t2)					# paint in value
-
-		# Updates for loop index
-		addi $t4, $t4, row_increment			# t4 += row_increment
-		j LOOP_BORDER_ROWS				# repeats LOOP_BORDER_ROWS
-	EXIT_LOOP_BORDER_ROWS:
 		jr $ra
+#___________________________________________________________________________________________________________________________
+# HELPER FUNCTION: PAINT_BORDER_HEART
+	# Precondition: 
+		# $a1 must be equal to 1 to avoid painting black.
+	# Inputs:
+		# $a0: address to start painting
+		# $a3: whether to paint in or erase heart
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $s3: starting row index for 'for loop' LOOP_OBJ_ROWS
+		# $s4: ending row index for 'for loop' LOOP_OBJ_ROWS
+PAINT_BORDER_HEART:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
+	    push_reg_to_stack ($a1)
+    
+	    # Initialize registers
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+	    addi $a1, $0, 1				# precondition
+	    
+		LOOP_BORDER_HEART_ROW: bge $s2, row_max, EXIT_PAINT_BORDER_HEART
+				# Boolean Expressions: Paint in based on row index
+			BORDER_HEART_COND:
+					beq $s2, 0, BORDER_HEART_ROW_0
+					beq $s2, 1024, BORDER_HEART_ROW_1
+					beq $s2, 2048, BORDER_HEART_ROW_2
+					beq $s2, 3072, BORDER_HEART_ROW_3
+					beq $s2, 4096, BORDER_HEART_ROW_4
+					beq $s2, 5120, BORDER_HEART_ROW_5
+					beq $s2, 6144, BORDER_HEART_ROW_6
+					beq $s2, 7168, BORDER_HEART_ROW_7
+					beq $s2, 8192, BORDER_HEART_ROW_8
+
+					j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_0:
+					setup_general_paint (0x7f7f7f, 0, 4, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x797979, 4, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x4c4c4c, 8, 12, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x666666, 12, 16, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x7f7f7f, 16, 20, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x6b6b6b, 20, 24, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x4c4c4c, 24, 28, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x747474, 28, 32, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x7f7f7f, 32, 36, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_1:
+					setup_general_paint (0x777777, 0, 4, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x6c2a2a, 4, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xdc3131, 8, 12, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x9f1616, 12, 16, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x545353, 16, 20, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x900000, 20, 24, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xd80000, 24, 28, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x741e1e, 28, 32, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x737373, 32, 36, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_2:
+					setup_general_paint (0x553131, 0, 4, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xed4343, 4, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff4d4d, 8, 12, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff0000, 12, 16, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xcc0000, 16, 20, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xfb0000, 20, 24, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff0000, 24, 28, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xdb0000, 28, 32, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x502424, 32, 36, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_3:
+					setup_general_paint (0x512424, 0, 4, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff3535, 4, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff0000, 8, 28, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xe50000, 28, 32, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x4f1717, 32, 36, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_4:
+					setup_general_paint (0x5f5050, 0, 4, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xc30000, 4, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff0000, 8, 24, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xfa0000, 24, 28, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xb40000, 28, 32, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x564343, 32, 36, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_5:
+					setup_general_paint (0x757575, 0, 4, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x701e1e, 4, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xf80000, 8, 12, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff0000, 12, 20, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xfe0000, 20, 24, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xe50000, 24, 28, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x6c1717, 28, 32, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x707070, 32, 36, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_6:
+					setup_general_paint (0x7f7f7f, 0, 4, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x787878, 4, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x671c1c, 8, 12, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xff0000, 12, 20, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xe90000, 20, 24, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x651414, 24, 28, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x727272, 28, 32, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x7f7f7f, 32, 36, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_7:
+					setup_general_paint (0x7f7f7f, 0, 8, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x7b7b7b, 8, 12, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x621c1c, 12, 16, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0xe60000, 16, 20, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x611616, 20, 24, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x747474, 24, 28, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+			BORDER_HEART_ROW_8:
+					setup_general_paint (0x7f7f7f, 0, 12, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x7a7a7a, 12, 16, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x423333, 16, 20, LOOP_BORDER_HEART_COLUMN)
+					setup_general_paint (0x747373, 20, 24, LOOP_BORDER_HEART_COLUMN)
+				j UPDATE_BORDER_HEART_ROW
+
+    	UPDATE_BORDER_HEART_ROW:				# Update row value
+    	    	addi $s2, $s2, row_increment
+	        	j LOOP_BORDER_HEART_ROW
+
+    	# FOR LOOP: (through column)
+    	# Paints in column from $s3 to $s4 at some row
+    	LOOP_BORDER_HEART_COLUMN: bge $s3, $s4, EXIT_LOOP_BORDER_HEART_COLUMN	# branch to UPDATE_BORDER_HEART_COL; if column index >= last column index to paint
+        		addi $s1, $a0, 0		# start from address specified in $a0
+        		
+        		addi $s1, $s1, 250880				# shift row to bottom outermost border (row index 245)
+        		addi $s1, $s1, 52				# shift column to column index 13
+        		add $s1, $s1, $a2				# add offset from parameter $a2
+        		
+        		add $s1, $s1, $s2				# update to specific row from base address
+        		add $s1, $s1, $s3				# update to specific column
+        		
+        		# If param. $a3 specifies to erase, then change color value stored in $s0
+        		IF_ERASE: beq $a3, 1, PAINT_BORDER_HEART_PIXEL
+        			addi $s0, $0, 0x868686
+        		
+        		PAINT_BORDER_HEART_PIXEL:	sw $s0, ($s1)				# paint in value
+        		# Updates for loop index
+        		addi $s3, $s3, column_increment			# t4 += row_increment
+        		j LOOP_BORDER_HEART_COLUMN			
+	    EXIT_LOOP_BORDER_HEART_COLUMN:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_BORDER_HEART:
+        		# Restore used registers
+        		pop_reg_from_stack ($a1)
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_BORDER_COIN
 	# Registers Used
@@ -1223,387 +1549,174 @@ CLEAR_SCREEN:
 	EXIT_LOOP_CLEAR_ROW:
 		jr $ra
 #___________________________________________________________________________________________________________________________
-# FUNCTION: UPDATE_HEALTH
-	# Inputs:
-		# $s0: Current number of health points (min = 0, max = 5)
-	# Registers Used:
-		# $a2: address offset
-		# $a3: whether to paint in or erase heart
-		# $t0: for loop indexer
-		# $t1: used to store column_increment temporarily
-		# $t2: temporary storage for manipulating number of health points
-		
-UPDATE_HEALTH:
-	# Store current state of used registers
+# FUNCTION: PAINT BORDER
+	# Registers Used
+		# $t1: parameter for LOOP_BORDER_ROWS. Stores color value
+		# $t2: temporary memory address storage for current unit (in bitmap)
+		# $t3: column index for 'for loop' LOOP_BORDER_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
+		# $t4: beginning row index for 'for loop' LOOP_BORDER_ROWS
+		# $t5: parameter for LOOP_BORDER_ROWS. Stores row index for last row to be painted in
+		# $t6: parameter for LOOP_BORDER_ROWS. Stores # rows to paint from top to bottom
+		# $t7: stores result from logical operations
+		# $t8-9: used for logical operations
+PAINT_BORDER:
+	# Push $ra to stack
 	push_reg_to_stack ($ra)
-	push_reg_to_stack ($s0)
-	push_reg_to_stack ($a2)
-	push_reg_to_stack ($a3)
-	push_reg_to_stack ($t0)
-	push_reg_to_stack ($t1)
-	push_reg_to_stack ($t2)
-	push_reg_to_stack ($t3)
-	push_reg_to_stack ($t4)
-	push_reg_to_stack ($t5)
-	push_reg_to_stack ($t8)
-	push_reg_to_stack ($t9)
-	
-	# Initialize for loop indexer
-	add $t0, $0, $0
-	# Loop 5 times through all possible hearts. Subtract 1 from number of hearts each time.
-	LOOP_HEART: beq $t0, 5, EXIT_UPDATE_HEALTH	# branch if $t0 = 5
-		addi $t1, $0, column_increment	# store column increment temporarily
-		addi $t2, $0, 12			
-		mult $t1, $t2
-		mflo $t1			
-		mult $t0, $t1			# address offset = current index * (3 * column_increment)
-		mflo $a2			# param. for helper function to add column offset
-		
-		add $t2, $s0, $0		# store number of hit points
-		sub $t2, $t2, $t0		# subtract number of hit points by current indexer
-		sge $a3, $t2, 1			# param. for helper function to paint/erase heart. If number of hearts > curr index, paint in heart. Otherwise, erase.		
-		jal PAINT_HEART			# paint/erase heart
-		
-		# Update for loop indexer
-		addi $t0, $t0, 1		# $t0 = $t0 + 1
-		j LOOP_HEART
-	# Restore previouos state of used registers
-	EXIT_UPDATE_HEALTH:
-		pop_reg_from_stack ($t9)
-		pop_reg_from_stack ($t8)
-		pop_reg_from_stack ($t5)
-		pop_reg_from_stack ($t4)
-		pop_reg_from_stack ($t3)
-		pop_reg_from_stack ($t2)
-		pop_reg_from_stack ($t1)
-		pop_reg_from_stack ($t0)
-		pop_reg_from_stack ($a3)
-		pop_reg_from_stack ($a2)
-		pop_reg_from_stack ($s0)
+
+	# Initialize registers
+	add $t1, $0, $0				# initialize current color to black
+	add $t2, $0, $0				# holds temporary memory address
+	add $t3, $0, $0				# 'column for loop' indexer
+	add $t4, $0, $0				# 'row for loop' indexer
+	add $t5, $0, $0				# last row index to paint in
+
+	LOOP_BORDER_COLS: bge $t3, column_max, EXIT_BORDER_PAINT
+		# Boolean Expressions: Paint in border piece based on column index
+		BORDER_COND:
+			# BORDER_OUTER
+			sle $t8, $t3, 36
+			sge $t9, $t3, 24
+			and $t7, $t8, $t9		# 6 <= col index <= 9
+
+			sle $t8, $t3, 996
+			sge $t9, $t3, 984
+			and $t9, $t8, $t9		# 246 <= col index <= 249
+
+			or $t7, $t7, $t9		# if 6 <= col index <= 9 	|	246 <= col index <= 249
+			beq $t7, 1, BORDER_OUTER
+
+			# BORDER_OUTERMOST
+			sle $t8, $t3, 20
+			sge $t9, $t3, 1000
+			or $t7, $t8, $t9		# if col <= 5 OR col index >= 250
+			beq $t7, 1, BORDER_OUTERMOST
+
+			# BORDER_INNER
+			seq $t8, $t3, 40
+			seq $t9, $t3, 980
+			or $t7, $t8, $t9		# if col == 10 OR == 245
+			beq $t7, 1, BORDER_INNER
+
+			# BORDER_OUTER
+			sge $t9, $t3, 44
+			sle $t8, $t3, 976
+			or $t7, $t8, $t9		# if col <= 11 OR col index >= 244
+			beq $t7, 1, BORDER_INNERMOST
+
+		# Paint Settings
+		BORDER_OUTERMOST:
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint in from top to bottom
+			addi $t5, $0, row_max
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	                j UPDATE_BORDER_COL		# end iteration
+		BORDER_OUTER:
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint starting from row ___
+			addi $t5, $0, 13312		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 13312		# paint starting from row ___
+			addi $t5, $0, 248832		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			addi $t4, $0, 248832		# paint starting from row ___
+			addi $t5, $0, row_max		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	                j UPDATE_BORDER_COL		# end iteration
+		BORDER_INNER:
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint starting from row ___
+			addi $t5, $0, 13312		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 13312		# paint starting from row ___
+			addi $t5, $0, 17408		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint white section
+	    		addi $t1, $0, 0xFFFFFF		# change current color to white
+			addi $t4, $0, 17408		# paint starting from row ___
+			addi $t5, $0, 244736		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 244736		# paint starting from row ___
+			addi $t5, $0, 248832		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			addi $t4, $0, 248832		# paint starting from row ___
+			addi $t5, $0, row_max		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+
+	                j UPDATE_BORDER_COL		# end iteration
+		BORDER_INNERMOST:
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			add $t4, $0, $0			# paint starting from row ___
+			addi $t5, $0, 13312		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 13312		# paint starting from row ___
+			addi $t5, $0, 17408		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint white section
+	    		addi $t1, $0, 0xFFFFFF		# change current color to white
+			addi $t4, $0, 17408		# paint starting from row ___
+			addi $t5, $0, 18432		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint black selection
+	    		addi $t1, $0, 0			# change current color to black
+			addi $t4, $0, 18432		# paint starting from row ___
+			addi $t5, $0, 243712		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint white section
+	    		addi $t1, $0, 0xFFFFFF		# change current color to white
+			addi $t4, $0, 243712		# paint starting from row ___
+			addi $t5, $0, 244736		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+	    		# Paint light gray section
+	    		addi $t1, $0, 0xC3C3C3		# change current color to light gray
+			addi $t4, $0, 244736		# paint starting from row ___
+			addi $t5, $0, 248832		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+			# Paint dark gray section
+			addi $t1, $0, 0x868686		# change current color to dark gray
+			addi $t4, $0, 248832		# paint starting from row ___
+			addi $t5, $0, row_max		# ending at row ___
+	    		jal LOOP_BORDER_ROWS		# paint in column
+
+	                j UPDATE_BORDER_COL		# end iteration
+
+	UPDATE_BORDER_COL:				# Update column value
+		addi $t3, $t3, column_increment		# add 4 bits (1 byte) to refer to memory address for next row
+		j LOOP_BORDER_COLS
+
+	# EXIT FUNCTION
+	EXIT_BORDER_PAINT:
+		# Restore $t registers
 		pop_reg_from_stack ($ra)
+		jr $ra						# return to previous instruction
+
+	# FOR LOOP: (through row)
+	# Paints in row from $t4 to $t5 at some column
+	LOOP_BORDER_ROWS: bge $t4, $t5, EXIT_LOOP_BORDER_ROWS	# branch to UPDATE_BORDER_COL; if row index >= last row index to paint
+		addi $t2, $0, display_base_address			# Reinitialize t2; temporary address store
+		add $t2, $t2, $t3				# update to specific column from base address
+		add $t2, $t2, $t4				# update to specific row
+		sw $t1, ($t2)					# paint in value
+
+		# Updates for loop index
+		addi $t4, $t4, row_increment			# t4 += row_increment
+		j LOOP_BORDER_ROWS				# repeats LOOP_BORDER_ROWS
+	EXIT_LOOP_BORDER_ROWS:
 		jr $ra
-#___________________________________________________________________________________________________________________________
-# HELPER FUNCTION: PAINT_HEART
-	# Precondition: 
-		# $a1 must be equal to 1 to avoid painting black.
-	# Inputs:
-		# $a2: address offset 
-		# $a3: whether to paint in or erase heart
-	# Registers Used
-		# $s0: stores current color value
-		# $s1: temporary memory address storage for current unit (in bitmap)
-		# $s2: column index for 'for loop' LOOP_OBJ_COLS					# Stores (delta) column to add to memory address to move columns right in the bitmap
-		# $s3: starting row index for 'for loop' LOOP_OBJ_ROWS
-		# $s4: ending row index for 'for loop' LOOP_OBJ_ROWS
-PAINT_HEART:
-	    # Store used registers in the stack
-	    push_reg_to_stack ($ra)
-	    push_reg_to_stack ($s0)
-	    push_reg_to_stack ($s1)
-	    push_reg_to_stack ($s2)
-	    push_reg_to_stack ($s3)
-	    push_reg_to_stack ($s4)
-    
-	    # Initialize registers
-	    add $s0, $0, $0				# initialize current color to black
-	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
-	    add $s3, $0, $0
-	    add $s4, $0, $0
-
-		LOOP_HEART_ROW: bge $s2, row_max, EXIT_PAINT_HEART
-				# Boolean Expressions: Paint in based on row index
-			HEART_COND:
-					beq $s2, 0, HEART_ROW_0
-					beq $s2, 1024, HEART_ROW_1
-					beq $s2, 2048, HEART_ROW_2
-					beq $s2, 3072, HEART_ROW_3
-					beq $s2, 4096, HEART_ROW_4
-					beq $s2, 5120, HEART_ROW_5
-					beq $s2, 6144, HEART_ROW_6
-					beq $s2, 7168, HEART_ROW_7
-					beq $s2, 8192, HEART_ROW_8
-
-					j UPDATE_HEART_ROW
-			HEART_ROW_0:
-					setup_general_paint (0x7f7f7f, 0, 4, LOOP_HEART_COLUMN)
-					setup_general_paint (0x797979, 4, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0x4c4c4c, 8, 12, LOOP_HEART_COLUMN)
-					setup_general_paint (0x666666, 12, 16, LOOP_HEART_COLUMN)
-					setup_general_paint (0x7f7f7f, 16, 20, LOOP_HEART_COLUMN)
-					setup_general_paint (0x6b6b6b, 20, 24, LOOP_HEART_COLUMN)
-					setup_general_paint (0x4c4c4c, 24, 28, LOOP_HEART_COLUMN)
-					setup_general_paint (0x747474, 28, 32, LOOP_HEART_COLUMN)
-					setup_general_paint (0x7f7f7f, 32, 36, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_1:
-					setup_general_paint (0x777777, 0, 4, LOOP_HEART_COLUMN)
-					setup_general_paint (0x6c2a2a, 4, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0xdc3131, 8, 12, LOOP_HEART_COLUMN)
-					setup_general_paint (0x9f1616, 12, 16, LOOP_HEART_COLUMN)
-					setup_general_paint (0x545353, 16, 20, LOOP_HEART_COLUMN)
-					setup_general_paint (0x900000, 20, 24, LOOP_HEART_COLUMN)
-					setup_general_paint (0xd80000, 24, 28, LOOP_HEART_COLUMN)
-					setup_general_paint (0x741e1e, 28, 32, LOOP_HEART_COLUMN)
-					setup_general_paint (0x737373, 32, 36, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_2:
-					setup_general_paint (0x553131, 0, 4, LOOP_HEART_COLUMN)
-					setup_general_paint (0xed4343, 4, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff4d4d, 8, 12, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff0000, 12, 16, LOOP_HEART_COLUMN)
-					setup_general_paint (0xcc0000, 16, 20, LOOP_HEART_COLUMN)
-					setup_general_paint (0xfb0000, 20, 24, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff0000, 24, 28, LOOP_HEART_COLUMN)
-					setup_general_paint (0xdb0000, 28, 32, LOOP_HEART_COLUMN)
-					setup_general_paint (0x502424, 32, 36, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_3:
-					setup_general_paint (0x512424, 0, 4, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff3535, 4, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff0000, 8, 28, LOOP_HEART_COLUMN)
-					setup_general_paint (0xe50000, 28, 32, LOOP_HEART_COLUMN)
-					setup_general_paint (0x4f1717, 32, 36, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_4:
-					setup_general_paint (0x5f5050, 0, 4, LOOP_HEART_COLUMN)
-					setup_general_paint (0xc30000, 4, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff0000, 8, 24, LOOP_HEART_COLUMN)
-					setup_general_paint (0xfa0000, 24, 28, LOOP_HEART_COLUMN)
-					setup_general_paint (0xb40000, 28, 32, LOOP_HEART_COLUMN)
-					setup_general_paint (0x564343, 32, 36, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_5:
-					setup_general_paint (0x757575, 0, 4, LOOP_HEART_COLUMN)
-					setup_general_paint (0x701e1e, 4, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0xf80000, 8, 12, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff0000, 12, 20, LOOP_HEART_COLUMN)
-					setup_general_paint (0xfe0000, 20, 24, LOOP_HEART_COLUMN)
-					setup_general_paint (0xe50000, 24, 28, LOOP_HEART_COLUMN)
-					setup_general_paint (0x6c1717, 28, 32, LOOP_HEART_COLUMN)
-					setup_general_paint (0x707070, 32, 36, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_6:
-					setup_general_paint (0x7f7f7f, 0, 4, LOOP_HEART_COLUMN)
-					setup_general_paint (0x787878, 4, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0x671c1c, 8, 12, LOOP_HEART_COLUMN)
-					setup_general_paint (0xff0000, 12, 20, LOOP_HEART_COLUMN)
-					setup_general_paint (0xe90000, 20, 24, LOOP_HEART_COLUMN)
-					setup_general_paint (0x651414, 24, 28, LOOP_HEART_COLUMN)
-					setup_general_paint (0x727272, 28, 32, LOOP_HEART_COLUMN)
-					setup_general_paint (0x7f7f7f, 32, 36, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_7:
-					setup_general_paint (0x7f7f7f, 0, 8, LOOP_HEART_COLUMN)
-					setup_general_paint (0x7b7b7b, 8, 12, LOOP_HEART_COLUMN)
-					setup_general_paint (0x621c1c, 12, 16, LOOP_HEART_COLUMN)
-					setup_general_paint (0xe60000, 16, 20, LOOP_HEART_COLUMN)
-					setup_general_paint (0x611616, 20, 24, LOOP_HEART_COLUMN)
-					setup_general_paint (0x747474, 24, 28, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-			HEART_ROW_8:
-					setup_general_paint (0x7f7f7f, 0, 12, LOOP_HEART_COLUMN)
-					setup_general_paint (0x7a7a7a, 12, 16, LOOP_HEART_COLUMN)
-					setup_general_paint (0x423333, 16, 20, LOOP_HEART_COLUMN)
-					setup_general_paint (0x747373, 20, 24, LOOP_HEART_COLUMN)
-				j UPDATE_HEART_ROW
-
-    	UPDATE_HEART_ROW:				# Update row value
-    	    	addi $s2, $s2, row_increment
-	        	j LOOP_HEART_ROW
-
-    	# FOR LOOP: (through column)
-    	# Paints in column from $s3 to $s4 at some row
-    	LOOP_HEART_COLUMN: bge $s3, $s4, EXIT_LOOP_HEART_COLUMN	# branch to UPDATE_HEART_COL; if column index >= last column index to paint
-        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
-        		
-        		addi $s1, $s1, 250880				# shift row to bottom outermost border (row index 245)
-        		addi $s1, $s1, 52				# shift column to column index 13
-        		add $s1, $s1, $a2				# add offset from parameter $a2
-        		
-        		
-        		add $s1, $s1, $s2				# update to specific row from base address
-        		add $s1, $s1, $s3				# update to specific column
-        		
-        		# If param. $a3 specifies to erase, then change color value stored in $s0
-        		IF_ERASE: beq $a3, 1, PAINT_HEART_PIXEL
-        			addi $s0, $0, 0x868686
-        		
-        		PAINT_HEART_PIXEL:	sw $s0, ($s1)				# paint in value
-        		# Updates for loop index
-        		addi $s3, $s3, column_increment			# t4 += row_increment
-        		j LOOP_HEART_COLUMN				# repeats LOOP_HEART_ROW
-	    EXIT_LOOP_HEART_COLUMN:
-		        jr $ra
-
-    	# EXIT FUNCTION
-       	EXIT_PAINT_HEART:
-        		# Restore used registers
-	    		pop_reg_from_stack ($s4)
-	    		pop_reg_from_stack ($s3)
-	    		pop_reg_from_stack ($s2)
-	    		pop_reg_from_stack ($s1)
-	    		pop_reg_from_stack ($s0)
-        		pop_reg_from_stack ($ra)
-        		jr $ra						# return to previous instruction
-#___________________________________________________________________________________________________________________________
-# FUNCTION: PAINT_PICKUP_COIN
-	# Registers Used
-		# $s0: stores current color value
-		# $s1: temporary memory address storage for current unit (in bitmap)
-		# $s2: row index for 'for loop' LOOP_PICKUP_COIN_ROW
-		# $s3: column index for 'for loop' LOOP_PICKUP_COIN_COLUMN
-		# $s4: parameter for subfunction LOOP_PICKUP_COIN_COLUMN
-PAINT_PICKUP_COIN:
-	    # Store used registers in the stack
-	    push_reg_to_stack ($ra)
-	    push_reg_to_stack ($s0)
-	    push_reg_to_stack ($s1)
-	    push_reg_to_stack ($s2)
-	    push_reg_to_stack ($s3)
-	    push_reg_to_stack ($s4)
-    
-	    # Initialize registers
-	    add $s0, $0, $0				# initialize current color to black
-	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
-	    add $s3, $0, $0
-	    add $s4, $0, $0
-
-		LOOP_PICKUP_COIN_ROW: bge $s2, row_max, EXIT_PAINT_PICKUP_COIN
-				# Boolean Expressions: Paint in based on row index
-			PICKUP_COIN_COND:
-					beq $s2, 0, PICKUP_COIN_ROW_0
-					beq $s2, 1024, PICKUP_COIN_ROW_1
-					beq $s2, 2048, PICKUP_COIN_ROW_2
-					beq $s2, 3072, PICKUP_COIN_ROW_3
-					beq $s2, 4096, PICKUP_COIN_ROW_4
-					beq $s2, 5120, PICKUP_COIN_ROW_5
-					beq $s2, 6144, PICKUP_COIN_ROW_6
-					beq $s2, 7168, PICKUP_COIN_ROW_7
-					beq $s2, 8192, PICKUP_COIN_ROW_8
-
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_0:
-					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 16, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x5c5c37, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x222100, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_1:
-					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x535300, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x8f8f00, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x5b5b00, 16, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x8d8d00, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xd8d851, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xd1d15c, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_2:
-					setup_general_paint (0x303016, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x939300, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x212100, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x333300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xa3a200, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xe2e1a6, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x878715, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_3:
-					setup_general_paint (0x5f5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbcbc00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xa9a853, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_4:
-					setup_general_paint (0x5e5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x2f2f00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xa6a66b, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_5:
-					setup_general_paint (0x5e5f00, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x8c8c59, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_6:
-					setup_general_paint (0x272700, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb8b800, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xafaf00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x333315, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x353600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xa7a700, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x393a00, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_7:
-					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x494900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb2b200, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb5b500, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x909000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x939300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x777700, 28, 32, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-			PICKUP_COIN_ROW_8:
-					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x252500, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb6b600, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 16, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb3b300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0x202100, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					j UPDATE_PICKUP_COIN_ROW
-
-    	UPDATE_PICKUP_COIN_ROW:				# Update row value
-    	    	addi $s2, $s2, row_increment
-	        	j LOOP_PICKUP_COIN_ROW
-
-    	# FOR LOOP: (through column)
-    	# Paints in column from $s3 to $s4 at some row
-    	LOOP_PICKUP_COIN_COLUMN: bge $s3, $s4, EXIT_LOOP_PICKUP_COIN_COLUMN	# branch to UPDATE_PICKUP_COIN_COL; if column index >= last column index to paint
-        		addi $s1, $0, display_base_address			# Reinitialize t2; temporary address store
-        		add $s1, $s1, $s2				# update to specific row from base address
-        		add $s1, $s1, $s3				# update to specific column
-        		sw $s0, ($s1)					# paint in value
-
-        		# Updates for loop index
-        		addi $s3, $s3, column_increment			# t4 += row_increment
-        		j LOOP_PICKUP_COIN_COLUMN				# repeats LOOP_PICKUP_COIN_ROW
-	    EXIT_LOOP_PICKUP_COIN_COLUMN:
-		        jr $ra
-
-    	# EXIT FUNCTION
-       	EXIT_PAINT_PICKUP_COIN:
-        		# Restore used registers
-	    		pop_reg_from_stack ($s4)
-	    		pop_reg_from_stack ($s3)
-	    		pop_reg_from_stack ($s2)
-	    		pop_reg_from_stack ($s1)
-	    		pop_reg_from_stack ($s0)
-        		pop_reg_from_stack ($ra)
-        		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_GAME_OVER
 	# Registers Used

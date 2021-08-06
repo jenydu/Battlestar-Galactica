@@ -301,13 +301,18 @@ if __name__ == "__main__":
     by = "row"      # 'row' or 'column'
     by_inverse = "column"
 
-    paint_in = 'border_coin'
+    paint_in = 'pickup_heart'
 
-    if paint_in == 'heart':
-        label = 'HEART'
+    if paint_in == 'border_heart':
+        label = 'BORDER_HEART'
         img_path = "D:/projects/Shoot-em-up-Game-Project/material/heart.png"
         img_shape = (9, 9)
-        print(create_assembly_code(img_path, img_shape, "heart_code", save=True))
+        print(create_assembly_code(img_path, img_shape, "border_heart_code", save=True))
+    elif paint_in == 'pickup_heart':
+        label = 'PICKUP_HEART'
+        img_path = "D:/projects/Shoot-em-up-Game-Project/material/pickup_heart.png"
+        img_shape = (7, 7)
+        print(create_assembly_code(img_path, img_shape, "pickup_heart_code", save=True))
     elif paint_in == 'game_over':
         label = 'GAME_OVER'
         img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
@@ -328,3 +333,4 @@ if __name__ == "__main__":
         img_path = "D:/projects/Shoot-em-up-Game-Project/material/border_coin.png"
         img_shape = (9, 14)       # row, column
         print(create_assembly_code(img_path, img_shape, "border_coin", save=True, offset=2888))
+
