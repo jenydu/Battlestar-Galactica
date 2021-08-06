@@ -356,12 +356,19 @@ COLLISION_DETECTOR:
         add_health:
         	addi $s0, $s0, 1			# health += 1
         	jal UPDATE_HEALTH			# update health on border
+        	
+        	push_reg_to_stack ($a0)			# stores away plane address
+		add $a0, $s3, $0			# PAINT_PICKUP_COIN param. Load base address
+		addi $a1, $0, 0				# PAINT_PICKUP_COIN param. Set to erase
+		jal PAINT_PICKUP_HEART
+		jal generate_heart
+		pop_reg_from_stack($a0)			# retrieve plane address
+        	
         	j exit_check_plane_hitbox		# exit collision check
 
         add_score:
         	jal UPDATE_SCORE			# score += 1
         	
-        	# erase coin (coin will be regenerated in the next loop)
 		push_reg_to_stack ($a0)			# stores away plane address
 		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
 		addi $a1, $0, 0				# PAINT_PICKUP_COIN param. Set to erase
