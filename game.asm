@@ -342,7 +342,7 @@ COLLISION_DETECTOR:
         	addi $t0, $t0, 1			# i += 1
         	lw $t2, ($t9)				# load pixel colour at the address
         	addu $t9, $t9, row_increment		# load $t9 of the next pixel (1 pixel down)
-        	push_reg_to_stack($t9)
+
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
         	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
@@ -352,12 +352,12 @@ COLLISION_DETECTOR:
         	subi $s0, $s0, 1			# health -= 1
         	jal UPDATE_HEALTH			# update health on border
         	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
-        	pop_reg_from_stack($t9)
+   		push_reg_to_stack ($a0)
         	jal check_asteroid_distances		# the address of the closest asteroid will be stored in $a0
 
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
 		jal PAINT_ASTEROID
-        	
+        	pop_reg_from_stack($a0)
         	j exit_check_plane_hitbox		# exit collision check
 
         add_health:
@@ -403,22 +403,23 @@ check_asteroid_distances:
 	
 	blt $t5, $t6, L0
 	blt $t6, $t7, L1
-	jr $ra
+	addi $a0, $s7, 0
+	j exit_loop
 	
 	
 L0:	blt $t5, $t7, L2
 	addi $a0, $s7, 0
-	jr $ra
+	j exit_loop
 	
 L1:	blt $t6, $t7, L3
 	addi $a0, $s7, 0
-	jr $ra
+	j exit_loop
 L2:	addi $a0, $s5, 0
-	jr $ra
+	j exit_loop
 L3: 	addi $a0, $s6, 0
-	jr $ra
+	j exit_loop
 
-
+exit_loop: jr $ra
 # REGENERATE PICKUPS
 generate_coin:	
 	push_reg_to_stack($ra)
