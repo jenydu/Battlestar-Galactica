@@ -298,10 +298,10 @@ if __name__ == "__main__":
     # ==PARAMETERS==:
     column_increment = 4
     row_increment = 1024
-    by = "column"      # 'row' or 'column'
-    by_inverse = "row"
+    by = "row"      # 'row' or 'column'
+    by_inverse = "column"
 
-    paint_in = 'number'
+    paint_in = 'pickup_coin'
 
     if paint_in == 'border_heart':
         label = 'BORDER_HEART'

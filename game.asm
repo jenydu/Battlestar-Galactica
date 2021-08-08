@@ -346,7 +346,14 @@ COLLISION_DETECTOR:
         	addi $t9, $0, 104		# specify column offset = (column index * 4)
         	addi $t9, $t9, plane_center	# begin from row center of plane
         	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
-        	jal plane_hitbox_loop 
+        	jal plane_hitbox_loop
+        	# Column 1
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t1, $0, 6		# plane_hitbox_loop param. check __ rows from the center
+        	addi $t9, $0, 4		# specify column offset = (column index * 4)
+        	addi $t9, $t9, plane_center	# begin from row center of plane
+        	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
+        	jal plane_hitbox_loop
         	# Column 23
         	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
         	addi $t1, $0, 2			# plane_hitbox_loop param. check __ rows from the center
@@ -1159,8 +1166,7 @@ PAINT_PICKUP_COIN:
 			PICKUP_COIN_ROW_0:
 					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x494900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbaba00, 16, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 12, 24, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x5c5c37, 24, 28, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x222100, 28, 32, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
@@ -1168,17 +1174,17 @@ PAINT_PICKUP_COIN:
 			PICKUP_COIN_ROW_1:
 					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x535300, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x8f8f00, 12, 16, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x5b5b00, 16, 20, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x8d8d00, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xd8d851, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0xd1d15c, 28, 32, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
 					j UPDATE_PICKUP_COIN_ROW
 			PICKUP_COIN_ROW_2:
 					setup_general_paint (0x303016, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 8, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x939300, 8, 12, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x212100, 12, 16, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
@@ -1194,7 +1200,7 @@ PAINT_PICKUP_COIN:
 					setup_general_paint (0x000000, 12, 20, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x161600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x5e5f00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xbcbc00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 28, 32, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0xa9a853, 32, 36, LOOP_PICKUP_COIN_COLUMN)
 					j UPDATE_PICKUP_COIN_ROW
 			PICKUP_COIN_ROW_4:
@@ -1219,8 +1225,7 @@ PAINT_PICKUP_COIN:
 					j UPDATE_PICKUP_COIN_ROW
 			PICKUP_COIN_ROW_6:
 					setup_general_paint (0x272700, 0, 4, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb8b800, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xafaf00, 8, 12, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 4, 12, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x333315, 12, 16, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x000000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x353600, 20, 24, LOOP_PICKUP_COIN_COLUMN)
@@ -1231,20 +1236,17 @@ PAINT_PICKUP_COIN:
 			PICKUP_COIN_ROW_7:
 					setup_general_paint (0x000000, 0, 4, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x494900, 4, 8, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb2b200, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb5b500, 12, 16, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 8, 16, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x909000, 16, 20, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x939300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 24, 28, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 24, 28, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x777700, 28, 32, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x000000, 32, 36, LOOP_PICKUP_COIN_COLUMN)
 					j UPDATE_PICKUP_COIN_ROW
 			PICKUP_COIN_ROW_8:
 					setup_general_paint (0x000000, 0, 8, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x252500, 8, 12, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb6b600, 12, 16, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb9b900, 16, 20, LOOP_PICKUP_COIN_COLUMN)
-					setup_general_paint (0xb3b300, 20, 24, LOOP_PICKUP_COIN_COLUMN)
+					setup_general_paint (0xbaba00, 12, 24, LOOP_PICKUP_COIN_COLUMN)
 					setup_general_paint (0x202100, 24, 28, LOOP_PICKUP_COIN_COLUMN)
 					j UPDATE_PICKUP_COIN_ROW
 
