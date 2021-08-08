@@ -249,10 +249,14 @@ MAIN_LOOP:
 	
 	difficulty_2:
 		bge $s1, 5, generate_difficulty_2_obs
-		bgt $s1, 5, move_difficulty_2_obs
+
 	
 	difficulty_3:
-	
+		bge $s1, 10, generate_difficulty_3_obs
+		
+		
+		
+		
 	move_heart:	
 		addi $a0, $s3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
@@ -299,19 +303,14 @@ EXIT:	li $v0, 10
 	
 #___________________________________________________________________________________________________________________________	
 
-generate_difficulty_2_obs:
-	addi $s4, $0, 8
-	j difficulty_3
-
-move_difficulty_2_obs:
-	j difficulty_3
+generate_difficulty_2_obs: 
+	addi $s4, $0, 8		# double asteroid moving speed
+	j move_heart
 
 
-
-
-
-
-
+generate_difficulty_3_obs:
+	addi $s4, $0, 12	# triple asteroid moving speed (same speed as plane)
+	j move_heart
 
 #___________________________________________________________________________________________________________________________	
 generate_asteroid:
