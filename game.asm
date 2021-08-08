@@ -251,20 +251,6 @@ MAIN_LOOP:
 	level_2:
 		bge $s1, 5, generate_level_2_obs
 		
-	move_lasers:
-		# laser 1	
-		addi $a0, $t0, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
-		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_LASER			
-		
-		#calculate_indices ($t0, $t5, $t6)	# calculate column and row index
-		#ble $t5, 11, regen_laser_1
-		
-		subu $t0, $t0, $s4			# shift obstacle 1 unit left
-		add $a0, $t0, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
-		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-		jal PAINT_LASER 
-	
 	
 	level_3:
 		bge $s1, 10, generate_level_3_obs
@@ -328,20 +314,68 @@ generate_lasers:
 	# generate laser 1 (in $t0)
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	addi $t0, $a0, 0
+	addi $t1, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER	
 	
 	# generate laser 2 (in $t1)
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
-	addi $t1, $a0, 0
+	addi $t2, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER	
 	
 	j move_lasers
 
+move_lasers:
+		move_laser_1:
+		# laser 1	
+		addi $a0, $t1, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+		jal PAINT_LASER			
+		
+		calculate_indices ($t1, $t5, $t6)	# calculate column and row index
+		ble $t5, 11, regen_laser_1
+		
+		subu $t1, $t1, $s4			# shift obstacle 1 unit left
+		add $a0, $t1, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+		jal PAINT_LASER  
+		
+		move_laser_2:
+		# laser 2	
+		addi $a0, $t2, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+		jal PAINT_LASER			
+		
+		calculate_indices ($t2, $t5, $t6)	# calculate column and row index
+		ble $t5, 11, regen_laser_2
+		
+		subu $t2, $t2, $s4			# shift obstacle 1 unit left
+		add $a0, $t2, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+		jal PAINT_LASER 
+		
+		j level_3
 
+regen_laser_1:		
+	jal RANDOM_OFFSET			# create random address offset
+	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $t1, $a0, 0
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_LASER				
+	j move_laser_2					
+
+regen_laser_2:		
+	jal RANDOM_OFFSET			# create random address offset
+	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $t2, $a0, 0
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_LASER				
+	j move_laser_2										
+																		
+																											
+																																													
 generate_level_3_obs:
 	addi $s4, $0, 12	# triple asteroid moving speed (same speed as plane)
 	j move_heart
@@ -460,6 +494,7 @@ COLLISION_DETECTOR:
         	lw $t2, ($t9)				# load pixel colour at the address
 		# if incorrect pixel color found
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
+        	beq $t2, 0x00cb0d, deduct_health
         	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
         	
@@ -559,7 +594,7 @@ exit_loop: jr $ra
 # REGENERATE PICKUPS
 generate_coin:	
 	push_reg_to_stack($ra)
-	jal RANDOM_OFFSET			# create random address offset
+	jal RANDOM_OFFSET_WHOLE_SCREEN			# create random address offset
 	add $a0, $v0, object_base_address	# store pickup coin address
 	add $s2, $a0, $0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
@@ -670,6 +705,7 @@ RANDOM_OFFSET:
 	li $a0, 0 		# from 0
 	li $a1, 188 		# to 220
 	syscall 		# generate and store random integer in $a0
+	addi $a0, $a0, 18
 	
 	addi $s0, $0, row_increment	# store row increment in $s0
 	mult $a0, $s0			# multiply row index to row increment
@@ -683,6 +719,47 @@ RANDOM_OFFSET:
 
 	# right most column	
 	addi $a0, $0, 225
+	addi $s0, $0, column_increment	# store column increment in $s0
+	mult $a0, $s0			# multiply column index to column increment
+	mflo $s1			# store result in t9
+	add $s2, $s2, $s1		# add column address offset to base address
+
+	add $v0, $s2, $0		# store return value (address offset) in $v0
+	
+	# Restore used registers from stack
+	pop_reg_from_stack ($s2)
+	pop_reg_from_stack ($s1)
+	pop_reg_from_stack ($s0)
+	pop_reg_from_stack ($a1)
+	pop_reg_from_stack ($a0)
+	jr $ra			# return to previous instruction
+	
+	
+RANDOM_OFFSET_WHOLE_SCREEN:
+	# This will make the object spawn on a random column AND a random row
+	# Store used registers to stack
+	push_reg_to_stack ($a0)
+	push_reg_to_stack ($a1)
+	push_reg_to_stack ($s0)
+	push_reg_to_stack ($s1)
+	push_reg_to_stack ($s2)
+	
+	# Randomly generate row value
+	li $v0, 42 		# Specify random integer
+	li $a0, 0 		# from 0
+	li $a1, 188 		# to 220
+	syscall 		# generate and store random integer in $a0
+	addi $a0, $a0, 18
+	addi $s0, $0, row_increment	# store row increment in $s0
+	mult $a0, $s0			# multiply row index to row increment
+	mflo $s2			# store result in $s2
+
+	li $v0, 42 		# Specify random integer
+	li $a0, 0 		# from 0
+	li $a1, 220 		# to 220
+	syscall 		# Generate and store random integer in $a0
+
+	# right most column	
 	addi $s0, $0, column_increment	# store column increment in $s0
 	mult $a0, $s0			# multiply column index to column increment
 	mflo $s1			# store result in t9
