@@ -301,6 +301,8 @@ generate_asteroid:
 	pop_reg_from_stack ($ra)	
 	jr $ra
 	
+	
+	
 # REGENERATE OBSTACLES
 regen_obs_1:	
 	jal generate_asteroid
@@ -599,6 +601,7 @@ USER_INPUT:
 	# Outputs:
 		# $v0: stores return value for random address offset
 RANDOM_OFFSET:
+	# This will make the object spawn on the rightmost column of the screen at a random row
 	# Store used registers to stack
 	push_reg_to_stack ($a0)
 	push_reg_to_stack ($a1)
@@ -616,13 +619,14 @@ RANDOM_OFFSET:
 	mult $a0, $s0			# multiply row index to row increment
 	mflo $s2			# store result in $s2
 
-	# Randomly generate col value
-	li $v0, 42 		# Specify random integer
-	li $a0, 0 		# from 0
-	li $a1, 22 		# to 220
-	syscall 		# Generate and store random integer in $a0
-	add $a0, $a0, 183
+	#li $v0, 42 		# Specify random integer
+	#li $a0, 0 		# from 0
+	#li $a1, 22 		# to 220
+	#syscall 		# Generate and store random integer in $a0
+	#add $a0, $a0, 183
 
+	# right most column	
+	addi $a0, $0, 225
 	addi $s0, $0, column_increment	# store column increment in $s0
 	mult $a0, $s0			# multiply column index to column increment
 	mflo $s1			# store result in t9
