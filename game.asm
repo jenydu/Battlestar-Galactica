@@ -137,7 +137,7 @@
 		push_reg_to_stack ($s2)
 		# Column index in (11, 216)
 		sgt $s0, $col, 11
-		slti $s1, $col, 216
+		slti $s1, $col, 245
 		and $s2, $s0, $s1			# 11 < col < 216
 		# Row index in (18, 238)
 		sgt $s0, $row, 18
