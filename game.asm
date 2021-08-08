@@ -247,12 +247,12 @@ MAIN_LOOP:
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 		jal PAINT_ASTEROID 
 	
-	difficulty_2:
-		bge $s1, 5, generate_difficulty_2_obs
+	level_2:
+		bge $s1, 5, generate_level_2_obs
 
 	
-	difficulty_3:
-		bge $s1, 10, generate_difficulty_3_obs
+	level_3:
+		bge $s1, 10, generate_level_3_obs
 		
 		
 		
@@ -303,12 +303,12 @@ EXIT:	li $v0, 10
 	
 #___________________________________________________________________________________________________________________________	
 
-generate_difficulty_2_obs: 
+generate_level_2_obs: 
 	addi $s4, $0, 8		# double asteroid moving speed
 	j move_heart
 
 
-generate_difficulty_3_obs:
+generate_level_3_obs:
 	addi $s4, $0, 12	# triple asteroid moving speed (same speed as plane)
 	j move_heart
 
@@ -342,7 +342,7 @@ regen_obs_3:
 regen_heart:
 	jal generate_heart
 	addi $s3, $a0, 0
-	j difficulty_2
+	j level_2
 #___________________________________________________________________________________________________________________________
 # FUNCTION: COLLISION_DETECTOR
 	# Registers Used
