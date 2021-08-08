@@ -137,7 +137,7 @@
 		push_reg_to_stack ($s2)
 		# Column index in (11, 216)
 		sgt $s0, $col, 11
-		slti $s1, $col, 245
+		slti $s1, $col, 216
 		and $s2, $s0, $s1			# 11 < col < 216
 		# Row index in (18, 238)
 		sgt $s0, $row, 18
@@ -155,9 +155,10 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 0					# score counter
+addi $s1, $0, 4					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
+addi $s4, $0, column_increment			# movement speed
 addi $a1, $0, 1
 
 # ==SETUP==:
@@ -215,7 +216,7 @@ MAIN_LOOP:
 		calculate_indices ($s5, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_1
 		
-		subu $s5, $s5, 4			# shift obstacle 1 unit left
+		subu $s5, $s5, $s4			# shift obstacle 1 unit left
 		add $a0, $s5, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
 		jal PAINT_ASTEROID  
@@ -228,7 +229,7 @@ MAIN_LOOP:
 		calculate_indices ($s6, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_2
 		
-		subu $s6, $s6, 4			# shift obstacle 1 unit left
+		subu $s6, $s6, $s4			# shift obstacle 1 unit left
 		add $a0, $s6, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 		jal PAINT_ASTEROID  
@@ -241,10 +242,16 @@ MAIN_LOOP:
 		calculate_indices ($s7, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_3
 		
-		subu $s7, $s7, 4			# shift obstacle 1 unit left
+		subu $s7, $s7, $s4			# shift obstacle 1 unit left
 		add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 		jal PAINT_ASTEROID 
+	
+	difficulty_2:
+		bge $s1, 5, generate_difficulty_2_obs
+		bgt $s1, 5, move_difficulty_2_obs
+	
+	difficulty_3:
 	
 	move_heart:	
 		addi $a0, $s3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
@@ -291,6 +298,22 @@ EXIT:	li $v0, 10
 	syscall
 	
 #___________________________________________________________________________________________________________________________	
+
+generate_difficulty_2_obs:
+	addi $s4, $0, 8
+	j difficulty_3
+
+move_difficulty_2_obs:
+	j difficulty_3
+
+
+
+
+
+
+
+
+#___________________________________________________________________________________________________________________________	
 generate_asteroid:
 	# randomly generates an obstacle with address stored in $a0
 	push_reg_to_stack ($ra)
@@ -320,7 +343,7 @@ regen_obs_3:
 regen_heart:
 	jal generate_heart
 	addi $s3, $a0, 0
-	j EXIT_OBSTACLE_MOVE
+	j difficulty_2
 #___________________________________________________________________________________________________________________________
 # FUNCTION: COLLISION_DETECTOR
 	# Registers Used
@@ -563,11 +586,11 @@ USER_INPUT:
 				add $t0, $t0, row_increment	# set base position 1 pixel down
 				j draw_new_avatar
 	
-	respond_to_d:		bgt $t5, 216, EXIT_KEY_PRESS
+	respond_to_d:		bgt $t5, 214, EXIT_KEY_PRESS
 				add $t0, $t0, column_increment	# set base position 1 pixel right
-				bge $t6, 217, draw_new_avatar	# if after movement, avatar is now at border, draw
+				bge $t6, 215, draw_new_avatar	# if after movement, avatar is now at border, draw
 				add $t0, $t0, column_increment	# set base position 1 pixel right
-				bge $t6, 218, draw_new_avatar	# if after movement, avatar is now at border, draw
+				bge $t6, 216, draw_new_avatar	# if after movement, avatar is now at border, draw
 				add $t0, $t0, column_increment	# set base position 1 pixel right
 				j draw_new_avatar
 	
