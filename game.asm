@@ -203,9 +203,10 @@ pop_reg_from_stack ($a0)			# restore current plane address from stack
 MAIN_LOOP:
 
 	AVATAR_MOVE:
+		
 		jal PAINT_PLANE
 		jal check_key_press		# check for keyboard input and redraw avatar accordingly
-
+		
 	OBSTACLE_MOVE:
 		push_reg_to_stack ($a0)	
 	move_obs_1:
@@ -249,7 +250,21 @@ MAIN_LOOP:
 	
 	level_2:
 		bge $s1, 5, generate_level_2_obs
-
+		
+	move_lasers:
+		# laser 1	
+		addi $a0, $t0, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+		jal PAINT_LASER			
+		
+		#calculate_indices ($t0, $t5, $t6)	# calculate column and row index
+		#ble $t5, 11, regen_laser_1
+		
+		subu $t0, $t0, $s4			# shift obstacle 1 unit left
+		add $a0, $t0, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+		jal PAINT_LASER 
+	
 	
 	level_3:
 		bge $s1, 10, generate_level_3_obs
@@ -304,8 +319,27 @@ EXIT:	li $v0, 10
 #___________________________________________________________________________________________________________________________	
 
 generate_level_2_obs: 
+	beq $s4, 4, generate_lasers
+	j move_lasers
+	
+generate_lasers:
 	addi $s4, $0, 8		# double asteroid moving speed
-	j move_heart
+
+	# generate laser 1 (in $t0)
+	jal RANDOM_OFFSET			# create random address offset
+	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $t0, $a0, 0
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_LASER	
+	
+	# generate laser 2 (in $t1)
+	jal RANDOM_OFFSET			# create random address offset
+	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $t1, $a0, 0
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_LASER	
+	
+	j move_lasers
 
 
 generate_level_3_obs:
