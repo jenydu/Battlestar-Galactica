@@ -102,7 +102,6 @@
 			# $row_store: register to store row index
 		# Registers Used
 			# $s1-2: for temporary operations
-
 	.macro calculate_indices ($address, $col_store, $row_store)
 		# Store curr. $s0-1 values in stack.
 		push_reg_to_stack ($s1)
@@ -159,7 +158,7 @@ addi $s0, $0, 3					# starting number of hearts
 addi $s1, $0, 0					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
-
+addi $a1, $0, 1
 
 # ==SETUP==:
 jal PAINT_BORDER		# Paint Border
@@ -269,7 +268,7 @@ MAIN_LOOP:
 		
 	CHECK_COLLISION:
 		pop_reg_from_stack ($a0)			# restore $a0 to plane's address
-		jal check_plane_hitbox			# check if the plane's hitbox is overlapped with an object based on colour
+		jal COLLISION_DETECTOR			# check if the plane's hitbox is overlapped with an object based on colour
 	
 	
 	j MAIN_LOOP				# repeat loop
@@ -321,54 +320,118 @@ regen_heart:
 	addi $s3, $a0, 0
 	j EXIT_OBSTACLE_MOVE
 #___________________________________________________________________________________________________________________________
-# COLLISION
+# FUNCTION: COLLISION_DETECTOR
+	# Registers Used
+		# $t0: for loop indexer for plane_hitbox_loop
+		# $t1: plane_hitbox_loop param. Specifies number of rows to offset from center (above and below) to check pixels
+		# $t2: used to store current color at pixel
+		# $t3: used in address offset calculations
+		# $t9: temporary memory address storage
+	# Registers Updated
+		# $s0: update global health points variable (if collision with heart)
+		# $s1: update global score variable (if collision with coin) 
 COLLISION_DETECTOR:
-        check_plane_hitbox:
+	# Save used registers to stack
         	push_reg_to_stack ($t0)
         	push_reg_to_stack ($t1)
         	push_reg_to_stack ($t2)
+        	push_reg_to_stack ($t3)
         	push_reg_to_stack ($t9)
         	push_reg_to_stack ($ra)
-        	# check column 20 of the plane, if not plane colour, deduct heart
-        	addi $t0, $0, 0		# i = 0 
-        	addi $t1, $0, 32	# 32(?) pixels in column 20
+
+        check_plane_hitbox:			# check specific columns of plane for collision
+        	# Column 26
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t1, $0, 2			# plane_hitbox_loop param. check __ rows from the center
+        	addi $t9, $0, 104		# specify column offset = (column index * 4)
+        	addi $t9, $t9, plane_center	# begin from row center of plane
+        	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
+        	jal plane_hitbox_loop 
+        	# Column 23
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t1, $0, 2			# plane_hitbox_loop param. check __ rows from the center
+        	addi $t9, $0, 92		# specify column offset = (column index * 4)
+        	addi $t9, $t9, plane_center	# begin from row center of plane
+        	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
+        	jal plane_hitbox_loop 	
+        	# Column 20
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t1, $0, 3			# plane_hitbox_loop param. check __ rows from the center
+        	addi $t9, $0, 80		# specify column offset = (column index * 4)
+        	addi $t9, $t9, plane_center	# begin from row center of plane
+        	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
+        	jal plane_hitbox_loop 	
+        	# Column 18
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t1, $0, 16		# plane_hitbox_loop param. check __ rows from the center
+        	addi $t9, $0, 72		# specify column offset = (column index * 4)
+        	addi $t9, $t9, plane_center	# begin from row center of plane
+        	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
+        	jal plane_hitbox_loop
+        	# Column 15
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t1, $0, 16		# plane_hitbox_loop param. check __ rows from the center
+        	addi $t9, $0, 60		# specify column offset = (column index * 4)
+        	addi $t9, $t9, plane_center	# begin from row center of plane
+        	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
+        	jal plane_hitbox_loop
         	
-        	addi $t9, $0, 20	
-        	sll $t9, $t9, 2
-        	add $t9, $t9, $a0	# $t9 stores the address of the top pixel on column 20
-
+        	j exit_check_plane_hitbox
+        	
         plane_hitbox_loop:
-        	bgt $t0, $t1, exit_check_plane_hitbox	# if i > 32, exit loop
-        	addi $t0, $t0, 1			# i += 1
+        	bgt $t0, $t1, exit_plane_hitbox_loop	# if i > 32, exit loop
+        	addi $t3, $t0, 0			# store current row index
+        	sll $t3, $t3, 10			# calculate row offset = (1024 * row index)
+        	
+        	subu $t9, $t9, $t3			# check pixel $t0 rows above
         	lw $t2, ($t9)				# load pixel colour at the address
-        	addu $t9, $t9, row_increment		# load $t9 of the next pixel (1 pixel down)
-
+		# if incorrect pixel color found
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
         	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
+        	
+        	add $t9, $t9, $t3			# reset back to center
+        	add $t9, $t9, $t3			# check pixel $t0 rows below
+        	lw $t2, ($t9)				# load pixel colour at the address
+		# if incorrect pixel color found
+        	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
+        	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
+        	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
+        	
+        	# repeat loop
+        	addi $t0, $t0, 1			# update for loop indexer;	i += 1
+        	subu $t9, $t9, $t3			# reset back to center
         	j plane_hitbox_loop
-
+        	
+        	exit_plane_hitbox_loop:			# return to previous instruction
+        		jr $ra
+        		
         deduct_health:
         	subi $s0, $s0, 1			# health -= 1
         	jal UPDATE_HEALTH			# update health on border
         	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
    		push_reg_to_stack ($a0)
+   		push_reg_to_stack ($a1)
         	jal check_asteroid_distances		# the address of the closest asteroid will be stored in $a0
-
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_ASTEROID
+		jal PAINT_ASTEROID			# erase current asteroid
+		pop_reg_from_stack($a1)
         	pop_reg_from_stack($a0)
         	j exit_check_plane_hitbox		# exit collision check
 
         add_health:
+        	beq $s0, 5, skip_add_health		# maximum health points is 5
         	addi $s0, $s0, 1			# health += 1
         	jal UPDATE_HEALTH			# update health on border
         	
+        	skip_add_health:
         	push_reg_to_stack ($a0)			# stores away plane address
+        	push_reg_to_stack ($a1)
 		add $a0, $s3, $0			# PAINT_PICKUP_COIN param. Load base address
 		addi $a1, $0, 0				# PAINT_PICKUP_COIN param. Set to erase
-		jal PAINT_PICKUP_HEART
-		jal generate_heart
+		jal PAINT_PICKUP_HEART			# erase current heart
+		jal generate_heart			# redraw new heart
+		pop_reg_from_stack($a1)
 		pop_reg_from_stack($a0)			# retrieve plane address
         	
         	j exit_check_plane_hitbox		# exit collision check
@@ -387,6 +450,13 @@ COLLISION_DETECTOR:
 	
 	exit_check_plane_hitbox:			# return to previous instruction
         	pop_reg_from_stack($ra)
+        	pop_reg_from_stack($t9)
+        	
+        	pop_reg_from_stack($t3)
+        	
+        	pop_reg_from_stack($t2)
+        	pop_reg_from_stack($t1)
+        	pop_reg_from_stack($t0)
         	jr $ra
 # -------------------------------------------------------------------------------------------------------------------------
 check_asteroid_distances:
@@ -420,6 +490,7 @@ L3: 	addi $a0, $s6, 0
 	j exit_loop
 
 exit_loop: jr $ra
+#___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
 generate_coin:	
 	push_reg_to_stack($ra)
