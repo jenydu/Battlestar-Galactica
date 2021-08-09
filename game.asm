@@ -655,18 +655,18 @@ exit_loop: jr $ra
 #___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
 generate_coin:	
-	push_reg_to_stack($ra)
+	push_reg_to_stack ($ra)
 	addi $a3, $0, 1				# RANDOM_OFFSET param. Add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store pickup coin address
 	add $s2, $a0, $0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
 	jal PAINT_PICKUP_COIN
-	pop_reg_from_stack($ra)
+	pop_reg_from_stack ($ra)
 	jr $ra
 
 generate_heart:
-	push_reg_to_stack($ra)
+	push_reg_to_stack ($ra)
 	addi $a3, $0, 0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $s3, $v0, object_base_address	# store pickup heart address
@@ -674,11 +674,14 @@ generate_heart:
 	addi $a0, $s3, 0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
 	jal PAINT_PICKUP_HEART
-	pop_reg_from_stack($ra)
+	pop_reg_from_stack ($ra)
 	jr $ra
 #___________________________________________________________________________________________________________________________
 # ==USER INPUT==
 USER_INPUT:
+	# Store used registers in stack
+		push_reg_to_stack ($t4)
+
 	check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 				bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
 				lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
@@ -743,7 +746,10 @@ USER_INPUT:
 	# go to gameover screen
 	respond_to_g:		j END_SCREEN_LOOP
 
-	EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
+	EXIT_KEY_PRESS:		
+		# Restore used registers
+		pop_reg_from_stack ($t4)
+		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
 # FUNCTION: Create random address offset
