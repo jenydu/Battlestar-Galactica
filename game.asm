@@ -425,17 +425,17 @@ move_level_3_obs:
 
 		move_obs_5:
 		# obs 5
-		#addi $a0, $t4, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
-		#addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
-		#jal PAINT_ASTEROID
+		addi $a0, $t4, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
+		jal PAINT_ASTEROID
 
 		#calculate_indices ($t4, $t5, $t6)	# calculate column and row index
 		#ble $t5, 11, regen_obs_5
 
-		#subu $t4, $t4, $s4			# shift obstacle 1 unit left
-		#add $a0, $t4, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
-		#addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
-		#jal PAINT_ASTEROID
+		subu $t4, $t4, $s4			# shift obstacle 1 unit left
+		add $a0, $t4, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
+		jal PAINT_ASTEROID
 
 		j move_heart
 
