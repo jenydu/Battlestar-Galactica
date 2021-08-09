@@ -155,7 +155,7 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 4					# score counter
+addi $s1, $0, 8					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
@@ -311,14 +311,14 @@ generate_level_2_obs:
 generate_lasers:
 	addi $s4, $0, 8		# double asteroid moving speed
 
-	# generate laser 1 (in $t0)
+	# generate laser 1 (in $t1)
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
 	addi $t1, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER	
 	
-	# generate laser 2 (in $t1)
+	# generate laser 2 (in $t2)
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
 	addi $t2, $a0, 0
@@ -377,8 +377,59 @@ regen_laser_2:
 																											
 																																													
 generate_level_3_obs:
-	addi $s4, $0, 12	# triple asteroid moving speed (same speed as plane)
-	j move_heart
+	beq $s4, 8, generate_obs_4_5
+	j move_level_3_obs
+	
+generate_obs_4_5:
+	addi $s4, $0, 12		# double asteroid moving speed
+
+	# generate obs 4 (in $t3)
+	jal RANDOM_OFFSET			# create random address offset
+	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $t3, $a0, 0
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID
+	
+	# generate obs 5 (in $t3)
+	jal RANDOM_OFFSET			# create random address offset
+	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $t4, $a0, 0
+	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
+	jal PAINT_ASTEROID	
+	
+	j  move_level_3_obs
+
+move_level_3_obs:
+		move_obs_4:
+		# obs 4	
+		addi $a0, $t3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
+		jal PAINT_ASTEROID			
+		
+		#calculate_indices ($t3, $t5, $t6)	# calculate column and row index
+		#ble $t5, 11, regen_obs_4
+		
+		subu $t3, $t3, $s4			# shift obstacle 1 unit left
+		add $a0, $t3, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
+		jal PAINT_ASTEROID  
+		
+		move_obs_5:
+		# obs 5	
+		#addi $a0, $t4, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
+		#addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
+		#jal PAINT_ASTEROID			
+		
+		#calculate_indices ($t4, $t5, $t6)	# calculate column and row index
+		#ble $t5, 11, regen_obs_5
+		
+		#subu $t4, $t4, $s4			# shift obstacle 1 unit left
+		#add $a0, $t4, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
+		#addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
+		#jal PAINT_ASTEROID  
+		
+		j move_heart
+
 
 #___________________________________________________________________________________________________________________________	
 generate_asteroid:
