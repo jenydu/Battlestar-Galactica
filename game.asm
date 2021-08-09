@@ -312,15 +312,19 @@ generate_lasers:
 	addi $s4, $0, 8		# double asteroid moving speed
 
 	# generate laser 1 (in $t1)
+	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t1, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER	
 	
 	# generate laser 2 (in $t2)
+	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t2, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER	
@@ -435,8 +439,10 @@ move_level_3_obs:
 generate_asteroid:
 	# randomly generates an obstacle with address stored in $a0
 	push_reg_to_stack ($ra)
+	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_ASTEROID
 	pop_reg_from_stack ($ra)	
@@ -644,8 +650,8 @@ exit_loop: jr $ra
 #___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
 generate_coin:	
-	push_reg_to_stack($ra)
-	jal RANDOM_OFFSET_WHOLE_SCREEN			# create random address offset
+	addi $a3, $0, 1				# RANDOM_OFFSET param. Add random column offset.
+	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store pickup coin address
 	add $s2, $a0, $0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
@@ -655,8 +661,10 @@ generate_coin:
 
 generate_heart:
 	push_reg_to_stack($ra)
+	addi $a3, $0, 0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $s3, $v0, object_base_address	# store pickup heart address
+	add $s3, $s3, 900			# set obstacle spawn column to 225
 	addi $a0, $s3, 0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
 	jal PAINT_PICKUP_HEART
@@ -733,6 +741,8 @@ USER_INPUT:
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
 # FUNCTION: Create random address offset
+	# Inputs
+		# $a3: specifies whether to add random column offset or not
 	# Used Registers
 		# $a0: used to create random integer via syscall
 		# $a1: used to create random integer via syscall
@@ -754,77 +764,35 @@ RANDOM_OFFSET:
 	# Randomly generate row value
 	li $v0, 42 		# Specify random integer
 	li $a0, 0 		# from 0
-	li $a1, 188 		# to 220
+	li $a1, 188 		# to 188
 	syscall 		# generate and store random integer in $a0
-	addi $a0, $a0, 18
 	
 	addi $s0, $0, row_increment	# store row increment in $s0
 	mult $a0, $s0			# multiply row index to row increment
 	mflo $s2			# store result in $s2
 
-	#li $v0, 42 		# Specify random integer
-	#li $a0, 0 		# from 0
-	#li $a1, 22 		# to 220
-	#syscall 		# Generate and store random integer in $a0
-	#add $a0, $a0, 183
+	# If $a3 == 1, add random column offset
+	beq $a3, 0, END_RANDOM_OFFSET		# if $a3 == 0, don't add random column offset
+		li $v0, 42 		# Specify random integer
+		li $a0, 0 		# from 0
+		li $a1, 220 		# to 220
+		syscall 		# Generate and store random integer in $a0
+		
+		addi $s0, $0, column_increment	# store column increment in $s0
+		mult $a0, $s0			# multiply column index to column increment
+		mflo $s1			# store result in s1
+		add $s2, $s2, $s1		# add column address offset to base address
 
-	# right most column	
-	addi $a0, $0, 225
-	addi $s0, $0, column_increment	# store column increment in $s0
-	mult $a0, $s0			# multiply column index to column increment
-	mflo $s1			# store result in t9
-	add $s2, $s2, $s1		# add column address offset to base address
-
-	add $v0, $s2, $0		# store return value (address offset) in $v0
-	
-	# Restore used registers from stack
-	pop_reg_from_stack ($s2)
-	pop_reg_from_stack ($s1)
-	pop_reg_from_stack ($s0)
-	pop_reg_from_stack ($a1)
-	pop_reg_from_stack ($a0)
-	jr $ra			# return to previous instruction
-	
-	
-RANDOM_OFFSET_WHOLE_SCREEN:
-	# This will make the object spawn on a random column AND a random row
-	# Store used registers to stack
-	push_reg_to_stack ($a0)
-	push_reg_to_stack ($a1)
-	push_reg_to_stack ($s0)
-	push_reg_to_stack ($s1)
-	push_reg_to_stack ($s2)
-	
-	# Randomly generate row value
-	li $v0, 42 		# Specify random integer
-	li $a0, 0 		# from 0
-	li $a1, 188 		# to 220
-	syscall 		# generate and store random integer in $a0
-	addi $a0, $a0, 18
-	addi $s0, $0, row_increment	# store row increment in $s0
-	mult $a0, $s0			# multiply row index to row increment
-	mflo $s2			# store result in $s2
-
-	li $v0, 42 		# Specify random integer
-	li $a0, 0 		# from 0
-	li $a1, 220 		# to 220
-	syscall 		# Generate and store random integer in $a0
-
-	# right most column	
-	addi $s0, $0, column_increment	# store column increment in $s0
-	mult $a0, $s0			# multiply column index to column increment
-	mflo $s1			# store result in t9
-	add $s2, $s2, $s1		# add column address offset to base address
-
-	add $v0, $s2, $0		# store return value (address offset) in $v0
-	
-	# Restore used registers from stack
-	pop_reg_from_stack ($s2)
-	pop_reg_from_stack ($s1)
-	pop_reg_from_stack ($s0)
-	pop_reg_from_stack ($a1)
-	pop_reg_from_stack ($a0)
-	jr $ra			# return to previous instruction
+	END_RANDOM_OFFSET:
+		add $v0, $s2, $0		# store return value (address offset) in $v0
+		
+		# Restore used registers from stack
+		pop_reg_from_stack ($s2)
+		pop_reg_from_stack ($s1)
+		pop_reg_from_stack ($s0)
+		pop_reg_from_stack ($a1)
+		pop_reg_from_stack ($a0)
+		jr $ra			# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT PLANE
 	# Inputs
