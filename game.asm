@@ -203,7 +203,6 @@ pop_reg_from_stack ($a0)			# restore current plane address from stack
 MAIN_LOOP:
 
 	AVATAR_MOVE:
-		
 		jal PAINT_PLANE
 		jal check_key_press		# check for keyboard input and redraw avatar accordingly
 		
@@ -254,8 +253,6 @@ MAIN_LOOP:
 	
 	level_3:
 		bge $s1, 10, generate_level_3_obs
-		
-		
 		
 		
 	move_heart:	
@@ -362,17 +359,21 @@ move_lasers:
 		
 		j level_3
 
-regen_laser_1:		
+regen_laser_1:
+	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t1, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER				
 	j move_laser_2					
 
-regen_laser_2:		
+regen_laser_2:
+	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t2, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER				
@@ -388,15 +389,19 @@ generate_obs_4_5:
 	addi $s4, $0, 12		# double asteroid moving speed
 
 	# generate obs 4 (in $t3)
+	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t3, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_ASTEROID
 	
 	# generate obs 5 (in $t3)
+	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store obstacle address = object_base_address + random offset
+	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t4, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_ASTEROID	
@@ -649,7 +654,8 @@ L3: 	addi $a0, $s6, 0
 exit_loop: jr $ra
 #___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
-generate_coin:	
+generate_coin:
+	push_reg_to_stack($ra)
 	addi $a3, $0, 1				# RANDOM_OFFSET param. Add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store pickup coin address
@@ -771,7 +777,6 @@ RANDOM_OFFSET:
 	mult $a0, $s0			# multiply row index to row increment
 	mflo $s2			# store result in $s2
 
-	# If $a3 == 1, add random column offset
 	beq $a3, 0, END_RANDOM_OFFSET		# if $a3 == 0, don't add random column offset
 		li $v0, 42 		# Specify random integer
 		li $a0, 0 		# from 0
