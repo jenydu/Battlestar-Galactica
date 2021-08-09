@@ -155,7 +155,7 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 8					# score counter
+addi $s1, $0, 10					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
@@ -171,7 +171,6 @@ addi $a0, $a0, 96256				# center plane
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
 
-j END_SCREEN_LOOP
 #---------------------------------------------------------------------------------------------------------------------------
 GENERATE_OBSTACLES:
 	# Used Registers:
@@ -683,22 +682,22 @@ generate_heart:
 # ==USER INPUT==
 USER_INPUT:
 	# Store used registers in stack
-		push_reg_to_stack ($t4)
+		push_reg_to_stack ($t7)
 
 	check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 				bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
-				lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
+				lw $t7, 0xffff0004		# load the ascii value of the key that was pressed
 
 	check_border:		la $t0, ($a0)			# load ___ base address to $t0
 				calculate_indices ($t0, $t5, $t6)	# calculate column and row index
 
-				beq $t4, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
-				beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
-				beq $t4, 0x73, respond_to_s	# ASCII code of 's'
-				beq $t4, 0x64, respond_to_d	# ASCII code of 'd'
-				beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
-				beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
-				beq $t4, 0x67, respond_to_g	# if 'g', branch to END_SCREEN_LOOP
+				beq $t7, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
+				beq $t7, 0x77, respond_to_w	# ASCII code of 'w'
+				beq $t7, 0x73, respond_to_s	# ASCII code of 's'
+				beq $t7, 0x64, respond_to_d	# ASCII code of 'd'
+				beq $t7, 0x70, respond_to_p	# restart game when 'p' is pressed
+				beq $t7, 0x71, respond_to_q	# exit game when 'q' is pressed
+				beq $t7, 0x67, respond_to_g	# if 'g', branch to END_SCREEN_LOOP
 				j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
 
 	respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
@@ -751,7 +750,7 @@ USER_INPUT:
 
 	EXIT_KEY_PRESS:		
 		# Restore used registers
-		pop_reg_from_stack ($t4)
+		pop_reg_from_stack ($t7)
 		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
