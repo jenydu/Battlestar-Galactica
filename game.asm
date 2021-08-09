@@ -650,6 +650,7 @@ exit_loop: jr $ra
 #___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
 generate_coin:	
+	push_reg_to_stack($ra)
 	addi $a3, $0, 1				# RANDOM_OFFSET param. Add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store pickup coin address
