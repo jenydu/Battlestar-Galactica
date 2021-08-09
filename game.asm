@@ -112,17 +112,17 @@
 		addi $s2, $zero, row_increment
 		div $s1, $s2				# divide by row increment
 		mflo $row_store				# quotient = row index
-		
+
 		addi $s2, $zero, column_increment
 		mfhi $s1				# store remainder back in $s1. NOTE: remainder = column_increment * column index
 		div $s1, $s2				# divide by column increment
 		mflo $col_store				# quotient = column index
-		
+
 		# Restore $s0-1 values from stack.
 		pop_reg_from_stack ($s2)
 		pop_reg_from_stack ($s1)
 	.end_macro
-	
+
 	# MACRO: Compute boolean if pixel indices stored in registers $col_index and $row_index are within the border.
 		# Inputs
 			# $col: register containing column index
@@ -182,18 +182,18 @@ GENERATE_OBSTACLES:
 	# Obstacle 1
 	jal generate_asteroid
 	addi $s5, $a0, 0
-	
+
 	# Obstacle 2
 	jal generate_asteroid
 	addi $s6, $a0, 0
-	
+
 	# Obstacle 3
 	jal generate_asteroid
 	addi $s7, $a0, 0
-	
+
 	# coin
 	jal generate_coin
-	
+
 	# heart
 	jal generate_heart
 #---------------------------------------------------------------------------------------------------------------------------
@@ -205,81 +205,81 @@ MAIN_LOOP:
 	AVATAR_MOVE:
 		jal PAINT_PLANE
 		jal check_key_press		# check for keyboard input and redraw avatar accordingly
-		
+
 	OBSTACLE_MOVE:
-		push_reg_to_stack ($a0)	
+		push_reg_to_stack ($a0)
 	move_obs_1:
 		addi $a0, $s5, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
-		jal PAINT_ASTEROID			
-		
+		jal PAINT_ASTEROID
+
 		calculate_indices ($s5, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_1
-		
+
 		subu $s5, $s5, $s4			# shift obstacle 1 unit left
 		add $a0, $s5, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
-		jal PAINT_ASTEROID  
-	
+		jal PAINT_ASTEROID
+
 	move_obs_2:
 		addi $a0, $s6, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_ASTEROID			
-		
+		jal PAINT_ASTEROID
+
 		calculate_indices ($s6, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_2
-		
+
 		subu $s6, $s6, $s4			# shift obstacle 1 unit left
 		add $a0, $s6, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-		jal PAINT_ASTEROID  
-	
+		jal PAINT_ASTEROID
+
 	move_obs_3:
 		addi $a0, $s7, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_ASTEROID			
-		
+		jal PAINT_ASTEROID
+
 		calculate_indices ($s7, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_3
-		
+
 		subu $s7, $s7, $s4			# shift obstacle 1 unit left
 		add $a0, $s7, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-		jal PAINT_ASTEROID 
-	
+		jal PAINT_ASTEROID
+
 	level_2:
 		bge $s1, 5, generate_level_2_obs
-		
-	
+
+
 	level_3:
 		bge $s1, 10, generate_level_3_obs
-		
-		
-	move_heart:	
+
+
+	move_heart:
 		addi $a0, $s3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_PICKUP_HEART			
-		
+		jal PAINT_PICKUP_HEART
+
 		calculate_indices ($s3, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_heart
-		
+
 		subu $s3, $s3, 4			# shift obstacle 1 unit left
 		add $a0, $s3, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-		jal PAINT_PICKUP_HEART 
+		jal PAINT_PICKUP_HEART
 	EXIT_OBSTACLE_MOVE:
-			
-	GENERATE_COIN:		
+
+	GENERATE_COIN:
 		# RE-DRAW the coin every loop so that it doesn't get erased when an obstacle flies over it
 		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
 		addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
-		jal PAINT_PICKUP_COIN	
-		
+		jal PAINT_PICKUP_COIN
+
 	CHECK_COLLISION:
 		pop_reg_from_stack ($a0)			# restore $a0 to plane's address
 		jal COLLISION_DETECTOR			# check if the plane's hitbox is overlapped with an object based on colour
-	
-	
+
+
 	j MAIN_LOOP				# repeat loop
 #---------------------------------------------------------------------------------------------------------------------------
 # END GAME LOOP
@@ -290,7 +290,7 @@ END_SCREEN_LOOP:
 		# Monitor p or q key press
 		lw $t8, 0xffff0000		# load the value at this address into $t8
 		lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
-		
+
 		beq $t4, 0x70, respond_to_p	# restart game when 'p' is pressed
 		beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
 		j monitor_end_key		# keep monitoring for key response until one is chosen
@@ -298,13 +298,13 @@ END_SCREEN_LOOP:
 # Tells OS the program ends
 EXIT:	li $v0, 10
 	syscall
-	
-#___________________________________________________________________________________________________________________________	
 
-generate_level_2_obs: 
+#___________________________________________________________________________________________________________________________
+
+generate_level_2_obs:
 	beq $s4, 4, generate_lasers
 	j move_lasers
-	
+
 generate_lasers:
 	addi $s4, $0, 8		# double asteroid moving speed
 
@@ -315,8 +315,8 @@ generate_lasers:
 	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t1, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_LASER	
-	
+	jal PAINT_LASER
+
 	# generate laser 2 (in $t2)
 	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
@@ -324,39 +324,39 @@ generate_lasers:
 	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t2, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_LASER	
-	
+	jal PAINT_LASER
+
 	j move_lasers
 
 move_lasers:
 		move_laser_1:
-		# laser 1	
+		# laser 1
 		addi $a0, $t1, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_LASER			
-		
+		jal PAINT_LASER
+
 		calculate_indices ($t1, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_laser_1
-		
+
 		subu $t1, $t1, $s4			# shift obstacle 1 unit left
 		add $a0, $t1, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-		jal PAINT_LASER  
-		
+		jal PAINT_LASER
+
 		move_laser_2:
-		# laser 2	
+		# laser 2
 		addi $a0, $t2, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_LASER			
-		
+		jal PAINT_LASER
+
 		calculate_indices ($t2, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_laser_2
-		
+
 		subu $t2, $t2, $s4			# shift obstacle 1 unit left
 		add $a0, $t2, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-		jal PAINT_LASER 
-		
+		jal PAINT_LASER
+
 		j level_3
 
 regen_laser_1:
@@ -366,8 +366,8 @@ regen_laser_1:
 	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t1, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_LASER				
-	j move_laser_2					
+	jal PAINT_LASER
+	j move_laser_2
 
 regen_laser_2:
 	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
@@ -376,15 +376,15 @@ regen_laser_2:
 	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t2, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_LASER				
-	j move_laser_2										
-																		
-																											
-																																													
+	jal PAINT_LASER
+	j move_laser_2
+
+
+
 generate_level_3_obs:
 	beq $s4, 8, generate_obs_4_5
 	j move_level_3_obs
-	
+
 generate_obs_4_5:
 	addi $s4, $0, 12		# double asteroid moving speed
 
@@ -396,7 +396,7 @@ generate_obs_4_5:
 	addi $t3, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_ASTEROID
-	
+
 	# generate obs 5 (in $t3)
 	add $a3, $0, $0				# RANDOM_OFFSET param. Don't add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
@@ -404,43 +404,43 @@ generate_obs_4_5:
 	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $t4, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
-	jal PAINT_ASTEROID	
-	
+	jal PAINT_ASTEROID
+
 	j  move_level_3_obs
 
 move_level_3_obs:
 		move_obs_4:
-		# obs 4	
+		# obs 4
 		addi $a0, $t3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
-		jal PAINT_ASTEROID			
-		
+		jal PAINT_ASTEROID
+
 		#calculate_indices ($t3, $t5, $t6)	# calculate column and row index
 		#ble $t5, 11, regen_obs_4
-		
+
 		subu $t3, $t3, $s4			# shift obstacle 1 unit left
 		add $a0, $t3, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
-		jal PAINT_ASTEROID  
-		
+		jal PAINT_ASTEROID
+
 		move_obs_5:
-		# obs 5	
+		# obs 5
 		#addi $a0, $t4, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		#addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
-		#jal PAINT_ASTEROID			
-		
+		#jal PAINT_ASTEROID
+
 		#calculate_indices ($t4, $t5, $t6)	# calculate column and row index
 		#ble $t5, 11, regen_obs_5
-		
+
 		#subu $t4, $t4, $s4			# shift obstacle 1 unit left
 		#add $a0, $t4, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		#addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
-		#jal PAINT_ASTEROID  
-		
+		#jal PAINT_ASTEROID
+
 		j move_heart
 
 
-#___________________________________________________________________________________________________________________________	
+#___________________________________________________________________________________________________________________________
 generate_asteroid:
 	# randomly generates an obstacle with address stored in $a0
 	push_reg_to_stack ($ra)
@@ -450,13 +450,13 @@ generate_asteroid:
 	addi $a0, $a0, 900			# set obstacle spawn column to 225
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_ASTEROID
-	pop_reg_from_stack ($ra)	
+	pop_reg_from_stack ($ra)
 	jr $ra
-	
-	
-	
+
+
+
 # REGENERATE OBSTACLES
-regen_obs_1:	
+regen_obs_1:
 	jal generate_asteroid
 	addi $s5, $a0, 0
 	j move_obs_2
@@ -464,10 +464,10 @@ regen_obs_2:
 	jal generate_asteroid
 	addi $s6, $a0, 0
 	j move_obs_3
-regen_obs_3:	
+regen_obs_3:
 	jal generate_asteroid
 	addi $s7, $a0, 0
-	j move_heart	
+	j move_heart
 
 regen_heart:
 	jal generate_heart
@@ -483,7 +483,7 @@ regen_heart:
 		# $t9: temporary memory address storage
 	# Registers Updated
 		# $s0: update global health points variable (if collision with heart)
-		# $s1: update global score variable (if collision with coin) 
+		# $s1: update global score variable (if collision with coin)
 COLLISION_DETECTOR:
 	# Save used registers to stack
         	push_reg_to_stack ($t0)
@@ -495,62 +495,62 @@ COLLISION_DETECTOR:
 
         check_plane_hitbox:			# check specific columns of plane for collision
         	# Column 26
-        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0
         	addi $t1, $0, 2			# plane_hitbox_loop param. check __ rows from the center
         	addi $t9, $0, 104		# specify column offset = (column index * 4)
         	addi $t9, $t9, plane_center	# begin from row center of plane
         	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
         	jal plane_hitbox_loop
         	# Column 1
-        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0
         	addi $t1, $0, 6		# plane_hitbox_loop param. check __ rows from the center
         	addi $t9, $0, 4		# specify column offset = (column index * 4)
         	addi $t9, $t9, plane_center	# begin from row center of plane
         	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
         	jal plane_hitbox_loop
         	# Column 23
-        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0
         	addi $t1, $0, 2			# plane_hitbox_loop param. check __ rows from the center
         	addi $t9, $0, 92		# specify column offset = (column index * 4)
         	addi $t9, $t9, plane_center	# begin from row center of plane
         	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
-        	jal plane_hitbox_loop 	
+        	jal plane_hitbox_loop
         	# Column 20
-        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0
         	addi $t1, $0, 3			# plane_hitbox_loop param. check __ rows from the center
         	addi $t9, $0, 80		# specify column offset = (column index * 4)
         	addi $t9, $t9, plane_center	# begin from row center of plane
         	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
-        	jal plane_hitbox_loop 	
+        	jal plane_hitbox_loop
         	# Column 18
-        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0
         	addi $t1, $0, 16		# plane_hitbox_loop param. check __ rows from the center
         	addi $t9, $0, 72		# specify column offset = (column index * 4)
         	addi $t9, $t9, plane_center	# begin from row center of plane
         	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
         	jal plane_hitbox_loop
         	# Column 15
-        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0 
+        	addi $t0, $0, 0			# initialize for loop indexer;	i = 0
         	addi $t1, $0, 16		# plane_hitbox_loop param. check __ rows from the center
         	addi $t9, $0, 60		# specify column offset = (column index * 4)
         	addi $t9, $t9, plane_center	# begin from row center of plane
         	add $t9, $t9, $a0		# store memory address for pixel at column index and at the center of the plane
         	jal plane_hitbox_loop
-        	
+
         	j exit_check_plane_hitbox
-        	
+
         plane_hitbox_loop:
         	bgt $t0, $t1, exit_plane_hitbox_loop	# if i > 32, exit loop
         	addi $t3, $t0, 0			# store current row index
         	sll $t3, $t3, 10			# calculate row offset = (1024 * row index)
-        	
+
         	subu $t9, $t9, $t3			# check pixel $t0 rows above
         	lw $t2, ($t9)				# load pixel colour at the address
 		# if incorrect pixel color found
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
         	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
-        	
+
         	add $t9, $t9, $t3			# reset back to center
         	add $t9, $t9, $t3			# check pixel $t0 rows below
         	lw $t2, ($t9)				# load pixel colour at the address
@@ -559,15 +559,15 @@ COLLISION_DETECTOR:
         	beq $t2, 0x00cb0d, deduct_health
         	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
-        	
+
         	# repeat loop
         	addi $t0, $t0, 1			# update for loop indexer;	i += 1
         	subu $t9, $t9, $t3			# reset back to center
         	j plane_hitbox_loop
-        	
+
         	exit_plane_hitbox_loop:			# return to previous instruction
         		jr $ra
-        		
+
         deduct_health:
         	subi $s0, $s0, 1			# health -= 1
         	jal UPDATE_HEALTH			# update health on border
@@ -585,7 +585,7 @@ COLLISION_DETECTOR:
         	beq $s0, 5, skip_add_health		# maximum health points is 5
         	addi $s0, $s0, 1			# health += 1
         	jal UPDATE_HEALTH			# update health on border
-        	
+
         	skip_add_health:
         	push_reg_to_stack ($a0)			# stores away plane address
         	push_reg_to_stack ($a1)
@@ -595,27 +595,27 @@ COLLISION_DETECTOR:
 		jal generate_heart			# redraw new heart
 		pop_reg_from_stack($a1)
 		pop_reg_from_stack($a0)			# retrieve plane address
-        	
+
         	j exit_check_plane_hitbox		# exit collision check
 
         add_score:
         	jal UPDATE_SCORE			# score += 1
-        	
+
 		push_reg_to_stack ($a0)			# stores away plane address
 		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
 		addi $a1, $0, 0				# PAINT_PICKUP_COIN param. Set to erase
 		jal PAINT_PICKUP_COIN
 		jal generate_coin
 		pop_reg_from_stack($a0)			# retrieve plane address
-        	
+
         	j exit_check_plane_hitbox
-	
+
 	exit_check_plane_hitbox:			# return to previous instruction
         	pop_reg_from_stack($ra)
         	pop_reg_from_stack($t9)
-        	
+
         	pop_reg_from_stack($t3)
-        	
+
         	pop_reg_from_stack($t2)
         	pop_reg_from_stack($t1)
         	pop_reg_from_stack($t0)
@@ -632,17 +632,17 @@ check_asteroid_distances:
 	abs $t6, $t6
 	sub $t7, $s7, $t9
 	abs $t7, $t7
-	
+
 	blt $t5, $t6, L0
 	blt $t6, $t7, L1
 	addi $a0, $s7, 0
 	j exit_loop
-	
-	
+
+
 L0:	blt $t5, $t7, L2
 	addi $a0, $s7, 0
 	j exit_loop
-	
+
 L1:	blt $t6, $t7, L3
 	addi $a0, $s7, 0
 	j exit_loop
@@ -654,15 +654,15 @@ L3: 	addi $a0, $s6, 0
 exit_loop: jr $ra
 #___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
-generate_coin:
+generate_coin:	
 	push_reg_to_stack($ra)
 	addi $a3, $0, 1				# RANDOM_OFFSET param. Add random column offset.
 	jal RANDOM_OFFSET			# create random address offset
 	add $a0, $v0, object_base_address	# store pickup coin address
 	add $s2, $a0, $0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
-	jal PAINT_PICKUP_COIN	
-	pop_reg_from_stack($ra)		
+	jal PAINT_PICKUP_COIN
+	pop_reg_from_stack($ra)
 	jr $ra
 
 generate_heart:
@@ -674,7 +674,7 @@ generate_heart:
 	addi $a0, $s3, 0			# PAINT_PICKUP_COIN param. Load base address
 	addi $a1, $0, 1				# PAINT_PICKUP_COIN param. Set to paint
 	jal PAINT_PICKUP_HEART
-	pop_reg_from_stack($ra)			
+	pop_reg_from_stack($ra)
 	jr $ra
 #___________________________________________________________________________________________________________________________
 # ==USER INPUT==
@@ -682,10 +682,10 @@ USER_INPUT:
 	check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 				bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
 				lw $t4, 0xffff0004		# load the ascii value of the key that was pressed
-	
+
 	check_border:		la $t0, ($a0)			# load ___ base address to $t0
 				calculate_indices ($t0, $t5, $t6)	# calculate column and row index
-	
+
 				beq $t4, 0x61, respond_to_a 	# ASCII code of 'a' is 0x61 or 97 in decimal
 				beq $t4, 0x77, respond_to_w	# ASCII code of 'w'
 				beq $t4, 0x73, respond_to_s	# ASCII code of 's'
@@ -694,7 +694,7 @@ USER_INPUT:
 				beq $t4, 0x71, respond_to_q	# exit game when 'q' is pressed
 				beq $t4, 0x67, respond_to_g	# if 'g', branch to END_SCREEN_LOOP
 				j EXIT_KEY_PRESS		# invalid key, exit the input checking stage
-	
+
 	respond_to_a:		ble $t5, 11, EXIT_KEY_PRESS	# the avatar is on left of screen, cannot move up
 				subu $t0, $t0, column_increment	# set base position 1 pixel left
 				ble $t6, 12, draw_new_avatar	# if after movement, avatar is now at border, draw
@@ -702,7 +702,7 @@ USER_INPUT:
 				ble $t6, 13, draw_new_avatar	# if after movement, avatar is now at border, draw
 				subu $t0, $t0, column_increment	# set base position 1 pixel left
 				j draw_new_avatar
-	
+
 	respond_to_w:		ble $t6, 18, EXIT_KEY_PRESS	# the avatar is on top of screen, cannot move up
 				subu $t0, $t0, row_increment	# set base position 1 pixel up
 				ble $t6, 19, draw_new_avatar	# if after movement, avatar is now at border, draw
@@ -710,7 +710,7 @@ USER_INPUT:
 				ble $t6, 20, draw_new_avatar	# if after movement, avatar is now at border, draw
 				subu $t0, $t0, row_increment	# set base position 1 pixel up
 				j draw_new_avatar
-	
+
 	respond_to_s:		bgt $t6, 206, EXIT_KEY_PRESS
 				add $t0, $t0, row_increment	# set base position 1 pixel down
 				bge $t6, 207, draw_new_avatar	# if after movement, avatar is now at border, draw
@@ -718,7 +718,7 @@ USER_INPUT:
 				bge $t6, 208, draw_new_avatar	# if after movement, avatar is now at border, draw
 				add $t0, $t0, row_increment	# set base position 1 pixel down
 				j draw_new_avatar
-	
+
 	respond_to_d:		bgt $t5, 214, EXIT_KEY_PRESS
 				add $t0, $t0, column_increment	# set base position 1 pixel right
 				bge $t6, 215, draw_new_avatar	# if after movement, avatar is now at border, draw
@@ -726,23 +726,23 @@ USER_INPUT:
 				bge $t6, 216, draw_new_avatar	# if after movement, avatar is now at border, draw
 				add $t0, $t0, column_increment	# set base position 1 pixel right
 				j draw_new_avatar
-	
+
 	draw_new_avatar:	addi $a1, $zero, 0		# set $a1 as 0
 				jal PAINT_PLANE			# (erase plane) paint plane black
-	
+
 				la $a0, ($t0)			# load new base address to $a0
 				addi $a1, $zero, 1		# set $a1 as 1
 				jal PAINT_PLANE			# paint plane at new location
 				j EXIT_KEY_PRESS
 	# restart game
-	respond_to_p:		jal CLEAR_SCREEN		
+	respond_to_p:		jal CLEAR_SCREEN
 				j INITIALIZE
 	# quit game
 	respond_to_q:		jal CLEAR_SCREEN
 				j EXIT
 	# go to gameover screen
 	respond_to_g:		j END_SCREEN_LOOP
-	
+
 	EXIT_KEY_PRESS:		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
@@ -766,13 +766,13 @@ RANDOM_OFFSET:
 	push_reg_to_stack ($s0)
 	push_reg_to_stack ($s1)
 	push_reg_to_stack ($s2)
-	
+
 	# Randomly generate row value
 	li $v0, 42 		# Specify random integer
 	li $a0, 0 		# from 0
 	li $a1, 188 		# to 188
 	syscall 		# generate and store random integer in $a0
-	
+
 	addi $s0, $0, row_increment	# store row increment in $s0
 	mult $a0, $s0			# multiply row index to row increment
 	mflo $s2			# store result in $s2
@@ -782,7 +782,7 @@ RANDOM_OFFSET:
 		li $a0, 0 		# from 0
 		li $a1, 220 		# to 220
 		syscall 		# Generate and store random integer in $a0
-		
+
 		addi $s0, $0, column_increment	# store column increment in $s0
 		mult $a0, $s0			# multiply column index to column increment
 		mflo $s1			# store result in s1
@@ -790,7 +790,7 @@ RANDOM_OFFSET:
 
 	END_RANDOM_OFFSET:
 		add $v0, $s2, $0		# store return value (address offset) in $v0
-		
+
 		# Restore used registers from stack
 		pop_reg_from_stack ($s2)
 		pop_reg_from_stack ($s1)
@@ -1030,9 +1030,9 @@ PAINT_LASER:
 		add $t2, $t2, $t3			# update to specific column
 		add $t2, $t2, $t4			# update to specific row
 		add $t2, $t2, $a2			# update to random offset
-		
+
 		calculate_indices ($t2, $t8, $t9)	# get address indices. Store in $t8 and $t9
-		within_borders ($t8, $t9, $t9)		# check within borders. Store boolean result in $t9 
+		within_borders ($t8, $t9, $t9)		# check within borders. Store boolean result in $t9
 		beq $t9, 0, SKIP_LASER_PAINT		# skip painting pixel if out of border
 		sw $t1, ($t2)				# paint pixel
 		SKIP_LASER_PAINT:
@@ -1061,11 +1061,11 @@ PAINT_ASTEROID:
 	    push_reg_to_stack ($s4)
 	    push_reg_to_stack ($s5)
 	    push_reg_to_stack ($s6)
-    
+
 	    # Initialize registers
 	    add $s0, $0, $0				# initialize current color to black
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
+	    add $s2, $0, $0
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 
@@ -1148,7 +1148,7 @@ PAINT_ASTEROID:
 			add $s1, $s1, $s3			# update to specific column
 			add $s1, $s1, $s2			# update to specific row
 			add $s1, $s1, $a2			# update to random offset
-		
+
 			calculate_indices ($s1, $s5, $s6)	# get address indices. Store in $s5-6
 			within_borders ($s5, $s6, $s6)		# check within borders. Store boolean result in $s6
 			beq $s6, 0, SKIP_ASTEROID_PAINT		# skip painting pixel if out of border
@@ -1191,11 +1191,11 @@ PAINT_PICKUP_HEART:
 	    push_reg_to_stack ($s4)
 	    push_reg_to_stack ($s5)
 	    push_reg_to_stack ($s6)
-    
+
 	    # Initialize registers
 	    add $s0, $0, $0				# initialize current color to black
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
+	    add $s2, $0, $0
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 
@@ -1302,11 +1302,11 @@ PAINT_PICKUP_COIN:
 	    push_reg_to_stack ($s2)
 	    push_reg_to_stack ($s3)
 	    push_reg_to_stack ($s4)
-    
+
 	    # Initialize registers
 	    add $s0, $0, $0				# initialize current color to black
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
+	    add $s2, $0, $0
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 
@@ -1449,7 +1449,7 @@ PAINT_PICKUP_COIN:
 		# $t0: for loop indexer
 		# $t1: used to store column_increment temporarily
 		# $t2: temporary storage for manipulating number of health points
-		
+
 UPDATE_HEALTH:
 	# Store current state of used registers
 	push_reg_to_stack ($ra)
@@ -1461,24 +1461,24 @@ UPDATE_HEALTH:
 	push_reg_to_stack ($t1)
 	push_reg_to_stack ($t2)
 	push_reg_to_stack ($t3)
-	
+
 	# Initialize for loop indexer
 	add $t0, $0, $0
 	# Loop 5 times through all possible hearts. Subtract 1 from number of hearts each time.
 	LOOP_HEART: beq $t0, 5, EXIT_UPDATE_HEALTH	# branch if $t0 = 5
 		addi $t1, $0, column_increment	# store column increment temporarily
-		addi $t2, $0, 12			
+		addi $t2, $0, 12
 		mult $t1, $t2
-		mflo $t1			
+		mflo $t1
 		mult $t0, $t1			# address offset = current index * (3 * column_increment)
-		mflo $t3			
+		mflo $t3
 		addi $a0, $t3, display_base_address	# param. address to start painting at
-		
+
 		add $t2, $s0, $0		# store number of hit points
 		sub $t2, $t2, $t0		# subtract number of hit points by current indexer
-		sge $a3, $t2, 1			# param. for helper function to paint/erase heart. If number of hearts > curr index, paint in heart. Otherwise, erase.		
+		sge $a3, $t2, 1			# param. for helper function to paint/erase heart. If number of hearts > curr index, paint in heart. Otherwise, erase.
 		jal PAINT_BORDER_HEART		# paint/erase heart
-		
+
 		# Update for loop indexer
 		addi $t0, $t0, 1		# $t0 = $t0 + 1
 		j LOOP_HEART
@@ -1489,7 +1489,7 @@ UPDATE_HEALTH:
 		pop_reg_from_stack ($t1)
 		pop_reg_from_stack ($t0)
 		pop_reg_from_stack ($s0)
-		
+
 		pop_reg_from_stack ($a3)
 		pop_reg_from_stack ($a2)
 		pop_reg_from_stack ($a0)
@@ -1497,7 +1497,7 @@ UPDATE_HEALTH:
 		jr $ra
 #___________________________________________________________________________________________________________________________
 # HELPER FUNCTION: PAINT_BORDER_HEART
-	# Precondition: 
+	# Precondition:
 		# $a1 must be equal to 1 to avoid painting black.
 	# Inputs:
 		# $a0: address to start painting
@@ -1517,15 +1517,15 @@ PAINT_BORDER_HEART:
 	    push_reg_to_stack ($s3)
 	    push_reg_to_stack ($s4)
 	    push_reg_to_stack ($a1)
-    
+
 	    # Initialize registers
 	    add $s0, $0, $0				# initialize current color to black
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
+	    add $s2, $0, $0
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 	    addi $a1, $0, 1				# precondition
-        	
+
 		LOOP_BORDER_HEART_ROW: bge $s2, row_max, EXIT_PAINT_BORDER_HEART
 				# Boolean Expressions: Paint in based on row index
 			BORDER_HEART_COND:
@@ -1631,20 +1631,20 @@ PAINT_BORDER_HEART:
     	# Paints in column from $s3 to $s4 at some row
     	LOOP_BORDER_HEART_COLUMN: bge $s3, $s4, EXIT_LOOP_BORDER_HEART_COLUMN	# branch to UPDATE_BORDER_HEART_COL; if column index >= last column index to paint
         		addi $s1, $a0, 0		# start from address specified in $a0
-        		
+
         		addi $s1, $s1, 250880				# shift row to bottom outermost border (row index 245)
         		addi $s1, $s1, 52				# shift column to column index 13
         		add $s1, $s1, $a2				# add offset from parameter $a2
-        		
+
         		add $s1, $s1, $s2				# update to specific row from base address
         		add $s1, $s1, $s3				# update to specific column
-        		
-			beq $a3, 1, PAINT_BORDER_HEART_PIXEL		# check if parameter specifies to erase/paint 
+
+			beq $a3, 1, PAINT_BORDER_HEART_PIXEL		# check if parameter specifies to erase/paint
         			addi $s0, $0, 0x868686
         		PAINT_BORDER_HEART_PIXEL: sw $s0, ($s1)					# paint in value
         		# Updates for loop index
         		addi $s3, $s3, column_increment			# t4 += row_increment
-        		j LOOP_BORDER_HEART_COLUMN			
+        		j LOOP_BORDER_HEART_COLUMN
 	    EXIT_LOOP_BORDER_HEART_COLUMN:
 		        jr $ra
 
@@ -1673,42 +1673,42 @@ UPDATE_SCORE:
 	push_reg_to_stack ($a2)
 	push_reg_to_stack ($t0)
 	push_reg_to_stack ($t1)
-	
+
 	# Find tenths and ones place value to display
 	addi $t0, $0, 10
 	div $s1, $t0			# divide current score by 10
 	mflo $t0			# holds tenths place value of score
 	mfhi $t1			# holds ones place value of score
-	
+
 	# Erase old score
 	addi $a0, $0, display_base_address
 	addi $a0, $a0, 2948
 	addi $a1, $0, 0
-	add $a2, $0, $t0		
+	add $a2, $0, $t0
 	jal PAINT_NUMBER		# erase tenths digit
 	addi $a0, $a0, 24
 	addi $a1, $0, 0
 	add $a2, $0, $t1
 	jal PAINT_NUMBER		# erase ones digit
-	
+
 	# Find tenths and ones place value to display
 	addi $s1, $s1, 1		# update new score
 	addi $t0, $0, 10
 	div $s1, $t0			# divide current score by 10
 	mflo $t0			# holds tenths place value of score
 	mfhi $t1			# holds ones place value of score
-	
+
 	# Paint new score
 	addi $a0, $0, display_base_address
 	addi $a0, $a0, 2948
 	addi $a1, $0, 1
-	add $a2, $0, $t0		
+	add $a2, $0, $t0
 	jal PAINT_NUMBER
 	addi $a0, $a0, 24
 	addi $a1, $0, 1
 	add $a2, $0, $t1
 	jal PAINT_NUMBER
-	
+
 	# EXIT UPDATE_SCORE
 	pop_reg_from_stack ($t1)	# Restore used registers
 	pop_reg_from_stack ($t0)
@@ -1740,7 +1740,7 @@ PAINT_NUMBER:
 	    # Initialize registers
 	    add $s0, $0, 0xffffff			# initialize current color to white
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
+	    add $s2, $0, $0
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 		LOOP_NUMBER_COLUMN: bge $s2, column_max, EXIT_PAINT_NUMBER
@@ -1755,18 +1755,18 @@ PAINT_NUMBER:
 					j UPDATE_NUMBER_COLUMN
 			NUMBER_COLUMN_0:
 					# number-specific painting conditionals
-					beq $a2, 1, SKIP_LOWER_NUMBER_COLUMN_0	
+					beq $a2, 1, SKIP_LOWER_NUMBER_COLUMN_0
 					beq $a2, 3, SKIP_LOWER_NUMBER_COLUMN_0
 					beq $a2, 7, SKIP_LOWER_NUMBER_COLUMN_0
 					beq $a2, 2, SKIP_UPPER_NUMBER_COLUMN_0
-					
+
 					setup_general_paint (0xffffff, 1024, 4096, LOOP_NUMBER_ROW)
 					SKIP_UPPER_NUMBER_COLUMN_0:
-					
+
 					beq $a2, 4, SKIP_LOWER_NUMBER_COLUMN_0
 					beq $a2, 5, SKIP_LOWER_NUMBER_COLUMN_0
 					beq $a2, 9, SKIP_LOWER_NUMBER_COLUMN_0
-					
+
 					setup_general_paint (0xffffff, 5120, 8192, LOOP_NUMBER_ROW)
 					SKIP_LOWER_NUMBER_COLUMN_0:
 					j UPDATE_NUMBER_COLUMN
@@ -1775,19 +1775,19 @@ PAINT_NUMBER:
 					beq $a2, 1, SKIP_BOTTOM_NUMBER_COLUMN_1
 					beq $a2, 4, SKIP_TOP_NUMBER_COLUMN_1
 					beq $a2, 6, SKIP_TOP_NUMBER_COLUMN_1
-					
+
 					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
 					SKIP_TOP_NUMBER_COLUMN_1:
-					
+
 					beq $a2, 0, SKIP_MIDDLE_NUMBER_COLUMN_1
 					beq $a2, 7, SKIP_BOTTOM_NUMBER_COLUMN_1
-					
+
 					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
 					SKIP_MIDDLE_NUMBER_COLUMN_1:
-					
+
 					beq $a2, 4, SKIP_BOTTOM_NUMBER_COLUMN_1
 					beq $a2, 9, SKIP_BOTTOM_NUMBER_COLUMN_1
-					
+
 					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
 					SKIP_BOTTOM_NUMBER_COLUMN_1:
 					j UPDATE_NUMBER_COLUMN
@@ -1796,19 +1796,19 @@ PAINT_NUMBER:
 					beq $a2, 1, SKIP_BOTTOM_NUMBER_COLUMN_2
 					beq $a2, 4, SKIP_TOP_NUMBER_COLUMN_2
 					beq $a2, 6, SKIP_TOP_NUMBER_COLUMN_2
-					
+
 					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
 					SKIP_TOP_NUMBER_COLUMN_2:
-					
+
 					beq $a2, 0, SKIP_MIDDLE_NUMBER_COLUMN_2
 					beq $a2, 7, SKIP_BOTTOM_NUMBER_COLUMN_2
-					
+
 					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
 					SKIP_MIDDLE_NUMBER_COLUMN_2:
-					
+
 					beq $a2, 4, SKIP_BOTTOM_NUMBER_COLUMN_2
 					beq $a2, 9, SKIP_BOTTOM_NUMBER_COLUMN_2
-					
+
 					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
 					SKIP_BOTTOM_NUMBER_COLUMN_2:
 					j UPDATE_NUMBER_COLUMN
@@ -1817,19 +1817,19 @@ PAINT_NUMBER:
 					beq $a2, 1, SKIP_BOTTOM_NUMBER_COLUMN_3
 					beq $a2, 4, SKIP_TOP_NUMBER_COLUMN_3
 					beq $a2, 6, SKIP_TOP_NUMBER_COLUMN_3
-					
+
 					setup_general_paint (0xffffff, 0, 1024, LOOP_NUMBER_ROW)
 					SKIP_TOP_NUMBER_COLUMN_3:
-					
+
 					beq $a2, 0, SKIP_MIDDLE_NUMBER_COLUMN_3
 					beq $a2, 7, SKIP_BOTTOM_NUMBER_COLUMN_3
-					
+
 					setup_general_paint (0xffffff, 4096, 5120, LOOP_NUMBER_ROW)
 					SKIP_MIDDLE_NUMBER_COLUMN_3:
-					
+
 					beq $a2, 4, SKIP_BOTTOM_NUMBER_COLUMN_3
 					beq $a2, 9, SKIP_BOTTOM_NUMBER_COLUMN_3
-					
+
 					setup_general_paint (0xffffff, 8192, 9216, LOOP_NUMBER_ROW)
 					SKIP_BOTTOM_NUMBER_COLUMN_3:
 					j UPDATE_NUMBER_COLUMN
@@ -1837,12 +1837,12 @@ PAINT_NUMBER:
 					# number-specific painting conditionals
 					beq $a2, 5, SKIP_UPPER_NUMBER_COLUMN_4
 					beq $a2, 6, SKIP_UPPER_NUMBER_COLUMN_4
-					
+
 					setup_general_paint (0xffffff, 1024, 4096, LOOP_NUMBER_ROW)
 					SKIP_UPPER_NUMBER_COLUMN_4:
-					
+
 					beq $a2, 2, SKIP_LOWER_NUMBER_COLUMN_4
-					
+
 					setup_general_paint (0xffffff, 5120, 8192, LOOP_NUMBER_ROW)
 					SKIP_LOWER_NUMBER_COLUMN_4:
 					j UPDATE_NUMBER_COLUMN
@@ -1858,9 +1858,9 @@ PAINT_NUMBER:
         		add $s1, $s1, $s2					# update to specific column from base address
         		add $s1, $s1, $s3					# update to specific row
 	    		beq $a1, 1, PAINT_NUMBER_PIXEL				# if $a1 == 0, set to erase
-	    		addi $s0, $0, 0x868686					# update color to border gray 
+	    		addi $s0, $0, 0x868686					# update color to border gray
 	    		PAINT_NUMBER_PIXEL: sw $s0, ($s1)			# paint in value
-	    		
+
         		# Updates for loop index
         		addi $s3, $s3, row_increment				# s3 += column_increment
         		j LOOP_NUMBER_ROW					# repeats LOOP_NUMBER_COLUMN
@@ -1897,11 +1897,11 @@ PAINT_BORDER_COIN:
 	    push_reg_to_stack ($s2)
 	    push_reg_to_stack ($s3)
 	    push_reg_to_stack ($s4)
-    
+
 	    # Initialize registers
 	    add $s0, $0, $0				# initialize current color to black
 	    add $s1, $0, $0				# holds temporary memory address
-	    add $s2, $0, $0	
+	    add $s2, $0, $0
 	    add $s3, $0, $0
 	    add $s4, $0, $0
 	    addi $a1, $0, 1				# precondition for painting
@@ -2039,13 +2039,13 @@ PAINT_BORDER_COIN:
 		addi $a0, $0, display_base_address
 		addi $a0, $a0, 2948
 		addi $a1, $0, 1
-		addi $a2, $0, 0		
+		addi $a2, $0, 0
 		jal PAINT_NUMBER
 		addi $a0, $a0, 24
 		addi $a1, $0, 1
 		addi $a2, $0, 0
 		jal PAINT_NUMBER
-       	
+
         	# Restore used registers
     		pop_reg_from_stack ($s4)
     		pop_reg_from_stack ($s3)
@@ -2084,7 +2084,7 @@ CLEAR_SCREEN:
 			addi $t5, $0, row_max
 	    		jal LOOP_CLEAR_ROW		# paint in column
 		UPDATE_CLEAR_COL:				# Update column index value
-			addi $t3, $t3, column_increment		
+			addi $t3, $t3, column_increment
 			j LOOP_CLEAR_COL
 
 	# EXIT FUNCTION
