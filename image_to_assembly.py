@@ -301,7 +301,7 @@ if __name__ == "__main__":
     by = "row"      # 'row' or 'column'
     by_inverse = "column"
 
-    paint_in = 'pickup_coin'
+    paint_in = 'game_over'
 
     if paint_in == 'border_heart':
         label = 'BORDER_HEART'
@@ -317,7 +317,7 @@ if __name__ == "__main__":
         label = 'GAME_OVER'
         img_path = "D:/projects/Shoot-em-up-Game-Project/material/game_over.png"
         img_shape = (160, 251)       # row, column
-        print(create_assembly_code(img_path, img_shape, "game_over_code", offset=16384, save=True))
+        print(create_assembly_code(img_path, img_shape, "game_over_code", offset=51200, save=True))
     elif paint_in == 'asteroid':
         label = 'ASTEROID'
         img_path = "D:/projects/Shoot-em-up-Game-Project/material/asteroid_resized.png"

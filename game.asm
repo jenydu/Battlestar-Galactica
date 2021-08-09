@@ -159,7 +159,7 @@ addi $s1, $0, 8					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
-addi $a1, $0, 1
+addi $a1, $0, 1					# paint param. set to paint
 
 # ==SETUP==:
 jal PAINT_BORDER		# Paint Border
@@ -171,6 +171,7 @@ addi $a0, $a0, 96256				# center plane
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
 
+j END_SCREEN_LOOP
 #---------------------------------------------------------------------------------------------------------------------------
 GENERATE_OBSTACLES:
 	# Used Registers:
@@ -286,6 +287,8 @@ MAIN_LOOP:
 END_SCREEN_LOOP:
 	jal CLEAR_SCREEN			# reset to black screen
 	jal PAINT_GAME_OVER			# create game over screen
+	jal PAINT_FINAL_SCORE
+	
 	monitor_end_key:
 		# Monitor p or q key press
 		lw $t8, 0xffff0000		# load the value at this address into $t8
@@ -2282,12 +2285,34 @@ PAINT_BORDER:
 	EXIT_LOOP_BORDER_ROWS:
 		jr $ra
 #___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT_FINAL_SCORE
+	# Inputs
+		# $s1: score counter
+	# Used Registers:
+		# $t0-1: used as temporary storages from division
+PAINT_FINAL_SCORE:
+	push_reg_to_stack ($ra)
+	# Find tenths and ones place value to display
+	addi $t0, $0, 10
+	div $s1, $t0			# divide current score by 10
+	mflo $t0			# holds tenths place value of score
+	mfhi $t1			# holds ones place value of score
+
+	# Erase old score
+	addi $a0, $0, display_base_address
+	addi $a0, $a0, 51200		# add offset when painting in game_over
+	addi $a0, $a0, 488		# shift to column 122
+	addi $a0, $a0, 78848		# shift to row 77
+	addi $a1, $0, 1			# set to paint
+	add $a2, $0, $t0		
+	jal PAINT_NUMBER		# paint tenths digit
+	addi $a0, $a0, 24
+	addi $a1, $0, 1			# set to paint
+	add $a2, $0, $t1
+	jal PAINT_NUMBER		# paint ones digit
+	pop_reg_from_stack ($ra)
+	jr $ra
+#___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_GAME_OVER
-	# Registers Used
-		# $s0: stores current color value
-		# $s1: temporary memory address storage for current unit (in bitmap)
-		# $s2: row index for 'for loop' LOOP_GAME_OVER_ROW
-		# $s3: column index for 'for loop' LOOP_GAME_OVER_COLUMN
-		# $s4: parameter for subfunction LOOP_GAME_OVER_COLUMN
 PAINT_GAME_OVER:
 	j EXIT
