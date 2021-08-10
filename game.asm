@@ -8,10 +8,10 @@
 #	Jun Ni Du, 1006217130, dujun1
 #
 # Bitmap Display Configuration:
-# - Unit width in pixels: 4
-# - Unit height in pixels: 4
-# - Display width in pixels: 1024
-# - Display height in pixels: 1024
+# - Unit width in pixels: 2
+# - Unit height in pixels: 2
+# - Display width in pixels: 512
+# - Display height in pixels: 512
 # - Base Address for Display: 0x10008000 ($gp)
 #
 # Which milestones have been reached in this submission?
@@ -20,16 +20,15 @@
 #
 # Which approved features have been implemented for milestone 3?
 # (See the assignment handout for the list of additional features)
-# 1. (fill in the feature, if any)
-# 2. (fill in the feature, if any)
-# 3. (fill in the feature, if any)
-# ... (add more if necessary)
+# 1. Pickups (health and coins for score)
+# 2. Scoring system (# of coins)
+# 3. Increase in difficulty based on score (# of coins). Three levels (<5, <10, >=10 coins). More asteroids, lasers and faster speed
 #
 # Link to video demonstration for final submission:
 # - (insert YouTube / MyMedia / other URL here). Make sure we can view it!
 #
 # Are you OK with us sharing the video with people outside course staff?
-# - yes / no / yes, and please share this project github link as well!
+# - yes, and please share this project github link as well!
 #
 # Any additional information that the TA needs to know:
 # - press 'g' to directly enter Game Over Loop
@@ -149,13 +148,35 @@
 		pop_reg_from_stack ($s1)
 		pop_reg_from_stack ($s0)
 	.end_macro
+	
+	# MACRO: Generate number from [0, N]
+		# Input
+			# %n: value of N
+		# Registers Used
+			# $a0-1: used to generate random number
+		# Output
+			# $v0: randomly generated number
+	.macro generate_random_number (%n)
+		# Store used registers to stack
+		push_reg_to_stack ($a0)
+		push_reg_to_stack ($a1)
+		# Randomly generate row value
+		li $v0, 42 		# Specify random integer
+		li $a0, 0 		# from 0
+		li $a1, %n 		# to N
+		syscall 		# generate and store random integer in $a0
+		addi $v0, $a0, 0	# store result in $v0
+		# Restore used registers from stack
+		pop_reg_from_stack ($a1)
+		pop_reg_from_stack ($a0)
+	.end_macro
 #___________________________________________________________________________________________________________________________
 # ==INITIALIZATION==:
 INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 10					# score counter
+addi $s1, $0, 9					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
@@ -165,12 +186,12 @@ addi $a1, $0, 1					# paint param. set to paint
 jal PAINT_BORDER		# Paint Border
 jal UPDATE_HEALTH		# Paint Health Status
 jal PAINT_BORDER_COIN		# Paint Score
+jal UPDATE_SCORE
 # Paint Plane
 addi $a0, $0, object_base_address		# start painting plane from top-left border
 addi $a0, $a0, 96256				# center plane
 push_reg_to_stack ($a0)				# store current plane address in stack
 jal PAINT_PLANE					# paint plane at $a0
-
 #---------------------------------------------------------------------------------------------------------------------------
 GENERATE_OBSTACLES:
 	# Used Registers:
@@ -193,9 +214,6 @@ GENERATE_OBSTACLES:
 
 	# coin
 	jal generate_coin
-
-	# heart
-	jal generate_heart
 #---------------------------------------------------------------------------------------------------------------------------
 pop_reg_from_stack ($a0)			# restore current plane address from stack
 
@@ -213,7 +231,7 @@ MAIN_LOOP:
 		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
 		jal PAINT_ASTEROID
 
-		calculate_indices ($s5, $t5, $t6)	# calculate column and row index
+		calculate_indices ($s5, $t5, $t6)	# calculate column and row indexmove_heart
 		ble $t5, 11, regen_obs_1
 
 		subu $s5, $s5, $s4			# shift obstacle 1 unit left
@@ -253,22 +271,27 @@ MAIN_LOOP:
 
 	level_3:
 		bge $s1, 10, generate_level_3_obs
-
-
-	move_heart:
+	
+	move_heart: beq $s3, 0 RANDOM_GENERATE_HEART	# if heart address is not 0, move heart left
 		addi $a0, $s3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
 		jal PAINT_PICKUP_HEART
 
 		calculate_indices ($s3, $t5, $t6)	# calculate column and row index
-		ble $t5, 11, regen_heart
+		ble $t5, 11, RANDOM_GENERATE_HEART	# if end of screen, try to generate heart
 
 		subu $s3, $s3, 4			# shift obstacle 1 unit left
 		add $a0, $s3, $0			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 		jal PAINT_PICKUP_HEART
-	EXIT_OBSTACLE_MOVE:
+	
+	# Generate heart if no heart currently exists
+	RANDOM_GENERATE_HEART: bne $s3, 0, EXIT_OBSTACLE_MOVE	# branch if current heart base address != 0
+		generate_random_number (300)		# randomly generate number from 0 to N=511
+		beq $v0, 0, regen_heart			# if equal to 0, create heart. Stores new heart address in $s3
 
+	EXIT_OBSTACLE_MOVE:
+	
 	GENERATE_COIN:
 		# RE-DRAW the coin every loop so that it doesn't get erased when an obstacle flies over it
 		add $a0, $s2, $0			# PAINT_PICKUP_COIN param. Load base address
@@ -594,7 +617,9 @@ COLLISION_DETECTOR:
 		add $a0, $s3, $0			# PAINT_PICKUP_COIN param. Load base address
 		addi $a1, $0, 0				# PAINT_PICKUP_COIN param. Set to erase
 		jal PAINT_PICKUP_HEART			# erase current heart
-		jal generate_heart			# redraw new heart
+		
+		addi $s3, $0, 0				# set current heart address to 0. Will regenerate heart at a 1/512 probability in main loop
+		
 		pop_reg_from_stack($a1)
 		pop_reg_from_stack($a0)			# retrieve plane address
 
@@ -681,9 +706,6 @@ generate_heart:
 #___________________________________________________________________________________________________________________________
 # ==USER INPUT==
 USER_INPUT:
-	# Store used registers in stack
-		push_reg_to_stack ($t7)
-
 	check_key_press:	lw $t8, 0xffff0000		# load the value at this address into $t8
 				bne $t8, 1, EXIT_KEY_PRESS	# if $t8 != 1, then no key was pressed, exit the function
 				lw $t7, 0xffff0004		# load the ascii value of the key that was pressed
@@ -748,9 +770,7 @@ USER_INPUT:
 	# go to gameover screen
 	respond_to_g:		j END_SCREEN_LOOP
 
-	EXIT_KEY_PRESS:		
-		# Restore used registers
-		pop_reg_from_stack ($t7)
+	EXIT_KEY_PRESS:
 		j OBSTACLE_MOVE			# avatar finished moving, move to next stage
 #___________________________________________________________________________________________________________________________
 # ==FUNCTIONS==:
