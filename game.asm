@@ -176,7 +176,7 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 0					# score counter
+addi $s1, $0, 8				# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
@@ -266,11 +266,10 @@ MAIN_LOOP:
 		jal PAINT_ASTEROID
 
 	level_2:
-		bge $s1, 5, generate_level_2_obs
-
+		bge $s1, 5, generate_level_2_obs	# when score reaches 5, spawn level 2 obstacles
 
 	level_3:
-		bge $s1, 10, generate_level_3_obs
+		bge $s1, 10, generate_level_3_obs	# when score reaches 10, spawn level 3 obstacles
 	
 	move_heart: beq $s3, 0 RANDOM_GENERATE_HEART	# if heart address is not 0, move heart left
 		addi $a0, $s3, 0			# PAINT_ASTEROID param. Load obstacle 1 base address
@@ -402,9 +401,7 @@ regen_laser_2:
 	addi $t2, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER
-	j move_laser_2
-
-
+	j level_3
 
 generate_level_3_obs:
 	beq $s4, 8, generate_obs_4_5
@@ -440,8 +437,8 @@ move_level_3_obs:
 		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
 		jal PAINT_ASTEROID
 
-		#calculate_indices ($t3, $t5, $t6)	# calculate column and row index
-		#ble $t5, 11, regen_obs_4
+		calculate_indices ($t3, $t5, $t6)	# calculate column and row index
+		ble $t5, 11, regen_obs_4
 
 		subu $t3, $t3, $s4			# shift obstacle 1 unit left
 		add $a0, $t3, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
@@ -454,8 +451,8 @@ move_level_3_obs:
 		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
 		jal PAINT_ASTEROID
 
-		#calculate_indices ($t4, $t5, $t6)	# calculate column and row index
-		#ble $t5, 11, regen_obs_5
+		calculate_indices ($t4, $t5, $t6)	# calculate column and row index
+		ble $t5, 11, regen_obs_5
 
 		subu $t4, $t4, $s4			# shift obstacle 1 unit left
 		add $a0, $t4, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
@@ -477,21 +474,30 @@ generate_asteroid:
 	jal PAINT_ASTEROID
 	pop_reg_from_stack ($ra)
 	jr $ra
-
-
-
 # REGENERATE OBSTACLES
 regen_obs_1:
 	jal generate_asteroid
 	addi $s5, $a0, 0
 	j move_obs_2
+
 regen_obs_2:
 	jal generate_asteroid
 	addi $s6, $a0, 0
 	j move_obs_3
+
 regen_obs_3:
 	jal generate_asteroid
 	addi $s7, $a0, 0
+	j level_2
+
+regen_obs_4:
+	jal generate_asteroid
+	addi $t3, $a0, 0
+	j move_obs_5
+
+regen_obs_5:
+	jal generate_asteroid
+	addi $t4, $a0, 0
 	j move_heart
 
 regen_heart:
@@ -656,6 +662,7 @@ check_asteroid_distances:
 	# $t5 = $s5 - $t9
 	# $t6 = $s6 - $t9
 	# $t7 = $s7 - $t9
+	# $t8: temp. storage for the smallest difference between asteroid address and address of collision ($t9)
 	sub $t5, $s5, $t9
 	abs $t5, $t5
 	sub $t6, $s6, $t9
@@ -666,33 +673,89 @@ check_asteroid_distances:
 	blt $t5, $t6, L0	# t5 < t6
 	blt $t6, $t7, L1	# t6 <= t5 AND t6 <t7
 	addi $a0, $s7, 0	# t7 <= t6 <= t5
-	j exit_loop
+	addi $t8, $t7, 0	# t7 <= t6 <= t5
+	bgt $s4, 8, check_level_3
+	j redraw_closest
 
 L0:	blt $t5, $t7, L2	# t5 < t7
 	addi $a0, $s7, 0	# t6 > t5 >= t7, so t7 smallest
-	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-	addi $a2, $0, 0
-	jal PAINT_ASTEROID			# erase current asteroid
-	jal generate_asteroid
-	addi $s7, $a0, 0	
-	j exit_loop
+	addi $t8, $t7, 0
+	bgt $s4, 8, check_level_3
+	j redraw_closest
 
 L1:	addi $a0, $s6, 0	# t6 smallest
-	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-	addi $a2, $0, 0
-	jal PAINT_ASTEROID			# erase current asteroid
-	jal generate_asteroid
-	addi $s6, $a0, 0
-	j exit_loop
+	addi $t8, $t6, 0
+	bgt $s4, 8, check_level_3
+	j redraw_closest
 	
 L2:	addi $a0, $s5, 0	# t5 smallest
+	addi $t8, $t5, 0
+	beq $s4, 12, check_level_3
+	j redraw_closest
+
+check_level_3:			# compare the difference in address of the two new asteroids to the smallest of the three original ones
+	sub $t1, $t3, $t9
+	abs $t1, $t1
+	sub $t2, $t4, $t9
+	abs $t2, $t2
+	
+	blt $t1, $t2, L3	# t1 < t2
+	blt $t2, $t8, L5	# t2 is the smallest
+	j redraw_closest	
+	
+L3:	blt $t1, $t8, L4	# t1 is the smallest
+	j redraw_closest
+
+L4:	addi $a0, $t3, 0	
+	j redraw_closest
+
+L5: 	addi $a0, $t4, 0
+	j redraw_closest
+
+redraw_closest:
 	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-	addi $a2, $0, 0
-	jal PAINT_ASTEROID			# erase current asteroid
+	addi $a2, $0, 0				# erase current asteroid
+				
+	beq $s5, $a0, closest_obs_1
+	beq $s6, $a0, closest_obs_2
+	beq $s7, $a0, closest_obs_3
+	beq $t3, $a0, closest_obs_4
+	beq $t4, $a0, closest_obs_5
+	#default
+	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $s5, $a0, 0
+	j exit_loop
+		
+closest_obs_1:			# remove and regenerate asteroid in address $s5
+	jal PAINT_ASTEROID
 	jal generate_asteroid
 	addi $s5, $a0, 0
 	j exit_loop
 
+closest_obs_2:			# remove and regenerate asteroid in address $s6
+	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $s6, $a0, 0
+	j exit_loop
+	
+closest_obs_3:			# remove and regenerate asteroid in address $s7
+	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $s7, $a0, 0
+	j exit_loop	
+	
+closest_obs_4:			# remove and regenerate asteroid in address $t3
+	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $t3, $a0, 0
+	j exit_loop
+	
+closest_obs_5:			# remove and regenerate asteroid in address $t4
+	jal PAINT_ASTEROID
+	jal generate_asteroid
+	addi $t4, $a0, 0
+	j exit_loop	
 
 exit_loop: 	pop_reg_from_stack ($ra)
 		jr $ra
