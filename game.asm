@@ -655,7 +655,8 @@ check_asteroid_distances:
 	push_reg_to_stack($s3)	# temp. register to store smallest distances
 	push_reg_to_stack($t1)
 	push_reg_to_stack($t2)
- 
+
+	#push_reg_to_stack($t8)	# temp. register 
 	# $t5 = $s5 - $t9
 	# $t6 = $s6 - $t9
 	# $t7 = $s7 - $t9
@@ -711,7 +712,7 @@ L4:
 	addi $s3, $t1, 0
 	j remove_closest
 
-remove_closest: # removes the asteroid at address $a0 and regenerate
+remove_closest: 
 		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
 		addi $a2, $0, 0
 		push_reg_to_stack($s3)
