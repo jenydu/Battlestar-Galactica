@@ -176,13 +176,13 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 8				# score counter
+addi $s1, $0, 0					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
-addi $a1, $0, 1					# paint param. set to paint
 
 # ==SETUP==:
+addi $a1, $0, 1					# paint param. set to paint
 jal PAINT_BORDER		# Paint Border
 jal UPDATE_HEALTH		# Paint Health Status
 jal PAINT_BORDER_COIN		# Paint Score
@@ -716,9 +716,16 @@ redraw_closest:
 	addi $a1, $0, 1				# PAINT_EXPLOSION param. Set to paint
 	jal PAINT_EXPLOSION			# paint explosion at asteroid base address
 
+	# Add small delay to show explosion
+	push_reg_to_stack ($a0)
+	li $v0, 32
+	li $a0, 100				# add 0.1 second delay
+	syscall
+	pop_reg_from_stack ($a0)
+		
 	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
 	addi $a2, $0, 0				# erase current asteroid
-				
+
 	beq $s5, $a0, closest_obs_1
 	beq $s6, $a0, closest_obs_2
 	beq $s7, $a0, closest_obs_3
