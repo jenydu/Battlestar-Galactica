@@ -402,7 +402,7 @@ regen_laser_2:
 	addi $t2, $a0, 0
 	addi $a1, $0, 1				# PAINT_ASTEROID param. Set to paint
 	jal PAINT_LASER
-	j level_3
+	j move_laser_2
 
 
 
@@ -440,8 +440,8 @@ move_level_3_obs:
 		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
 		jal PAINT_ASTEROID
 
-		calculate_indices ($t3, $t5, $t6)	# calculate column and row index
-		ble $t5, 11, regen_obs_4
+		#calculate_indices ($t3, $t5, $t6)	# calculate column and row index
+		#ble $t5, 11, regen_obs_4
 
 		subu $t3, $t3, $s4			# shift obstacle 1 unit left
 		add $a0, $t3, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
@@ -454,8 +454,8 @@ move_level_3_obs:
 		addi $a1, $zero, 0			# PAINT_ASTEROID param. Set to erase
 		jal PAINT_ASTEROID
 
-		calculate_indices ($t4, $t5, $t6)	# calculate column and row index
-		ble $t5, 11, regen_obs_5
+		#calculate_indices ($t4, $t5, $t6)	# calculate column and row index
+		#ble $t5, 11, regen_obs_5
 
 		subu $t4, $t4, $s4			# shift obstacle 1 unit left
 		add $a0, $t4, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
@@ -492,16 +492,6 @@ regen_obs_2:
 regen_obs_3:
 	jal generate_asteroid
 	addi $s7, $a0, 0
-	j level_2
-
-regen_obs_4:
-	jal generate_asteroid
-	addi $t3, $a0, 0
-	j move_obs_5
-
-regen_obs_5:
-	jal generate_asteroid
-	addi $t4, $a0, 0
 	j move_heart
 
 regen_heart:
