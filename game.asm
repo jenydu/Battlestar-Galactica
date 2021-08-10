@@ -713,6 +713,9 @@ L5: 	addi $a0, $t4, 0
 	j redraw_closest
 
 redraw_closest:
+	addi $a1, $0, 1				# PAINT_EXPLOSION param. Set to paint
+	jal PAINT_EXPLOSION			# paint explosion at asteroid base address
+
 	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
 	addi $a2, $0, 0				# erase current asteroid
 				
@@ -2411,6 +2414,171 @@ PAINT_FINAL_SCORE:
 	jal PAINT_NUMBER		# paint ones digit
 	pop_reg_from_stack ($ra)
 	jr $ra
+#___________________________________________________________________________________________________________________________
+# FUNCTION: PAINT_EXPLOSION
+	# Inputs
+		# $a0: base address to paint explosion
+	# Registers Used
+		# $s0: stores current color value
+		# $s1: temporary memory address storage for current unit (in bitmap)
+		# $s2: row index for 'for loop' LOOP_EXPLOSION_ROW
+		# $s3: column index for 'for loop' LOOP_EXPLOSION_COLUMN
+		# $s4: parameter for subfunction LOOP_EXPLOSION_COLUMN
+PAINT_EXPLOSION:
+	    # Store used registers in the stack
+	    push_reg_to_stack ($ra)
+	    push_reg_to_stack ($s0)
+	    push_reg_to_stack ($s1)
+	    push_reg_to_stack ($s2)
+	    push_reg_to_stack ($s3)
+	    push_reg_to_stack ($s4)
+    
+	    # Initialize registers
+	    add $s0, $0, $0				# initialize current color to black
+	    add $s1, $0, $0				# holds temporary memory address
+	    add $s2, $0, $0	
+	    add $s3, $0, $0
+	    add $s4, $0, $0
+
+		LOOP_EXPLOSION_ROW: bge $s2, row_max, EXIT_PAINT_EXPLOSION
+				# Boolean Expressions: Paint in based on row index
+			EXPLOSION_COND:
+					beq $s2, 0, EXPLOSION_ROW_0
+					beq $s2, 1024, EXPLOSION_ROW_1
+					beq $s2, 2048, EXPLOSION_ROW_2
+					beq $s2, 3072, EXPLOSION_ROW_3
+					beq $s2, 4096, EXPLOSION_ROW_4
+					beq $s2, 5120, EXPLOSION_ROW_5
+					beq $s2, 6144, EXPLOSION_ROW_6
+					beq $s2, 7168, EXPLOSION_ROW_7
+					beq $s2, 8192, EXPLOSION_ROW_8
+
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_0:
+					setup_general_paint (0x000000, 0, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x8b1600, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x6d0000, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x390000, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x000000, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x290000, 24, 28, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_1:
+					setup_general_paint (0x300000, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x872700, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xd7743c, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xf8b423, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xee9b49, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xbd3200, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xdd3f00, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x340000, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_2:
+					setup_general_paint (0x9f1f00, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfbcb3a, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfffffb, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfcf8ae, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfcf9bb, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xffca00, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfcbb22, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xc55000, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x2c0000, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_3:
+					setup_general_paint (0x852600, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xffde1e, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfdf8aa, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfef04c, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xffea00, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfedb1c, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xf9ce1f, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xf1b118, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x7a2100, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_4:
+					setup_general_paint (0xba3e00, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xffd822, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfed91d, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfcc820, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xffda1a, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfcf7a9, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfeeb00, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfbc91c, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x9d3f00, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_5:
+					setup_general_paint (0xb24d00, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfac838, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xf29926, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xf19726, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfefce0, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xffeb00, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xffdf00, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfde82e, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xe55c00, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_6:
+					setup_general_paint (0xb74f00, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfedd2d, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfabf32, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfec41e, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfcf8ae, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfdee38, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfdcb19, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xed7100, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x6c1700, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_7:
+					setup_general_paint (0x862000, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xe66900, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xe25f00, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xee7814, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfee770, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xfee130, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xf3821d, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xb01f00, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x1d0000, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+			EXPLOSION_ROW_8:
+					setup_general_paint (0x4f0000, 0, 4, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x2d0000, 4, 8, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x000000, 8, 12, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x380000, 12, 16, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0xb23100, 16, 20, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x8b2600, 20, 24, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x2e0000, 24, 28, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x380000, 28, 32, LOOP_EXPLOSION_COLUMN)
+					setup_general_paint (0x000000, 32, 36, LOOP_EXPLOSION_COLUMN)
+					j UPDATE_EXPLOSION_ROW
+
+    	UPDATE_EXPLOSION_ROW:				# Update row value
+    	    	addi $s2, $s2, row_increment
+	        	j LOOP_EXPLOSION_ROW
+
+    	# FOR LOOP: (through column)
+    	# Paints in column from $s3 to $s4 at some row
+    	LOOP_EXPLOSION_COLUMN: bge $s3, $s4, EXIT_LOOP_EXPLOSION_COLUMN	# branch to UPDATE_EXPLOSION_COL; if column index >= last column index to paint
+        		addi $s1, $a0, 0				# initialize from base address
+        		add $s1, $s1, $s2				# update to specific row from base address
+        		add $s1, $s1, $s3				# update to specific column
+        		sw $s0, ($s1)					# paint in value
+
+        		# Updates for loop index
+        		addi $s3, $s3, column_increment			# s3 += row_increment
+        		j LOOP_EXPLOSION_COLUMN				# repeats LOOP_EXPLOSION_ROW
+	    EXIT_LOOP_EXPLOSION_COLUMN:
+		        jr $ra
+
+    	# EXIT FUNCTION
+       	EXIT_PAINT_EXPLOSION:
+        		# Restore used registers
+	    		pop_reg_from_stack ($s4)
+	    		pop_reg_from_stack ($s3)
+	    		pop_reg_from_stack ($s2)
+	    		pop_reg_from_stack ($s1)
+	    		pop_reg_from_stack ($s0)
+        		pop_reg_from_stack ($ra)
+        		jr $ra						# return to previous instruction
 #___________________________________________________________________________________________________________________________
 # FUNCTION: PAINT_GAME_OVER
 PAINT_GAME_OVER:
