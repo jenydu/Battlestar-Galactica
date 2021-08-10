@@ -176,7 +176,7 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 0					# score counter
+addi $s1, $0, 8					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
@@ -674,18 +674,18 @@ check_asteroid_distances:
 	blt $t6, $t7, L1	# t6 <= t5 AND t6 <t7
 	addi $a0, $s7, 0	# t7 <= t6 <= t5
 	addi $t8, $t7, 0	# t7 <= t6 <= t5
-	bgt $s4, 8, check_level_3
+	beq $s4, 12, check_level_3
 	j redraw_closest
 
 L0:	blt $t5, $t7, L2	# t5 < t7
 	addi $a0, $s7, 0	# t6 > t5 >= t7, so t7 smallest
 	addi $t8, $t7, 0
-	bgt $s4, 8, check_level_3
+	beq $s4, 12, check_level_3
 	j redraw_closest
 
 L1:	addi $a0, $s6, 0	# t6 smallest
 	addi $t8, $t6, 0
-	bgt $s4, 8, check_level_3
+	beq $s4, 12, check_level_3
 	j redraw_closest
 	
 L2:	addi $a0, $s5, 0	# t5 smallest
