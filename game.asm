@@ -176,7 +176,7 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 0					# score counter
+addi $s1, $0, 8					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
@@ -514,7 +514,7 @@ COLLISION_DETECTOR:
         	push_reg_to_stack ($t0)
         	push_reg_to_stack ($t1)
         	push_reg_to_stack ($t2)
-        	push_reg_to_stack ($t3)
+        	push_reg_to_stack ($t7)
         	push_reg_to_stack ($t9)
         	push_reg_to_stack ($ra)
 
@@ -566,18 +566,18 @@ COLLISION_DETECTOR:
 
         plane_hitbox_loop:
         	bgt $t0, $t1, exit_plane_hitbox_loop	# if i > 32, exit loop
-        	addi $t3, $t0, 0			# store current row index
-        	sll $t3, $t3, 10			# calculate row offset = (1024 * row index)
+        	addi $t7, $t0, 0			# store current row index
+        	sll $t7, $t7, 10			# calculate row offset = (1024 * row index)
 
-        	subu $t9, $t9, $t3			# check pixel $t0 rows above
+        	subu $t9, $t9, $t7			# check pixel $t0 rows above
         	lw $t2, ($t9)				# load pixel colour at the address
 		# if incorrect pixel color found
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
         	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
 
-        	add $t9, $t9, $t3			# reset back to center
-        	add $t9, $t9, $t3			# check pixel $t0 rows below
+        	add $t9, $t9, $t7			# reset back to center
+        	add $t9, $t9, $t7			# check pixel $t0 rows below
         	lw $t2, ($t9)				# load pixel colour at the address
 		# if incorrect pixel color found
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
@@ -587,7 +587,7 @@ COLLISION_DETECTOR:
 
         	# repeat loop
         	addi $t0, $t0, 1			# update for loop indexer;	i += 1
-        	subu $t9, $t9, $t3			# reset back to center
+        	subu $t9, $t9, $t7			# reset back to center
         	j plane_hitbox_loop
 
         	exit_plane_hitbox_loop:			# return to previous instruction
@@ -641,7 +641,7 @@ COLLISION_DETECTOR:
         	pop_reg_from_stack($ra)
         	pop_reg_from_stack($t9)
 
-        	pop_reg_from_stack($t3)
+        	pop_reg_from_stack($t7)
 
         	pop_reg_from_stack($t2)
         	pop_reg_from_stack($t1)
@@ -652,7 +652,11 @@ check_asteroid_distances:
 	# check the distance of each asteroid in comparison to $t9 (the pixel which collision happened)
 
 	push_reg_to_stack($ra)
+	push_reg_to_stack($s3)	# temp. register to store smallest distances
+	push_reg_to_stack($t1)
+	push_reg_to_stack($t2)
 
+	#push_reg_to_stack($t8)	# temp. register 
 	# $t5 = $s5 - $t9
 	# $t6 = $s6 - $t9
 	# $t7 = $s7 - $t9
@@ -666,35 +670,79 @@ check_asteroid_distances:
 	blt $t5, $t6, L0	# t5 < t6
 	blt $t6, $t7, L1	# t6 <= t5 AND t6 <t7
 	addi $a0, $s7, 0	# t7 <= t6 <= t5
-	j exit_loop
+	addi $s3, $t7, 0	# store the smallest distance in s3
+	beq $s4, 12, check_level_3
+	j remove_closest
 
 L0:	blt $t5, $t7, L2	# t5 < t7
-	addi $a0, $s7, 0	# t6 > t5 >= t7, so t7 smallest
-	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-	addi $a2, $0, 0
-	jal PAINT_ASTEROID			# erase current asteroid
-	jal generate_asteroid
-	addi $s7, $a0, 0	
-	j exit_loop
+	addi $a0, $s7, 0	# t6 > t5 >= t7, so t7 smallest	
+	addi $s3, $t7, 0	# store the smallest distance in s3
+	beq $s4, 12, check_level_3
+	j remove_closest
 
 L1:	addi $a0, $s6, 0	# t6 smallest
-	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-	addi $a2, $0, 0
-	jal PAINT_ASTEROID			# erase current asteroid
-	jal generate_asteroid
-	addi $s6, $a0, 0
-	j exit_loop
+	addi $s3, $t6, 0	# store the smallest distance in s3
+	beq $s4, 12, check_level_3
+	j remove_closest
 	
 L2:	addi $a0, $s5, 0	# t5 smallest
-	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-	addi $a2, $0, 0
-	jal PAINT_ASTEROID			# erase current asteroid
-	jal generate_asteroid
-	addi $s5, $a0, 0
-	j exit_loop
+	addi $s3, $t5, 0	# store the smallest distance in s3
+	beq $s4, 12, check_level_3
+	j remove_closest
 
+# check the distance of the two additional asteroids in level 3
+check_level_3:	
+		sub $t1, $t3, $t9
+		abs $t1, $t1
+		sub $t2, $t4, $t9
+		abs $t2, $t2
+		
+		blt $t1, $s3, L3	# t3 <a0
+		blt $t2, $s3, L3	# t3 >= a0 AND t4 < a0 (t4 is smallest)
+		j remove_closest
+		
+L3:	blt $t1, $t2, L4		# t3 < a0 AND t4
 
-exit_loop: 	pop_reg_from_stack ($ra)
+	addi $a0, $t4, 0		# t4 <= t3 <a0
+	addi $s3, $t2, 0
+	j remove_closest
+
+L4:	
+	addi $a0, $t3, 0 
+	addi $s3, $t1, 0
+	j remove_closest
+
+remove_closest: 
+		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+		addi $a2, $0, 0
+		push_reg_to_stack($s3)
+		jal PAINT_ASTEROID			# erase current asteroid
+		jal generate_asteroid
+		pop_reg_from_stack($s3)
+		beq $t5, $s3, closest_obs_1
+		beq $t6, $s3, closest_obs_2
+		beq $t7, $s3, closest_obs_3
+		beq $t1, $s3, closest_obs_4
+		beq $t2, $s3, closest_obs_5
+		addi $s5, $a0, 0 
+		j exit_loop
+		
+closest_obs_1:		add $s5, $a0, 0 
+			j exit_loop
+closest_obs_2:		add $s6, $a0, 0
+			j exit_loop
+closest_obs_3:		add $s7, $a0, 0
+			j exit_loop
+closest_obs_4:		add $t3, $a0, 0
+			j exit_loop
+closest_obs_5:		add $t4, $a0, 0
+			j exit_loop
+			
+exit_loop:	
+		pop_reg_from_stack ($ra)
+		pop_reg_from_stack ($t1)
+		pop_reg_from_stack ($t2)
+		pop_reg_from_stack ($s3)
 		jr $ra
 #___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
