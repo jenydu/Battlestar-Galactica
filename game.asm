@@ -520,7 +520,7 @@ COLLISION_DETECTOR:
         	push_reg_to_stack ($t0)
         	push_reg_to_stack ($t1)
         	push_reg_to_stack ($t2)
-        	push_reg_to_stack ($t3)
+        	push_reg_to_stack ($t5)
         	push_reg_to_stack ($t9)
         	push_reg_to_stack ($ra)
 
@@ -572,18 +572,18 @@ COLLISION_DETECTOR:
 
         plane_hitbox_loop:
         	bgt $t0, $t1, exit_plane_hitbox_loop	# if i > 32, exit loop
-        	addi $t3, $t0, 0			# store current row index
-        	sll $t3, $t3, 10			# calculate row offset = (1024 * row index)
+        	addi $t5, $t0, 0			# store current row index
+        	sll $t5, $t5, 10			# calculate row offset = (1024 * row index)
 
-        	subu $t9, $t9, $t3			# check pixel $t0 rows above
+        	subu $t9, $t9, $t5			# check pixel $t0 rows above
         	lw $t2, ($t9)				# load pixel colour at the address
 		# if incorrect pixel color found
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
         	beq $t2, 0xff0000, add_health		# if pixel of heart pickup color, add heart by 1
         	beq $t2, 0xbaba00, add_score		# if pixel of coin pickup color, add score by 1
 
-        	add $t9, $t9, $t3			# reset back to center
-        	add $t9, $t9, $t3			# check pixel $t0 rows below
+        	add $t9, $t9, $t5			# reset back to center
+        	add $t9, $t9, $t5			# check pixel $t0 rows below
         	lw $t2, ($t9)				# load pixel colour at the address
 		# if incorrect pixel color found
         	beq $t2, 0x896e5d, deduct_health	# if the pixel has asteroid colour, deduct heart by 1
@@ -593,23 +593,25 @@ COLLISION_DETECTOR:
 
         	# repeat loop
         	addi $t0, $t0, 1			# update for loop indexer;	i += 1
-        	subu $t9, $t9, $t3			# reset back to center
+        	subu $t9, $t9, $t5			# reset back to center
         	j plane_hitbox_loop
 
         	exit_plane_hitbox_loop:			# return to previous instruction
         		jr $ra
 
         deduct_health:
-        	subi $s0, $s0, 1			# health -= 1
-        	jal UPDATE_HEALTH			# update health on border
-        	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
-   		push_reg_to_stack ($a0)
+        	push_reg_to_stack ($a0)
    		push_reg_to_stack ($a1)
         	
         	jal check_asteroid_distances		# the address of the closest asteroid will be stored in $a0
 
 		pop_reg_from_stack($a1)
         	pop_reg_from_stack($a0)
+        	
+        	subi $s0, $s0, 1			# health -= 1
+        	jal UPDATE_HEALTH			# update health on border
+        	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
+   		
         	j exit_check_plane_hitbox		# exit collision check
 
         add_health:
@@ -647,7 +649,7 @@ COLLISION_DETECTOR:
         	pop_reg_from_stack($ra)
         	pop_reg_from_stack($t9)
 
-        	pop_reg_from_stack($t3)
+        	pop_reg_from_stack($t5)
 
         	pop_reg_from_stack($t2)
         	pop_reg_from_stack($t1)
@@ -656,9 +658,9 @@ COLLISION_DETECTOR:
 # -------------------------------------------------------------------------------------------------------------------------
 check_asteroid_distances:
 	# check the distance of each asteroid in comparison to $t9 (the pixel which collision happened)
-
 	push_reg_to_stack($ra)
-
+	beq $t2, 0x00cb0d, exit_loop
+	
 	# $t5 = $s5 - $t9
 	# $t6 = $s6 - $t9
 	# $t7 = $s7 - $t9
@@ -699,17 +701,19 @@ check_level_3:			# compare the difference in address of the two new asteroids to
 	sub $t2, $t4, $t9
 	abs $t2, $t2
 	
-	blt $t1, $t2, L3	# t1 < t2
-	blt $t2, $t8, L5	# t2 is the smallest
+	blt $t1, $t8, L3	# 
+	blt $t2, $t8, L5	# 
 	j redraw_closest	
 	
-L3:	blt $t1, $t8, L4	# t1 is the smallest
+L3:	blt $t2, $t1, L4	# 
+	addi $a0, $t3, 0
 	j redraw_closest
 
-L4:	addi $a0, $t3, 0	
+L4:	addi $a0, $t4, 0	
 	j redraw_closest
 
-L5: 	addi $a0, $t4, 0
+L5: 	blt $t2, $t1, L4
+	addi $a0, $t3, 0
 	j redraw_closest
 
 redraw_closest:
@@ -717,11 +721,11 @@ redraw_closest:
 	jal PAINT_EXPLOSION			# paint explosion at asteroid base address
 
 	# Add small delay to show explosion
-	push_reg_to_stack ($a0)
+	add $t8, $a0, 0
 	li $v0, 32
 	li $a0, 100				# add 0.1 second delay
 	syscall
-	pop_reg_from_stack ($a0)
+	add $a0, $t8, 0
 		
 	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
 	addi $a2, $0, 0				# erase current asteroid
