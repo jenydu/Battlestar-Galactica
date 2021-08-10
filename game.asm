@@ -176,7 +176,7 @@ INITIALIZE:
 
 # ==PARAMETERS==:
 addi $s0, $0, 3					# starting number of hearts
-addi $s1, $0, 9					# score counter
+addi $s1, $0, 0					# score counter
 addi $s2, $0, 0					# stores current base address for coin
 addi $s3, $0, 0					# stores current base address for heart
 addi $s4, $0, column_increment			# movement speed
@@ -599,9 +599,9 @@ COLLISION_DETECTOR:
         	beq $s0, 0, END_SCREEN_LOOP		# Go to game over screen if 0 health
    		push_reg_to_stack ($a0)
    		push_reg_to_stack ($a1)
+        	
         	jal check_asteroid_distances		# the address of the closest asteroid will be stored in $a0
-		addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
-		jal PAINT_ASTEROID			# erase current asteroid
+
 		pop_reg_from_stack($a1)
         	pop_reg_from_stack($a0)
         	j exit_check_plane_hitbox		# exit collision check
@@ -650,6 +650,9 @@ COLLISION_DETECTOR:
 # -------------------------------------------------------------------------------------------------------------------------
 check_asteroid_distances:
 	# check the distance of each asteroid in comparison to $t9 (the pixel which collision happened)
+
+	push_reg_to_stack($ra)
+
 	# $t5 = $s5 - $t9
 	# $t6 = $s6 - $t9
 	# $t7 = $s7 - $t9
@@ -660,25 +663,39 @@ check_asteroid_distances:
 	sub $t7, $s7, $t9
 	abs $t7, $t7
 
-	blt $t5, $t6, L0
-	blt $t6, $t7, L1
-	addi $a0, $s7, 0
+	blt $t5, $t6, L0	# t5 < t6
+	blt $t6, $t7, L1	# t6 <= t5 AND t6 <t7
+	addi $a0, $s7, 0	# t7 <= t6 <= t5
+	j exit_loop
+
+L0:	blt $t5, $t7, L2	# t5 < t7
+	addi $a0, $s7, 0	# t6 > t5 >= t7, so t7 smallest
+	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+	addi $a2, $0, 0
+	jal PAINT_ASTEROID			# erase current asteroid
+	jal generate_asteroid
+	addi $s7, $a0, 0	
+	j exit_loop
+
+L1:	addi $a0, $s6, 0	# t6 smallest
+	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+	addi $a2, $0, 0
+	jal PAINT_ASTEROID			# erase current asteroid
+	jal generate_asteroid
+	addi $s6, $a0, 0
+	j exit_loop
+	
+L2:	addi $a0, $s5, 0	# t5 smallest
+	addi $a1, $0, 0				# PAINT_ASTEROID param. Set to erase
+	addi $a2, $0, 0
+	jal PAINT_ASTEROID			# erase current asteroid
+	jal generate_asteroid
+	addi $s5, $a0, 0
 	j exit_loop
 
 
-L0:	blt $t5, $t7, L2
-	addi $a0, $s7, 0
-	j exit_loop
-
-L1:	blt $t6, $t7, L3
-	addi $a0, $s7, 0
-	j exit_loop
-L2:	addi $a0, $s5, 0
-	j exit_loop
-L3: 	addi $a0, $s6, 0
-	j exit_loop
-
-exit_loop: jr $ra
+exit_loop: 	pop_reg_from_stack ($ra)
+		jr $ra
 #___________________________________________________________________________________________________________________________
 # REGENERATE PICKUPS
 generate_coin:	
