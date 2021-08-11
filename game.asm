@@ -22,7 +22,10 @@
 # (See the assignment handout for the list of additional features)
 # 1. Pickups (health and coins for score)
 # 2. Scoring system (# of coins)
-# 3. Increase in difficulty based on score (# of coins). Three levels (<5, <10, >=10 coins). More asteroids, lasers and faster speed
+# 3. Increase in difficulty based on score (# of coins). 
+# 	- Three levels (<5, <10, >=10 coins). 
+# 	- More asteroids, different types (lasers that continously deducts health unless you avoid it)
+# 	- Increased speed in each level and additional asteroids with surprising moving patterns in level 3 
 #
 # Link to video demonstration for final submission:
 # - (insert YouTube / MyMedia / other URL here). Make sure we can view it!
@@ -439,8 +442,11 @@ move_level_3_obs:
 
 		calculate_indices ($t3, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_4
+		ble $t6, 18, regen_obs_4
+		bge $t6, 238, regen_obs_4
 
 		subu $t3, $t3, $s4			# shift obstacle 1 unit left
+		addu $t3, $t3, 2048
 		add $a0, $t3, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
 		jal PAINT_ASTEROID
@@ -453,8 +459,11 @@ move_level_3_obs:
 
 		calculate_indices ($t4, $t5, $t6)	# calculate column and row index
 		ble $t5, 11, regen_obs_5
-
+		ble $t6, 18, regen_obs_5
+		bge $t6, 238, regen_obs_5
+		
 		subu $t4, $t4, $s4			# shift obstacle 1 unit left
+		subu $t4, $t4, 2048
 		add $a0, $t4, $0 			# PAINT_ASTEROID param. Load obstacle 1 new base address
 		addi $a1, $zero, 1			# PAINT_ASTEROID param. Set to paint
 		jal PAINT_ASTEROID
@@ -902,9 +911,9 @@ RANDOM_OFFSET:
 	beq $a3, 0, END_RANDOM_OFFSET		# if $a3 == 0, don't add random column offset
 		li $v0, 42 		# Specify random integer
 		li $a0, 0 		# from 0
-		li $a1, 220 		# to 220
+		li $a1, 210# to 220
 		syscall 		# Generate and store random integer in $a0
-
+		addi $a0, $a0, 10
 		addi $s0, $0, column_increment	# store column increment in $s0
 		mult $a0, $s0			# multiply column index to column increment
 		mflo $s1			# store result in s1
