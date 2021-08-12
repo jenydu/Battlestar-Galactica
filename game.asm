@@ -20,18 +20,19 @@
 #
 # Which approved features have been implemented for milestone 3?
 # (See the assignment handout for the list of additional features)
-# 1. Pickups (health and coins for score)
-# 2. Scoring system (# of coins)
+# 1. Pickups (heart for health regen, and coins for score)
+# 2. Scoring system (# of coins collected)
 # 3. Increase in difficulty based on score (# of coins). 
 # 	- Three levels (<5, <10, >=10 coins). 
 # 	- More asteroids, different types (lasers that continously deducts health unless you avoid it)
 # 	- Increased speed in each level and additional asteroids with surprising moving patterns in level 3 
 #
 # Link to video demonstration for final submission:
-# - (insert YouTube / MyMedia / other URL here). Make sure we can view it!
+# - https://www.youtube.com/watch?v=6Ln81-7GRnI
 #
 # Are you OK with us sharing the video with people outside course staff?
-# - yes, and please share this project github link as well!
+# - yes
+# - GitHub link: https://github.com/jenydu/Shoot-em-up-Game-Project
 #
 # Any additional information that the TA needs to know:
 # - press 'g' to directly enter Game Over Loop
